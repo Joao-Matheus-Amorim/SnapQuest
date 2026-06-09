@@ -39,7 +39,8 @@ export default function CameraScreen() {
         }
 
         const asset = await MediaLibrary.createAssetAsync(capturedUri);
-        savedUri = asset.uri || capturedUri;
+        const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+        savedUri = assetInfo.localUri || capturedUri;
         assetId = asset.id;
         filename = asset.filename;
       }
