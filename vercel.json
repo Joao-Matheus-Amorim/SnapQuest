@@ -1,0 +1,10 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/((?!src/|docs/|supabase/|scripts/|index.html|package.json|README.md|.nojekyll).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
