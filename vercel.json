@@ -1,9 +1,11 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!src/|docs/|supabase/|scripts/|index.html|package.json|README.md|.nojekyll).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
