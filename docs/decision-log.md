@@ -51,3 +51,23 @@ Decisao: criar `docs/PROJECT-SKILL.md` como regra-mae.
 Motivo: o projeto precisa saber sempre o que e, onde esta e para onde vai.
 
 Consequencia: PRs devem atualizar docs quando mudarem estado, roadmap, risco, divida ou arquitetura.
+
+## D-006 — Manter Expo Router no bootstrap mobile
+
+Data: 2026-06-09
+
+Decisao: manter Expo Router nesta fase do bootstrap mobile.
+
+Motivo: o app abriu usando `expo-router/entry` e a estrutura `src/app/` ja estava criada. Remover o router agora aumentaria o escopo e poderia quebrar a validacao inicial.
+
+Consequencia: o PR de bootstrap deve alinhar a navegacao inicial com Expo Router e nao misturar troca de arquitetura de navegacao com gameplay, Supabase, Gemini ou Storage.
+
+## D-007 — Remover referencias a assets do template Expo
+
+Data: 2026-06-09
+
+Decisao: remover do `app.json` as referencias para assets do template Expo que nao existem no repositorio.
+
+Motivo: o celular acusou `Unable to resolve asset "./assets/icon.png"` durante a validacao Expo Go.
+
+Consequencia: o bootstrap fica sem icone customizado nesta fase. Icones/app assets devem entrar depois em PR proprio ou ajuste pequeno com arquivos reais.
