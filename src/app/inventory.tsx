@@ -1,14 +1,16 @@
-import { ScrollView, View, Text, StyleSheet } from "react-native";
+import { Image, ScrollView, View, Text, StyleSheet } from "react-native";
+import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 import { useInventory } from "../hooks/useInventory";
 
 export default function InventoryScreen() {
   const { fighters, cards, battleRequirements } = useInventory();
+  const { capturedPhotos } = useCapturedPhotos();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Inventário</Text>
       <Text style={styles.subtitle}>
-        Seed local reaproveitando o core web. Persistência mobile entra em PR próprio.
+        Fighters e cartas vêm do seed local. Fotos brutas ficam separadas e não contam para batalha.
       </Text>
 
       <View style={styles.summaryBox}>
@@ -18,7 +20,27 @@ export default function InventoryScreen() {
         <Text style={styles.summaryText}>
           Cartas: {battleRequirements.cardCount}/{battleRequirements.minCards}
         </Text>
+        <Text style={styles.rawText}>Fotos brutas: {capturedPhotos.length}</Text>
       </View>
+
+      <Text style={styles.sectionTitle}>Fotos brutas capturadas</Text>
+      {capturedPhotos.length === 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Nenhuma foto bruta salva</Text>
+          <Text style={styles.cardText}>Use a câmera para capturar uma foto real.</Text>
+        </View>
+      ) : (
+        capturedPhotos.map((photo) => (
+          <View key={photo.id} style={styles.rawPhotoCard}>
+            <Image source={{ uri: photo.uri }} style={styles.rawPhoto} />
+            <View style={styles.rawPhotoTextBox}>
+              <Text style={styles.cardTitle}>Foto bruta</Text>
+              <Text style={styles.cardText}>Ainda não virou Fighter nem carta.</Text>
+              <Text style={styles.cardText}>{new Date(photo.createdAt).toLocaleString()}</Text>
+            </View>
+          </View>
+        ))
+      )}
 
       <Text style={styles.sectionTitle}>Fighters</Text>
       {fighters.map((fighter) => (
@@ -78,6 +100,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 6,
   },
+  rawText: {
+    color: "#f5a623",
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: 4,
+  },
   sectionTitle: {
     color: "#f5a623",
     fontSize: 20,
@@ -92,6 +121,26 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     marginBottom: 12,
+  },
+  rawPhotoCard: {
+    backgroundColor: "#16213e",
+    borderColor: "rgba(245,166,35,.35)",
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    gap: 12,
+  },
+  rawPhoto: {
+    width: 72,
+    height: 72,
+    borderRadius: 14,
+    backgroundColor: "#0f172a",
+  },
+  rawPhotoTextBox: {
+    flex: 1,
+    justifyContent: "center",
   },
   cardTitle: {
     color: "#f5a623",

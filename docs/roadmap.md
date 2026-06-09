@@ -62,15 +62,18 @@ Objetivo:
 - Adaptar persistencia local para React Native.
 - Integrar Supabase de forma segura.
 
-Entregas em andamento:
+Entregas realizadas:
 - `useInventory` usando seed do core web.
 - Home mobile com contadores reais.
 - Inventory mobile renderizando fighters/cartas seeded.
 - Battle mobile alinhada ao requisito do core: 6 fighters + 6 cartas.
 
+Entregas em andamento:
+- Persistencia local de fotos brutas capturadas.
+- Secao separada de fotos brutas no inventario mobile.
+
 Entregas futuras:
-- Adapter de storage mobile.
-- Persistencia local real.
+- Persistencia local real de fighters/cartas criados pelo usuario.
 - Sync com Supabase.
 
 ## Fase 4 — Batalha mobile
@@ -98,7 +101,7 @@ Entregas existentes:
 - Documentacao em `docs/gemini-card-suggestions.md`.
 
 Entregas esperadas:
-- Persistencia local de fotos brutas capturadas.
+- Conversao de foto bruta em Fighter/carta.
 - Upload para Supabase Storage.
 - IA para lore/atributos.
 - Revisao humana antes de salvar.
