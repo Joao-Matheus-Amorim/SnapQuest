@@ -6,7 +6,7 @@ Ultima atualizacao: 2026-06-09
 
 SnapQuest e um card game mobile-first em validacao, onde fotos viram lutadores e cartas de efeito para batalhas locais entre pai e filho.
 
-O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e integracao inicial com Supabase. A proxima grande direcao e preparar uma base React Native + Expo sem quebrar o MVP web existente.
+O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e integracao inicial com Supabase. A direcao atual e preparar uma base React Native + Expo sem quebrar o MVP web existente.
 
 ## Estado real hoje
 
@@ -30,11 +30,14 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - Sincronizacao de inventario com Supabase.
 - UX de Conta/Nuvem ainda nao e produto final.
 - Deploy Vercel pode depender de limite/rate limit externo.
+- Bootstrap React Native + Expo na branch `feat/rn-bootstrap`.
+- Estrutura mobile inicial com Expo Router em `src/app/`.
+- Telas mobile esqueleto de Home, Camera, Inventory e Battle.
+- Validacao em celular ainda pendente apos atualizacao do Expo Go.
 
 ### Nao implementado
 
-- App React Native + Expo.
-- Camera real no app nativo.
+- Camera/foto como fluxo completo de criacao de fighter.
 - Supabase Storage para fotos.
 - Gemini para lore/atributos por foto.
 - Inventario mobile completo.
@@ -47,10 +50,12 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - `main`: fonte atual do projeto.
 - PR #5: Vite/env Supabase foi mergeado.
 - PR #9: fechado sem merge, pois a direcao mudou para migracao mobile em vez de continuar refatorando UI web.
-- Issue #10: cria a skill de documentacao e ciencia do projeto.
+- Issue #10 / PR #11: cria a skill de documentacao e ciencia do projeto.
+- Issue #12: bootstrap React Native + Expo sem quebrar MVP web.
+- Branch `feat/rn-bootstrap`: bootstrap mobile em andamento.
 
 ## Decisao atual
 
-Antes de iniciar o bootstrap React Native + Expo, a documentacao deve ficar consolidada como fonte viva do projeto.
+O bootstrap React Native + Expo deve continuar em PR pequeno, preservando o MVP web e mantendo `src/js/core/` intocado.
 
-A migracao mobile deve preservar o MVP web ate que exista app nativo equivalente ou melhor.
+Antes de mergear o bootstrap mobile, a validacao manual no Expo Go deve ser confirmada ou marcada explicitamente como pendente no PR.
