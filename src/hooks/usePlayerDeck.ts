@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
+import { getStorageItem, setStorageItem } from "../lib/mobileStorage";
 import { createEffectCard, type EffectCard } from "../js/core/cards.js";
 import { createFighter, type Fighter } from "../js/core/fighters.js";
 import type { CapturedPhoto } from "./useCapturedPhotos";
@@ -37,7 +37,7 @@ function isEffectCard(item: unknown): item is EffectCard {
 }
 
 async function readPlayerDeck(): Promise<PlayerDeck> {
-  const value = await SecureStore.getItemAsync(PLAYER_DECK_KEY);
+  const value = await getStorageItem(PLAYER_DECK_KEY);
 
   if (!value) return emptyDeck;
 
@@ -54,7 +54,7 @@ async function readPlayerDeck(): Promise<PlayerDeck> {
 }
 
 async function writePlayerDeck(deck: PlayerDeck) {
-  await SecureStore.setItemAsync(PLAYER_DECK_KEY, JSON.stringify(deck));
+  await setStorageItem(PLAYER_DECK_KEY, JSON.stringify(deck));
 }
 
 function makeNameFromPhoto(prefix: string, photo: CapturedPhoto) {
