@@ -3,7 +3,7 @@ let currentClient = null;
 export async function createSupabaseClient({ url, anonKey }) {
   if (!url || !anonKey) throw new Error('URL e anon key são obrigatórios.');
 
-  const module = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const module = await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
   currentClient = module.createClient(url, anonKey);
   return currentClient;
 }
