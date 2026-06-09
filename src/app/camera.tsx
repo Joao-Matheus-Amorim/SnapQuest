@@ -1,17 +1,44 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Image } from "react-native";
+import { Alert, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 export default function CameraScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   async function pickImage() {
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-    });
+    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+    if (!cameraPermission.granted) {
+      Alert.alert(
+        "Permissão necessária",
+        "Autorize o acesso à câmera para criar um Fighter por foto."
+      );
+      return;
+    }
+
+    const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!mediaPermission.granted) {
+      Alert.alert(
+        "Permissão necessária",
+        "Autorize o acesso às fotos para salvar ou retornar a imagem capturada."
+      );
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setImageUri(result.assets[0].uri);
+      }
+    } catch {
+      Alert.alert(
+        "Não foi possível abrir a câmera",
+        "Verifique as permissões do Expo Go nos ajustes do celular e tente novamente."
+      );
     }
   }
 
