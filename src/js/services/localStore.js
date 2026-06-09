@@ -1,7 +1,17 @@
 import { seedFighters } from '../core/fighters.js';
 import { seedCards } from '../core/cards.js';
+import { getPublicConfig } from './publicConfig.js';
 
 const STORAGE_KEY = 'snapquest-v1';
+
+function resolveSupabaseConfig(savedConfig = {}) {
+  const publicConfig = getPublicConfig();
+
+  return {
+    url: publicConfig.supabaseUrl || savedConfig.url || '',
+    anonKey: publicConfig.supabaseAnonKey || savedConfig.anonKey || '',
+  };
+}
 
 export function loadLocalState() {
   try {
@@ -11,7 +21,7 @@ export function loadLocalState() {
       player2Name: data.player2Name || '',
       fighters: data.fighters || seedFighters(),
       cards: data.cards || seedCards(),
-      supabaseConfig: data.supabaseConfig || {},
+      supabaseConfig: resolveSupabaseConfig(data.supabaseConfig),
     };
   } catch {
     return {
@@ -19,7 +29,7 @@ export function loadLocalState() {
       player2Name: '',
       fighters: seedFighters(),
       cards: seedCards(),
-      supabaseConfig: {},
+      supabaseConfig: resolveSupabaseConfig(),
     };
   }
 }
