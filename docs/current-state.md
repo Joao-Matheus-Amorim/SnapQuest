@@ -1,4 +1,4 @@
-# Estado Atual do SnapQuest
+﻿# Estado Atual do SnapQuest
 
 Ultima atualizacao: 2026-06-09
 
@@ -23,6 +23,7 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - Leitura de env publica via `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 - Bloqueio de chave `sb_secret_` no frontend.
 - Documentos iniciais de governanca, risco e divida tecnica.
+- Contrato inicial/mock para sugestao de cartas por foto em `src/js/services/cardSuggestionService.js`.
 
 ### Parcial ou em validacao
 
@@ -30,16 +31,18 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - Sincronizacao de inventario com Supabase.
 - UX de Conta/Nuvem ainda nao e produto final.
 - Deploy Vercel pode depender de limite/rate limit externo.
+- Sugestao de cartas por IA ainda e contrato/mock; nao chama backend real e nao salva cartas.
 - Bootstrap React Native + Expo na branch `feat/rn-bootstrap`.
 - Estrutura mobile inicial com Expo Router em `src/app/`.
 - Telas mobile esqueleto de Home, Camera, Inventory e Battle.
-- Validacao em celular ainda pendente apos atualizacao do Expo Go.
+- Validacao SDK 54 em andamento no Expo Go.
 
 ### Nao implementado
 
+- App React Native + Expo mergeado em `main`.
 - Camera/foto como fluxo completo de criacao de fighter.
 - Supabase Storage para fotos.
-- Gemini para lore/atributos por foto.
+- IA real para lore/atributos por foto.
 - Inventario mobile completo.
 - Batalha mobile completa.
 - Auth nativo consolidado.
@@ -52,10 +55,13 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - PR #9: fechado sem merge, pois a direcao mudou para migracao mobile em vez de continuar refatorando UI web.
 - Issue #10 / PR #11: cria a skill de documentacao e ciencia do projeto.
 - Issue #12: bootstrap React Native + Expo sem quebrar MVP web.
+- Issue #17 / PR #18: contrato inicial de sugestao de cartas por foto foi mergeado.
 - Branch `feat/rn-bootstrap`: bootstrap mobile em andamento.
 
 ## Decisao atual
 
 O bootstrap React Native + Expo deve continuar em PR pequeno, preservando o MVP web e mantendo `src/js/core/` intocado.
+
+Gemini/IA deve continuar como assistente criativo com contrato estruturado, revisao humana e validacao pelo core antes de qualquer carta real ser salva.
 
 Antes de mergear o bootstrap mobile, a validacao manual no Expo Go deve ser confirmada ou marcada explicitamente como pendente no PR.
