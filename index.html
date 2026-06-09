@@ -32,9 +32,30 @@
         <input class="text-input" id="player2Name" placeholder="Nome do(a) filho(a)" maxlength="20" />
       </div>
 
+      <div class="status-row">
+        <div class="mini-stat" id="fightersStat"><strong id="fightersCount">0</strong><span>⚔️ Lutadores</span></div>
+        <div class="mini-stat" id="cardsStat"><strong id="cardsCount">0</strong><span>✨ Cartas</span></div>
+      </div>
+
+      <div class="grid two">
+        <button class="btn primary big" data-go="createFighter" type="button">📸 Criar Lutador</button>
+        <button class="btn green big" data-go="createCard" type="button">✨ Criar Carta</button>
+      </div>
+      <div class="grid two">
+        <button class="btn blue" data-go="inventory" type="button">🎒 Inventário</button>
+        <button class="btn red" id="startBattleBtn" type="button">⚔️ Batalhar</button>
+      </div>
+    </section>
+
+    <section id="account" class="screen">
+      <div class="hero">
+        <h2>Conta e nuvem.</h2>
+        <p>Entre para salvar lutadores e cartas na nuvem e continuar de onde parou.</p>
+      </div>
+
       <div class="panel cloud-panel">
         <h3>Inventário recorrente</h3>
-        <p>Opcional no MVP. Sem configurar, o jogo continua usando inventário local.</p>
+        <p>Login, cadastro e sincronização ficam aqui. A Home fica livre para jogar.</p>
         <input class="text-input" id="supabaseUrl" placeholder="Supabase Project URL" />
         <input class="text-input" id="supabaseAnonKey" placeholder="Supabase anon public key" />
         <input class="text-input" id="authEmail" placeholder="E-mail" />
@@ -48,20 +69,6 @@
           <button class="btn small ghost" id="signOutBtn" type="button">Sair</button>
         </div>
         <p id="cloudStatus" class="hint">Nuvem desconectada.</p>
-      </div>
-
-      <div class="status-row">
-        <div class="mini-stat" id="fightersStat"><strong id="fightersCount">0</strong><span>⚔️ Lutadores</span></div>
-        <div class="mini-stat" id="cardsStat"><strong id="cardsCount">0</strong><span>✨ Cartas</span></div>
-      </div>
-
-      <div class="grid two">
-        <button class="btn primary big" data-go="createFighter" type="button">📸 Criar Lutador</button>
-        <button class="btn green big" data-go="createCard" type="button">✨ Criar Carta</button>
-      </div>
-      <div class="grid two">
-        <button class="btn blue" data-go="inventory" type="button">🎒 Inventário</button>
-        <button class="btn red" id="startBattleBtn" type="button">⚔️ Batalhar</button>
       </div>
     </section>
 
@@ -154,6 +161,7 @@
 
     <nav class="bottom-nav" id="bottomNav">
       <button class="navbtn active" data-go="home" type="button"><b>🏠</b>Casa</button>
+      <button class="navbtn" data-go="account" type="button"><b>☁️</b>Conta</button>
       <button class="navbtn" data-go="createFighter" type="button"><b>📸</b>Lutador</button>
       <button class="navbtn" data-go="createCard" type="button"><b>✨</b>Carta</button>
       <button class="navbtn" data-go="inventory" type="button"><b>🎒</b>Bolsa</button>
@@ -173,5 +181,6 @@
   </div>
 
   <script type="module" src="./src/js/app.js"></script>
+  <script type="module" src="./src/js/ui/cloudAccount.js"></script>
 </body>
 </html>
