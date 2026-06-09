@@ -35,14 +35,16 @@ export function loadLocalState() {
 }
 
 export function saveLocalState(state) {
+  const resolvedConfig = resolveSupabaseConfig(state.supabaseConfig || {});
   const payload = {
     playerName: state.playerName,
     player2Name: state.player2Name,
     fighters: state.fighters,
     cards: state.cards,
-    supabaseConfig: state.supabaseConfig || {},
+    supabaseConfig: resolvedConfig,
   };
 
+  state.supabaseConfig = resolvedConfig;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
