@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import { EFFECT_CATEGORIES } from '../src/js/core/balance.js';
 import {
   CARD_SUGGESTION_SCHEMA_VERSION,
@@ -6,22 +5,7 @@ import {
   suggestCardFromPhoto,
 } from '../src/js/services/cardSuggestionService.js';
 
-const required = [
-  'index.html',
-  'src/styles/app.css',
-  'src/js/app.js',
-  'src/js/core/balance.js',
-  'src/js/core/battle.js',
-  'src/js/core/cards.js',
-  'src/js/core/fighters.js',
-  'src/js/services/inventoryRepository.js',
-  'src/js/services/localStore.js',
-  'src/js/services/supabaseClient.js',
-  'src/js/services/cardSuggestionService.js',
-  'docs/gemini-card-suggestions.md',
-  'supabase/schema.sql',
-];
-
+const categoryKeys = new Set(EFFECT_CATEGORIES.map(category => category[0]));
 let ok = true;
 
 function fail(message) {
@@ -29,27 +13,6 @@ function fail(message) {
   ok = false;
 }
 
-for (const file of required) {
-  if (!fs.existsSync(file)) {
-    fail(`Missing required file: ${file}`);
-  }
-}
-
-const html = fs.readFileSync('index.html', 'utf8');
-if (!html.includes('type="module"')) {
-  fail('index.html must load src/js/app.js as type="module".');
-}
-
-const schema = fs.readFileSync('supabase/schema.sql', 'utf8');
-if (!schema.includes('alter table public.snapquest_fighters enable row level security')) {
-  fail('schema.sql must enable RLS for fighters.');
-}
-
-if (!schema.includes('auth.uid()')) {
-  fail('schema.sql must scope policies by auth.uid().');
-}
-
-const categoryKeys = new Set(EFFECT_CATEGORIES.map(category => category[0]));
 const suggestion = await suggestCardFromPhoto({
   photoUri: 'file://snapquest-test-photo.jpg',
   visualHint: 'livro azul',
@@ -115,5 +78,4 @@ if (!missingPhotoFailed) {
 
 if (!ok) process.exit(1);
 
-console.log('SnapQuest static checks passed.');
 console.log('SnapQuest card suggestion checks passed.');

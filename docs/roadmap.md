@@ -93,10 +93,14 @@ Status: planejado
 Objetivo:
 - Foto real vira lutador/carta com lore e atributos.
 
+Entregas existentes:
+- Contrato inicial de sugestao de carta por foto em `src/js/services/cardSuggestionService.js`.
+- Documentacao em `docs/gemini-card-suggestions.md`.
+
 Entregas esperadas:
 - Camera real.
 - Upload para Supabase Storage.
-- Gemini para lore/atributos.
+- IA para lore/atributos.
 - Revisao humana antes de salvar.
 
 ## Fase 6 — Produto familiar completo
