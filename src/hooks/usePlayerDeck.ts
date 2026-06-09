@@ -3,6 +3,7 @@ import { getStorageItem, setStorageItem } from "../lib/mobileStorage";
 import { createEffectCard, type EffectCard } from "../js/core/cards.js";
 import { createFighter, type Fighter } from "../js/core/fighters.js";
 import type { CapturedPhoto } from "./useCapturedPhotos";
+import type { GeminiTransformResult } from "../services/geminiTransform";
 
 const PLAYER_DECK_KEY = "snapquest-player-deck-v1";
 
@@ -81,11 +82,11 @@ export function usePlayerDeck() {
     void reload();
   }, [reload]);
 
-  const addFighterFromPhoto = useCallback(async (photo: CapturedPhoto) => {
+  const addFighterFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult) => {
     const currentDeck = await readPlayerDeck();
     const fighter = createFighter({
-      classKey: "guerreiro",
-      name: makeNameFromPhoto("Fighter", photo),
+      classKey: transform?.target === "fighter" ? transform.key : "guerreiro",
+      name: transform?.target === "fighter" ? transform.name : makeNameFromPhoto("Fighter", photo),
       photo: photo.uri,
     });
     const nextDeck = {
@@ -99,11 +100,11 @@ export function usePlayerDeck() {
     return fighter;
   }, []);
 
-  const addCardFromPhoto = useCallback(async (photo: CapturedPhoto) => {
+  const addCardFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult) => {
     const currentDeck = await readPlayerDeck();
     const card = createEffectCard({
-      categoryKey: "criatura",
-      name: makeNameFromPhoto("Carta", photo),
+      categoryKey: transform?.target === "effect_card" ? transform.key : "criatura",
+      name: transform?.target === "effect_card" ? transform.name : makeNameFromPhoto("Carta", photo),
       photo: photo.uri,
     });
     const nextDeck = {
