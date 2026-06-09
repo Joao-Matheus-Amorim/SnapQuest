@@ -1,4 +1,4 @@
-﻿# Estado Atual do SnapQuest
+# Estado Atual do SnapQuest
 
 Ultima atualizacao: 2026-06-09
 
@@ -6,7 +6,7 @@ Ultima atualizacao: 2026-06-09
 
 SnapQuest e um card game mobile-first em validacao, onde fotos viram lutadores e cartas de efeito para batalhas locais entre pai e filho.
 
-O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e integracao inicial com Supabase. A direcao atual e preparar uma base React Native + Expo sem quebrar o MVP web existente.
+O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e integracao inicial com Supabase. A direcao atual e evoluir a base React Native + Expo sem quebrar o MVP web existente.
 
 ## Estado real hoje
 
@@ -24,6 +24,7 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - Bloqueio de chave `sb_secret_` no frontend.
 - Documentos iniciais de governanca, risco e divida tecnica.
 - Contrato inicial/mock para sugestao de cartas por foto em `src/js/services/cardSuggestionService.js`.
+- Bootstrap React Native + Expo mergeado em `main` pelo PR #19.
 
 ### Parcial ou em validacao
 
@@ -32,19 +33,19 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - UX de Conta/Nuvem ainda nao e produto final.
 - Deploy Vercel pode depender de limite/rate limit externo.
 - Sugestao de cartas por IA ainda e contrato/mock; nao chama backend real e nao salva cartas.
-- Bootstrap React Native + Expo na branch `feat/rn-bootstrap`.
-- Estrutura mobile inicial com Expo Router em `src/app/`.
-- Telas mobile esqueleto de Home, Camera, Inventory e Battle.
-- Validacao SDK 54 em andamento no Expo Go.
+- Inventario mobile local seeded em andamento na branch `issue20-mobile-inventory`.
+- Home mobile mostra contadores seeded em validacao.
+- Inventory mobile renderiza seed local em validacao.
+- Battle mobile ainda nao e jogavel; apenas usa requisito do core para indicar disponibilidade.
 
 ### Nao implementado
 
-- App React Native + Expo mergeado em `main`.
+- Persistencia local mobile real para inventario.
 - Camera/foto como fluxo completo de criacao de fighter.
+- Persistencia local de fotos brutas capturadas.
 - Supabase Storage para fotos.
 - IA real para lore/atributos por foto.
-- Inventario mobile completo.
-- Batalha mobile completa.
+- Batalha mobile completa usando `src/js/core/battle.js`.
 - Auth nativo consolidado.
 - Testes automatizados robustos.
 
@@ -54,14 +55,15 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - PR #5: Vite/env Supabase foi mergeado.
 - PR #9: fechado sem merge, pois a direcao mudou para migracao mobile em vez de continuar refatorando UI web.
 - Issue #10 / PR #11: cria a skill de documentacao e ciencia do projeto.
-- Issue #12: bootstrap React Native + Expo sem quebrar MVP web.
+- Issue #12 / PR #19: bootstrap React Native + Expo foi mergeado.
 - Issue #17 / PR #18: contrato inicial de sugestao de cartas por foto foi mergeado.
-- Branch `feat/rn-bootstrap`: bootstrap mobile em andamento.
+- Issue #20: inventario mobile local com seed do core web em andamento.
+- Branch `issue20-mobile-inventory`: inventario mobile seeded em andamento.
 
 ## Decisao atual
 
-O bootstrap React Native + Expo deve continuar em PR pequeno, preservando o MVP web e mantendo `src/js/core/` intocado.
+O proximo passo e concluir o inventario mobile local seeded sem persistencia, sem DB, sem Storage, sem Gemini real e sem alterar `src/js/core/`.
 
 Gemini/IA deve continuar como assistente criativo com contrato estruturado, revisao humana e validacao pelo core antes de qualquer carta real ser salva.
 
-Antes de mergear o bootstrap mobile, a validacao manual no Expo Go deve ser confirmada ou marcada explicitamente como pendente no PR.
+A regra de batalha deve seguir o core web: 6 fighters + 6 cartas totais para simular dois jogadores.
