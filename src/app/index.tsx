@@ -1,27 +1,29 @@
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Link } from "expo-router";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 
-import type { RootStackParamList } from "../../App";
-
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
-
-export default function HomeScreen({ navigation }: Props) {
+export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>SnapQuest</Text>
       <Text style={styles.subtitle}>Card Game · Foto · Batalha</Text>
 
-      <Pressable style={styles.primaryButton} onPress={() => navigation.navigate("Camera")}>
-        <Text style={styles.primaryText}>📸 Criar Fighter</Text>
-      </Pressable>
+      <Link href="/camera" asChild>
+        <Pressable style={styles.primaryButton}>
+          <Text style={styles.primaryText}>📸 Criar Fighter</Text>
+        </Pressable>
+      </Link>
 
-      <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate("Inventory")}>
-        <Text style={styles.secondaryText}>🃏 Ver Inventário</Text>
-      </Pressable>
+      <Link href="/inventory" asChild>
+        <Pressable style={styles.secondaryButton}>
+          <Text style={styles.secondaryText}>🃏 Ver Inventário</Text>
+        </Pressable>
+      </Link>
 
-      <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate("Battle")}>
-        <Text style={styles.secondaryText}>⚔️ Testar Batalha</Text>
-      </Pressable>
+      <Link href="/battle" asChild>
+        <Pressable style={styles.secondaryButton}>
+          <Text style={styles.secondaryText}>⚔️ Testar Batalha</Text>
+        </Pressable>
+      </Link>
     </View>
   );
 }
