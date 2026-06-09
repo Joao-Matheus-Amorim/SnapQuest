@@ -23,6 +23,7 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - Leitura de env publica via `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 - Bloqueio de chave `sb_secret_` no frontend.
 - Documentos iniciais de governanca, risco e divida tecnica.
+- Contrato inicial/mock para sugestao de cartas por foto em `src/js/services/cardSuggestionService.js`.
 
 ### Parcial ou em validacao
 
@@ -30,13 +31,14 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 - Sincronizacao de inventario com Supabase.
 - UX de Conta/Nuvem ainda nao e produto final.
 - Deploy Vercel pode depender de limite/rate limit externo.
+- Sugestao de cartas por IA ainda e contrato/mock; nao chama backend real e nao salva cartas.
 
 ### Nao implementado
 
-- App React Native + Expo.
-- Camera real no app nativo.
+- App React Native + Expo mergeado em `main`.
+- Camera real no app nativo mergeada em `main`.
 - Supabase Storage para fotos.
-- Gemini para lore/atributos por foto.
+- IA real para lore/atributos por foto.
 - Inventario mobile completo.
 - Batalha mobile completa.
 - Auth nativo consolidado.
@@ -45,12 +47,14 @@ O repositorio atual contem um MVP web em HTML/CSS/JavaScript puro com Vite e int
 ## Branches e PRs relevantes
 
 - `main`: fonte atual do projeto.
+- `feat/gemini-card-suggestion-contract`: contrato inicial de sugestao de cartas por foto.
 - PR #5: Vite/env Supabase foi mergeado.
 - PR #9: fechado sem merge, pois a direcao mudou para migracao mobile em vez de continuar refatorando UI web.
 - Issue #10: cria a skill de documentacao e ciencia do projeto.
+- Issue #17: projetar Gemini para auxiliar criacao de cartas sem substituir o core.
 
 ## Decisao atual
 
-Antes de iniciar o bootstrap React Native + Expo, a documentacao deve ficar consolidada como fonte viva do projeto.
+Antes de integrar IA real, o projeto deve ter contrato estruturado, revisao humana e validacao pelo core.
 
 A migracao mobile deve preservar o MVP web ate que exista app nativo equivalente ou melhor.
