@@ -1,27 +1,33 @@
 import { Link } from "expo-router";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useInventory } from "../hooks/useInventory";
 
 export default function HomeScreen() {
+  const { battleRequirements } = useInventory();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>SnapQuest</Text>
       <Text style={styles.subtitle}>Card Game · Foto · Batalha</Text>
+      <Text style={styles.inventorySummary}>
+        Fighters {battleRequirements.fighterCount}/{battleRequirements.minFighters} · Cartas {battleRequirements.cardCount}/{battleRequirements.minCards}
+      </Text>
 
       <Link href="/camera" asChild>
         <Pressable style={styles.primaryButton}>
-          <Text style={styles.primaryText}>📸 Criar Fighter</Text>
+          <Text style={styles.primaryText}>Criar Fighter</Text>
         </Pressable>
       </Link>
 
       <Link href="/inventory" asChild>
         <Pressable style={styles.secondaryButton}>
-          <Text style={styles.secondaryText}>🃏 Ver Inventário</Text>
+          <Text style={styles.secondaryText}>Ver Inventário</Text>
         </Pressable>
       </Link>
 
       <Link href="/battle" asChild>
         <Pressable style={styles.secondaryButton}>
-          <Text style={styles.secondaryText}>⚔️ Testar Batalha</Text>
+          <Text style={styles.secondaryText}>Testar Batalha</Text>
         </Pressable>
       </Link>
     </View>
@@ -45,7 +51,14 @@ const styles = StyleSheet.create({
   subtitle: {
     color: "#ffffff",
     fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 12,
+  },
+  inventorySummary: {
+    color: "#f5a623",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 28,
+    textAlign: "center",
   },
   primaryButton: {
     backgroundColor: "#e94560",

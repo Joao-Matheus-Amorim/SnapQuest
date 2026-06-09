@@ -1,23 +1,27 @@
-export const MIN_FIGHTERS_TO_BATTLE = 3;
-export const MIN_ITEMS_TO_BATTLE = 3;
+import { canStartBattle } from "../js/core/battle.js";
+import { seedCards } from "../js/core/cards.js";
+import { seedFighters } from "../js/core/fighters.js";
+
+export const MIN_FIGHTERS_TO_BATTLE = 6;
+export const MIN_CARDS_TO_BATTLE = 6;
+
+const seededFighters = seedFighters();
+const seededCards = seedCards();
 
 export function useInventory() {
-  const fighters = [];
-  const items = [];
+  const fighters = seededFighters;
+  const cards = seededCards;
 
   return {
-    cards: [],
+    cards,
     fighters,
-    items,
     isLoading: false,
     battleRequirements: {
       minFighters: MIN_FIGHTERS_TO_BATTLE,
-      minItems: MIN_ITEMS_TO_BATTLE,
+      minCards: MIN_CARDS_TO_BATTLE,
       fighterCount: fighters.length,
-      itemCount: items.length,
-      canBattle:
-        fighters.length >= MIN_FIGHTERS_TO_BATTLE &&
-        items.length >= MIN_ITEMS_TO_BATTLE,
+      cardCount: cards.length,
+      canBattle: canStartBattle(fighters, cards),
     },
   };
 }
