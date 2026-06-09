@@ -17,4 +17,11 @@ export type Fighter = {
   criado_em: string;
 };
 
+export type CreateFighterInput = {
+  classKey: string;
+  name: string;
+  photo?: string | null;
+};
+
+export function createFighter(input: CreateFighterInput): Fighter;
 export function seedFighters(): Fighter[];
