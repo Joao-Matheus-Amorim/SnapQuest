@@ -26,6 +26,7 @@ body{
 button,input{font:inherit;color:inherit}
 button{border:0;cursor:pointer;background:none}
 input{outline:none}
+[hidden]{display:none!important}
 
 .app{
   width:min(440px,100%);
@@ -82,6 +83,7 @@ input{outline:none}
   box-shadow:0 12px 34px rgba(0,0,0,.18);
 }
 .panel h3{margin:0 0 12px;font-size:17px}
+.cloud-panel{background:linear-gradient(180deg,rgba(121,242,192,.10),rgba(255,255,255,.06))}
 .grid{display:grid;gap:10px;margin-top:10px}
 .grid.two{grid-template-columns:1fr 1fr}
 .status-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
