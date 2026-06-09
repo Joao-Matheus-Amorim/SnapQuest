@@ -2,7 +2,7 @@
 
 SnapQuest é um card game mobile-first que mistura fotografia real, RPG leve e batalha local pai & filho.
 
-Este repositório começa com um MVP web estático para validar a jogabilidade antes de migrar para React Native + Expo.
+Este repositório começa com um MVP web para validar a jogabilidade antes de migrar para React Native + Expo.
 
 ## Objetivo da fundação
 
@@ -25,10 +25,29 @@ docs/              Documentação de escopo, banco e roadmap
 
 ## Rodar localmente
 
-Como o app usa módulos ES, abra com um servidor local:
+Instale dependências:
 
 ```bash
-python -m http.server 5173
+npm install
+```
+
+Crie um `.env` local, se quiser testar Supabase sem preencher manualmente na tela:
+
+```bash
+cp .env.example .env
+```
+
+Use apenas chave pública/anon:
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+Rode o app:
+
+```bash
+npm run dev
 ```
 
 Depois acesse:
@@ -41,12 +60,29 @@ http://localhost:5173
 
 1. Crie um projeto no Supabase.
 2. Rode `supabase/schema.sql` no SQL Editor.
-3. Abra o app.
-4. Informe `Project URL` e `anon public key`.
-5. Crie conta ou faça login.
-6. Sincronize o inventário.
+3. Use `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` na Vercel ou no `.env` local.
+4. Crie conta ou faça login no app.
+5. Sincronize o inventário.
 
 Nunca coloque `service_role` no frontend.
+
+## Deploy na Vercel
+
+Configure as variáveis:
+
+```txt
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+Configuração esperada:
+
+```txt
+Build Command: npm run build
+Output Directory: dist
+```
+
+O `vercel.json` já define esse comportamento.
 
 ## Próxima migração
 
