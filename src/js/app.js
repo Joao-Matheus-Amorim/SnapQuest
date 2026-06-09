@@ -1,4 +1,4 @@
-import { CLASSES, EFFECT_CATEGORIES, STAT_EMOJI } from './core/balance.js';
+import { CLASSES, EFFECT_CATEGORIES } from './core/balance.js';
 import { createFighter } from './core/fighters.js';
 import { createEffectCard } from './core/cards.js';
 import { mockPhoto, escapeHtml, clamp } from './core/utils.js';
@@ -12,15 +12,19 @@ import {
   useSelectedCard,
   attackSelectedTarget,
   passTurn,
+  getTurnGuidance,
+  canUseSelectedCard,
+  canAttackSelectedTarget,
 } from './core/battle.js';
 import { loadLocalState, saveLocalState, clearLocalState } from './services/localStore.js';
 import { createSupabaseClient, signUp, signIn, signOut, getUser } from './services/supabaseClient.js';
-import { loadCloudInventory, upsertCloudInventory } from './services/inventoryRepository.js';
+import { upsertCloudInventory } from './services/inventoryRepository.js';
 import { $, $$, toast, go } from './ui/dom.js';
 
+const loaded = loadLocalState();
 const state = {
-  ...loadLocalState(),
-  supabaseConfig: loadLocalState().supabaseConfig || {},
+  ...loaded,
+  supabaseConfig: loaded.supabaseConfig || {},
   activeInventoryTab: 'fighters',
   selectedClassKey: null,
   selectedCategoryKey: null,
@@ -40,14 +44,13 @@ function persist() {
 }
 
 function renderHome() {
+  const ready = canStartBattle(state.fighters, state.cards);
   $('#fightersCount').textContent = state.fighters.length;
   $('#cardsCount').textContent = state.cards.length;
   $('#fightersStat').classList.toggle('ok', state.fighters.length >= 6);
   $('#cardsStat').classList.toggle('ok', state.cards.length >= 6);
-  $('#startBattleBtn').disabled = !canStartBattle(state.fighters, state.cards);
-  $('#startBattleBtn').textContent = canStartBattle(state.fighters, state.cards)
-    ? '⚔️ Batalhar'
-    : '⚔️ Precisa 6 + 6';
+  $('#startBattleBtn').disabled = !ready;
+  $('#startBattleBtn').textContent = ready ? '⚔️ Batalhar' : '⚔️ Precisa 6 + 6';
 }
 
 function renderChoices() {
@@ -81,77 +84,42 @@ function renderChoices() {
 }
 
 function imgHtml(item, fallback) {
-  if (item.foto) return `<img src="${item.foto}" alt="">`;
-  return `<span>${fallback}</span>`;
+  return item.foto ? `<img src="${item.foto}" alt="">` : `<span>${fallback}</span>`;
 }
 
 function renderInventory() {
   $('#tabFighters').classList.toggle('active', state.activeInventoryTab === 'fighters');
   $('#tabCards').classList.toggle('active', state.activeInventoryTab === 'cards');
-
   const root = $('#inventoryList');
 
   if (state.activeInventoryTab === 'fighters') {
-    if (!state.fighters.length) {
-      root.innerHTML = '<div class="empty-state">Nenhum lutador ainda.</div>';
-      return;
-    }
-
-    root.innerHTML = state.fighters.map(fighter => `
+    root.innerHTML = state.fighters.length ? state.fighters.map(fighter => `
       <article class="card">
-        <div class="card-img" style="background:${fighter.foto ? 'rgba(0,0,0,.2)' : fighter.foto_fake}">
-          ${imgHtml(fighter, fighter.icon || '⚔️')}
-        </div>
+        <div class="card-img" style="background:${fighter.foto ? 'rgba(0,0,0,.2)' : fighter.foto_fake}">${imgHtml(fighter, fighter.icon || '⚔️')}</div>
         <div class="card-body">
           <h4>${escapeHtml(fighter.nome)}</h4>
-          <div class="badge-row">
-            <span class="badge">${fighter.icon} ${fighter.classe}</span>
-            <span class="badge">+${fighter.bonus_intensidade} ${String(fighter.bonus_atributo).toUpperCase()}</span>
-          </div>
-          <div class="stat-line">
-            <span class="stat-pill">❤️ ${fighter.hp}</span>
-            <span class="stat-pill">⚔️ ${fighter.atk}</span>
-            <span class="stat-pill">🛡️ ${fighter.def}</span>
-            <span class="stat-pill">🍀 ${fighter.lck}</span>
-            <span class="stat-pill">⚡ ${fighter.spd}</span>
-          </div>
+          <div class="badge-row"><span class="badge">${fighter.icon} ${fighter.classe}</span><span class="badge">+${fighter.bonus_intensidade} ${String(fighter.bonus_atributo).toUpperCase()}</span></div>
+          <div class="stat-line"><span class="stat-pill">❤️ ${fighter.hp}</span><span class="stat-pill">⚔️ ${fighter.atk}</span><span class="stat-pill">🛡️ ${fighter.def}</span><span class="stat-pill">🍀 ${fighter.lck}</span><span class="stat-pill">⚡ ${fighter.spd}</span></div>
         </div>
       </article>
-    `).join('');
+    `).join('') : '<div class="empty-state">Nenhum lutador ainda.</div>';
     return;
   }
 
-  if (!state.cards.length) {
-    root.innerHTML = '<div class="empty-state">Nenhuma carta ainda.</div>';
-    return;
-  }
-
-  root.innerHTML = state.cards.map(card => `
+  root.innerHTML = state.cards.length ? state.cards.map(card => `
     <article class="card">
-      <div class="card-img" style="background:${card.foto ? 'rgba(0,0,0,.2)' : card.foto_fake}">
-        ${imgHtml(card, card.icon || '✨')}
-      </div>
+      <div class="card-img" style="background:${card.foto ? 'rgba(0,0,0,.2)' : card.foto_fake}">${imgHtml(card, card.icon || '✨')}</div>
       <div class="card-body">
         <h4>${escapeHtml(card.nome_efeito)}</h4>
-        <div class="badge-row">
-          <span class="badge">${card.icon} ${card.categoria}</span>
-          <span class="badge">${card.raridade}</span>
-          <span class="badge">${card.polaridade === 'DEBUFF' ? '-' : '+'}${card.intensidade} ${card.atributo}</span>
-        </div>
+        <div class="badge-row"><span class="badge">${card.icon} ${card.categoria}</span><span class="badge">${card.raridade}</span><span class="badge">${card.polaridade === 'DEBUFF' ? '-' : '+'}${card.intensidade} ${card.atributo}</span></div>
       </div>
     </article>
-  `).join('');
+  `).join('') : '<div class="empty-state">Nenhuma carta ainda.</div>';
 }
 
 function saveFighter() {
   try {
-    const fighter = createFighter({
-      classKey: state.selectedClassKey,
-      name: $('#fighterName').value,
-      photo: state.tempFighterPhoto,
-    });
-
-    state.fighters.unshift(fighter);
+    state.fighters.unshift(createFighter({ classKey: state.selectedClassKey, name: $('#fighterName').value, photo: state.tempFighterPhoto }));
     state.selectedClassKey = null;
     state.tempFighterPhoto = null;
     $('#fighterName').value = '';
@@ -169,13 +137,7 @@ function saveFighter() {
 
 function saveCard() {
   try {
-    const card = createEffectCard({
-      categoryKey: state.selectedCategoryKey,
-      name: $('#effectName').value,
-      photo: state.tempCardPhoto,
-    });
-
-    state.cards.unshift(card);
+    state.cards.unshift(createEffectCard({ categoryKey: state.selectedCategoryKey, name: $('#effectName').value, photo: state.tempCardPhoto }));
     state.selectedCategoryKey = null;
     state.tempCardPhoto = null;
     $('#effectName').value = '';
@@ -197,6 +159,7 @@ function renderBattle() {
 
   const player = currentPlayer(battle);
   const enemy = enemyPlayer(battle);
+  const guidance = getTurnGuidance(battle);
 
   $('#p1Name').textContent = battle.players[0].name;
   $('#p2Name').textContent = battle.players[1].name;
@@ -204,43 +167,29 @@ function renderBattle() {
   $('#p2HpText').textContent = totalHp(battle.players[1]);
   $('#p1Box').classList.toggle('active', battle.turn === 0);
   $('#p2Box').classList.toggle('active', battle.turn === 1);
-  $('#turnTitle').textContent = `Turno de ${player.name}`;
+  $('#turnTitle').textContent = `${guidance.phase}: ${player.name}`;
+  $('#turnHint').textContent = guidance.hint;
 
   $('#ownArena').innerHTML = player.fighters.filter(f => f.active).map(fighterSlotHtml).join('');
   $('#enemyArena').innerHTML = enemy.fighters.filter(f => f.active).map(fighterSlotHtml).join('');
 
-  $$('#ownArena .fighter-slot').forEach(el => {
-    el.addEventListener('click', () => {
-      battle.selectedOwnId = el.dataset.id;
-      renderBattle();
-    });
-  });
+  $$('#ownArena .fighter-slot').forEach(el => el.addEventListener('click', () => { battle.selectedOwnId = el.dataset.id; renderBattle(); }));
+  $$('#enemyArena .fighter-slot').forEach(el => el.addEventListener('click', () => { battle.selectedEnemyId = el.dataset.id; renderBattle(); }));
 
-  $$('#enemyArena .fighter-slot').forEach(el => {
-    el.addEventListener('click', () => {
-      battle.selectedEnemyId = el.dataset.id;
-      renderBattle();
-    });
-  });
+  $('#hand').innerHTML = player.hand.length ? player.hand.map(card => `
+    <button class="hand-card ${battle.selectedCardId === card.id ? 'selected' : ''}" data-id="${card.id}" type="button">
+      <strong>${escapeHtml(card.nome_efeito)}</strong>
+      <p>${card.polaridade === 'DEBUFF' ? '-' : '+'}${card.intensidade} ${card.atributo}</p>
+      <p>${card.raridade}</p>
+    </button>
+  `).join('') : '<div class="empty-state">Compre uma carta.</div>';
 
-  $('#hand').innerHTML = player.hand.length
-    ? player.hand.map(card => `
-      <button class="hand-card ${battle.selectedCardId === card.id ? 'selected' : ''}" data-id="${card.id}" type="button">
-        <strong>${escapeHtml(card.nome_efeito)}</strong>
-        <p>${card.polaridade === 'DEBUFF' ? '-' : '+'}${card.intensidade} ${card.atributo}</p>
-        <p>${card.raridade}</p>
-      </button>
-    `).join('')
-    : '<div class="empty-state">Compre uma carta.</div>';
-
-  $$('#hand .hand-card').forEach(el => {
-    el.addEventListener('click', () => {
-      battle.selectedCardId = el.dataset.id;
-      renderBattle();
-    });
-  });
+  $$('#hand .hand-card').forEach(el => el.addEventListener('click', () => { battle.selectedCardId = el.dataset.id; renderBattle(); }));
 
   $('#drawBtn').disabled = player.drawn_this_turn;
+  $('#useCardBtn').disabled = !canUseSelectedCard(battle);
+  $('#attackBtn').disabled = !canAttackSelectedTarget(battle);
+  $('#passTurnBtn').disabled = !player.drawn_this_turn;
   $('#battleLog').innerHTML = battle.log.slice(-12).reverse().map(line => `<p>${escapeHtml(line)}</p>`).join('');
 }
 
@@ -248,22 +197,13 @@ function fighterSlotHtml(fighter) {
   const selected = state.battle?.selectedOwnId === fighter.id;
   const target = state.battle?.selectedEnemyId === fighter.id;
   const hpPct = clamp((fighter.current_hp / fighter.max_hp) * 100, 0, 100);
-
   return `
     <button class="fighter-slot ${selected ? 'selected' : ''} ${target ? 'target' : ''} ${fighter.alive ? '' : 'dead'}" data-id="${fighter.id}" type="button">
-      <div class="fighter-img" style="background:${fighter.foto ? 'rgba(0,0,0,.2)' : fighter.foto_fake}">
-        ${imgHtml(fighter, fighter.icon || '⚔️')}
-      </div>
+      <div class="fighter-img" style="background:${fighter.foto ? 'rgba(0,0,0,.2)' : fighter.foto_fake}">${imgHtml(fighter, fighter.icon || '⚔️')}</div>
       <h4>${escapeHtml(fighter.nome)}</h4>
       <p>${fighter.icon} ${fighter.classe}</p>
-      <div class="stat-line">
-        <span class="stat-pill">❤️ ${fighter.current_hp}/${fighter.max_hp}</span>
-        <span class="stat-pill">⚔️ ${fighter.atk + (fighter.buffs.atk || 0)}</span>
-        <span class="stat-pill">🛡️ ${fighter.def + (fighter.buffs.def || 0)}</span>
-      </div>
-      <div class="hpbar" style="height:8px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:999px;overflow:hidden">
-        <i style="display:block;height:100%;width:${hpPct}%;background:linear-gradient(90deg,#79f2c0,#ffd166)"></i>
-      </div>
+      <div class="stat-line"><span class="stat-pill">❤️ ${fighter.current_hp}/${fighter.max_hp}</span><span class="stat-pill">⚔️ ${fighter.atk + (fighter.buffs.atk || 0)}</span><span class="stat-pill">🛡️ ${fighter.def + (fighter.buffs.def || 0)}</span></div>
+      <div class="hpbar" style="height:8px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:999px;overflow:hidden"><i style="display:block;height:100%;width:${hpPct}%;background:linear-gradient(90deg,#79f2c0,#ffd166)"></i></div>
     </button>
   `;
 }
@@ -271,12 +211,7 @@ function fighterSlotHtml(fighter) {
 function startBattle() {
   try {
     persist();
-    state.battle = createBattle({
-      fighters: state.fighters,
-      cards: state.cards,
-      playerName: state.playerName,
-      player2Name: state.player2Name,
-    });
+    state.battle = createBattle({ fighters: state.fighters, cards: state.cards, playerName: state.playerName, player2Name: state.player2Name });
     go('battle');
     renderBattle();
   } catch (error) {
@@ -351,81 +286,26 @@ function bind() {
   $('#supabaseUrl').value = state.supabaseConfig?.url || '';
   $('#supabaseAnonKey').value = state.supabaseConfig?.anonKey || '';
 
-  $$('[data-go]').forEach(button => {
-    button.addEventListener('click', () => {
-      persist();
-      go(button.dataset.go);
-      if (button.dataset.go === 'inventory') renderInventory();
-    });
-  });
-
-  $('#resetBtn').addEventListener('click', () => {
-    if (!confirm('Resetar inventário local?')) return;
-    clearLocalState();
-    location.reload();
-  });
-
-  $('#mockFighterPhotoBtn').addEventListener('click', () => {
-    state.tempFighterPhoto = mockPhoto('Lutador');
-    $('#fighterCapture').innerHTML = `<img src="${state.tempFighterPhoto}" alt="Foto simulada">`;
-  });
-
-  $('#mockCardPhotoBtn').addEventListener('click', () => {
-    state.tempCardPhoto = mockPhoto('Carta');
-    $('#cardCapture').innerHTML = `<img src="${state.tempCardPhoto}" alt="Foto simulada">`;
-  });
-
+  $$('[data-go]').forEach(button => button.addEventListener('click', () => { persist(); go(button.dataset.go); if (button.dataset.go === 'inventory') renderInventory(); }));
+  $('#resetBtn').addEventListener('click', () => { if (!confirm('Resetar inventário local?')) return; clearLocalState(); location.reload(); });
+  $('#mockFighterPhotoBtn').addEventListener('click', () => { state.tempFighterPhoto = mockPhoto('Lutador'); $('#fighterCapture').innerHTML = `<img src="${state.tempFighterPhoto}" alt="Foto simulada">`; });
+  $('#mockCardPhotoBtn').addEventListener('click', () => { state.tempCardPhoto = mockPhoto('Carta'); $('#cardCapture').innerHTML = `<img src="${state.tempCardPhoto}" alt="Foto simulada">`; });
   $('#saveFighterBtn').addEventListener('click', saveFighter);
   $('#saveCardBtn').addEventListener('click', saveCard);
   $('#tabFighters').addEventListener('click', () => { state.activeInventoryTab = 'fighters'; renderInventory(); });
   $('#tabCards').addEventListener('click', () => { state.activeInventoryTab = 'cards'; renderInventory(); });
   $('#startBattleBtn').addEventListener('click', startBattle);
-
-  $('#drawBtn').addEventListener('click', () => {
-    const result = drawCard(state.battle);
-    if (!result.ok) toast(result.message);
-    renderBattle();
-  });
-
-  $('#useCardBtn').addEventListener('click', () => {
-    const result = useSelectedCard(state.battle);
-    if (!result.ok) toast(result.message);
-    renderBattle();
-  });
-
+  $('#drawBtn').addEventListener('click', () => { const result = drawCard(state.battle); if (!result.ok) toast(result.message); renderBattle(); });
+  $('#useCardBtn').addEventListener('click', () => { const result = useSelectedCard(state.battle); if (!result.ok) toast(result.message); renderBattle(); });
   $('#attackBtn').addEventListener('click', () => {
     const result = attackSelectedTarget(state.battle);
-    if (!result.ok) {
-      toast(result.message);
-      return;
-    }
-
-    if (result.winner) {
-      renderBattle();
-      showResult(result.winner);
-      return;
-    }
-
+    if (!result.ok) { toast(result.message); return; }
+    if (result.winner) { renderBattle(); showResult(result.winner); return; }
     renderBattle();
   });
-
-  $('#passTurnBtn').addEventListener('click', () => {
-    passTurn(state.battle);
-    renderBattle();
-  });
-
-  $('#againBtn').addEventListener('click', () => {
-    $('#resultModal').classList.remove('show');
-    startBattle();
-  });
-
-  $('#backHomeBtn').addEventListener('click', () => {
-    $('#resultModal').classList.remove('show');
-    state.battle = null;
-    go('home');
-    renderHome();
-  });
-
+  $('#passTurnBtn').addEventListener('click', () => { passTurn(state.battle); renderBattle(); });
+  $('#againBtn').addEventListener('click', () => { $('#resultModal').classList.remove('show'); startBattle(); });
+  $('#backHomeBtn').addEventListener('click', () => { $('#resultModal').classList.remove('show'); state.battle = null; go('home'); renderHome(); });
   $('#signUpBtn').addEventListener('click', handleSignUp);
   $('#signInBtn').addEventListener('click', handleSignIn);
   $('#syncBtn').addEventListener('click', handleSync);
