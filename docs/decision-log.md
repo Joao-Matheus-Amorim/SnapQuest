@@ -71,3 +71,13 @@ Decisao: remover do `app.json` as referencias para assets do template Expo que n
 Motivo: o celular acusou `Unable to resolve asset "./assets/icon.png"` durante a validacao Expo Go.
 
 Consequencia: o bootstrap fica sem icone customizado nesta fase. Icones/app assets devem entrar depois em PR proprio ou ajuste pequeno com arquivos reais.
+
+## D-008 — Alinhar bootstrap Expo ao SDK 54 para validar no dispositivo real
+
+Data: 2026-06-09
+
+Decisao: rebaixar/alinha r o bootstrap mobile para Expo SDK 54 nesta fase, em vez de exigir SDK 56.
+
+Motivo: o dispositivo fisico disponivel para validacao esta preso no Expo Go SDK 54 e nao permite atualizacao. Sem alinhar o projeto, a validacao manual do PR fica impossivel.
+
+Consequencia: Expo SDK 56 fica como upgrade futuro em issue/PR proprio. O PR de bootstrap deve priorizar validacao real no dispositivo disponivel, preservando MVP web e `src/js/core/`.
