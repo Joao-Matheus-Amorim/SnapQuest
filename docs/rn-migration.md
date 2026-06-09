@@ -10,6 +10,7 @@
 - [x] Tela de camera esqueleto criada
 - [x] Tela de inventario esqueleto criada
 - [x] Tela de batalha esqueleto criada
+- [x] Batalha bloqueada quando inventario nao possui pelo menos 3 fighters e 3 itens
 - [x] `src/js/core/` preservado
 - [x] `app.json` ajustado para nao apontar para assets do template Expo que nao existem no repo
 - [x] Uso depreciado de `ImagePicker.MediaTypeOptions` removido da tela de camera
@@ -30,6 +31,14 @@
 O MVP web continua existindo. O bootstrap mobile foi adicionado sem remover `index.html`, `vite.config.js` ou `vercel.json`.
 
 Nesta fase, o app mobile permanece com Expo Router porque o projeto abriu usando `expo-router/entry` e a estrutura `src/app/` ja foi criada. Remover o router agora aumentaria o escopo do PR de bootstrap.
+
+## Regra minima para batalha
+
+A batalha nao deve iniciar enquanto o jogador nao tiver pelo menos 3 fighters e 3 itens.
+
+No bootstrap atual, como ainda nao existe DB/persistencia mobile, essa regra fica como trava de UX usando o hook de inventario. A tela de batalha pode ser acessada pela navegacao, mas fica bloqueada e mostra os requisitos pendentes.
+
+Quando DB/Storage/RLS forem implementados, essa regra deve ser reforcada na camada de dados e no fluxo real de gameplay.
 
 ## Decisao de compatibilidade do dispositivo
 
