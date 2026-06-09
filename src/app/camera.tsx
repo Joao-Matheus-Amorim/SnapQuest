@@ -7,7 +7,6 @@ export default function CameraScreen() {
 
   async function pickImage() {
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: [ImagePicker.MediaType.Images],
       quality: 0.8,
     });
 
