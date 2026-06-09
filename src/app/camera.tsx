@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { Link } from "expo-router";
 import { Alert, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 
 export default function CameraScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { addCapturedPhoto } = useCapturedPhotos();
 
   async function pickImage() {
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
@@ -11,17 +15,7 @@ export default function CameraScreen() {
     if (!cameraPermission.granted) {
       Alert.alert(
         "Permissão necessária",
-        "Autorize o acesso à câmera para criar um Fighter por foto."
-      );
-      return;
-    }
-
-    const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!mediaPermission.granted) {
-      Alert.alert(
-        "Permissão necessária",
-        "Autorize o acesso às fotos para salvar ou retornar a imagem capturada."
+        "Autorize o acesso à câmera para capturar uma foto real."
       );
       return;
     }
@@ -31,30 +25,49 @@ export default function CameraScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-      }
+      if (result.canceled) return;
+
+      setIsSaving(true);
+
+      const capturedUri = result.assets[0].uri;
+
+      await addCapturedPhoto({
+        uri: capturedUri,
+        assetId: result.assets[0].assetId ?? undefined,
+        filename: result.assets[0].fileName ?? undefined,
+      });
+
+      setImageUri(capturedUri);
     } catch {
       Alert.alert(
-        "Não foi possível abrir a câmera",
-        "Verifique as permissões do Expo Go nos ajustes do celular e tente novamente."
+        "Não foi possível salvar a captura",
+        "Verifique as permissões do Expo Go e tente novamente."
       );
+    } finally {
+      setIsSaving(false);
     }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📸 Novo Fighter</Text>
-      <Text style={styles.subtitle}>Capture uma foto para virar personagem no futuro.</Text>
+      <Text style={styles.title}>📸 Nova Captura</Text>
+      <Text style={styles.subtitle}>
+        A foto original fica nas Capturas Brutas. Para jogar, transforme em Fighter ou Carta no Inventário.
+      </Text>
 
-      <Pressable style={styles.button} onPress={pickImage}>
-        <Text style={styles.buttonText}>Tirar Foto</Text>
+      <Pressable style={styles.button} onPress={pickImage} disabled={isSaving}>
+        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "Tirar Foto"}</Text>
       </Pressable>
 
       {imageUri ? (
         <>
           <Image source={{ uri: imageUri }} style={styles.preview} />
-          <Text style={styles.success}>Foto capturada! ✅</Text>
+          <Text style={styles.success}>Foto salva nas Capturas Brutas.</Text>
+          <Link href="/inventory" asChild>
+            <Pressable style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Transformar no Inventário</Text>
+            </Pressable>
+          </Link>
         </>
       ) : null}
     </View>
@@ -74,6 +87,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "800",
     marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     color: "#ffffff",
@@ -91,6 +105,19 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 18,
   },
+  secondaryButton: {
+    borderColor: "#f5a623",
+    borderWidth: 1,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 16,
+    marginTop: 16,
+  },
+  secondaryButtonText: {
+    color: "#f5a623",
+    fontWeight: "800",
+    fontSize: 15,
+  },
   preview: {
     width: 220,
     height: 220,
@@ -100,5 +127,6 @@ const styles = StyleSheet.create({
   success: {
     color: "#ffffff",
     marginTop: 14,
+    textAlign: "center",
   },
 });
