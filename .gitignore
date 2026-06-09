@@ -5,3 +5,13 @@ node_modules/
 dist/
 coverage/
 *.log
+
+# Expo
+.expo/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*

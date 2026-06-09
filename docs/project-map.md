@@ -7,7 +7,9 @@ Este documento mostra onde cada parte do SnapQuest vive e qual responsabilidade 
 - `index.html`: entrada do MVP web. Web only.
 - `vite.config.js`: build Vite do MVP web. Web only.
 - `vercel.json`: deploy do MVP web na Vercel. Web only.
-- `package.json`: scripts e dependencias atuais do MVP web.
+- `package.json`: scripts e dependencias do MVP web e comandos iniciais mobile.
+- `app.json`: configuracao Expo do app mobile.
+- `App.tsx`: arquivo legado do bootstrap inicial; o entry atual usa Expo Router via `expo-router/entry`.
 - `.env.example`: exemplo de env publica segura.
 
 ## Core de jogo
@@ -26,11 +28,11 @@ Arquivos:
 
 Regra: o core deve ser reutilizavel no mobile. Evitar dependencias web.
 
-## Services
+## Services web
 
 Local: `src/js/services/`
 
-Responsabilidade: integracoes e persistencia.
+Responsabilidade: integracoes e persistencia do MVP web.
 
 Arquivos:
 
@@ -48,6 +50,45 @@ Local: `src/js/ui/`, `src/js/app.js`, `src/styles/app.css`
 Responsabilidade: telas, DOM, navegacao e estilo do MVP web.
 
 Status: valido para MVP web, mas nao e arquitetura final do app mobile.
+
+## UI mobile inicial
+
+Local: `src/app/`
+
+Responsabilidade: telas iniciais React Native + Expo Router.
+
+Arquivos:
+
+- `_layout.tsx`: Stack do Expo Router.
+- `index.tsx`: Home mobile esqueleto.
+- `camera.tsx`: tela de camera esqueleto.
+- `inventory.tsx`: tela de inventario esqueleto.
+- `battle.tsx`: tela de batalha esqueleto.
+
+Regra: nesta fase, estas telas sao esqueleto. Nao representam gameplay real nem integracao final com foto, Supabase, Gemini ou Storage.
+
+## Componentes mobile iniciais
+
+Local: `src/components/`
+
+Responsabilidade: componentes visuais reutilizaveis do bootstrap mobile.
+
+Arquivos:
+
+- `BattleLog.tsx`
+- `CardItem.tsx`
+- `FighterCard.tsx`
+
+## Hooks mobile iniciais
+
+Local: `src/hooks/`
+
+Responsabilidade: hooks esqueleto para evolucao posterior do mobile.
+
+Arquivos:
+
+- `useBattle.ts`
+- `useInventory.ts`
 
 ## Supabase
 
@@ -73,14 +114,8 @@ Documentos centrais:
 - `documentation-policy.md`
 - `risk-register.md`
 - `technical-debt-register.md`
+- `rn-migration.md`
 
-## Mobile futuro
+## Regra do bootstrap mobile
 
-Local planejado: a definir no PR de bootstrap Expo.
-
-Opcoes seguras:
-
-- preservar MVP web e criar estrutura mobile isolada; ou
-- migrar package/scripts com garantia de que o web continua executavel.
-
-Regra: bootstrap mobile deve ser PR proprio e nao deve alterar `src/js/core/`.
+O bootstrap mobile deve preservar o MVP web, manter `index.html`, `vite.config.js` e `vercel.json`, e nao alterar `src/js/core/` no mesmo PR.

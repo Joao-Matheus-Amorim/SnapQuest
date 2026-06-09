@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "SnapQuest",
+    "slug": "snapquest",
+    "scheme": "snapquest",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "O SnapQuest usa a câmera para criar Fighters a partir de fotos.",
+          "photosPermission": "O SnapQuest acessa fotos para exibir a imagem capturada no inventário."
+        }
+      ],
+      "expo-router"
+    ]
+  }
+}
