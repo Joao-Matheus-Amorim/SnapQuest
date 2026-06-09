@@ -1,3 +1,5 @@
+import '../ui/cloudAccount.js';
+
 let currentClient = null;
 
 function assertSafeFrontendKey(anonKey) {
