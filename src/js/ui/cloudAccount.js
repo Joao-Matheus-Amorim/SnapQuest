@@ -18,7 +18,7 @@ function updateCloudAccountUi() {
   if (panel) panel.classList.toggle('cloud-connected', isConnected);
 }
 
-export function initCloudAccountUi() {
+function initCloudAccountUi() {
   const status = document.getElementById('cloudStatus');
   if (!status) return;
 
@@ -31,4 +31,10 @@ export function initCloudAccountUi() {
     setAuthVisible(true);
     status.closest('.cloud-panel')?.classList.remove('cloud-connected');
   });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCloudAccountUi, { once: true });
+} else {
+  initCloudAccountUi();
 }
