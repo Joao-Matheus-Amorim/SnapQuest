@@ -1,5 +1,6 @@
 const AUTH_SELECTOR = '#authEmail, #authPassword, #signUpBtn, #signInBtn';
 const CONNECTED_TEXT = 'Conectado:';
+const DISCONNECTED_TEXT = 'Nuvem desconectada.';
 
 function injectCloudAccountStyles() {
   if (document.getElementById('cloudAccountUiStyles')) return;
@@ -27,10 +28,12 @@ function updateCloudAccountUi() {
   const status = document.getElementById('cloudStatus');
   if (!status) return;
 
-  const isConnected = status.textContent.trim().startsWith(CONNECTED_TEXT);
-  setAuthVisible(!isConnected);
-
   const panel = status.closest('.cloud-panel');
+  const text = status.textContent.trim();
+  const wasConnected = panel?.classList.contains('cloud-connected');
+  const isConnected = text.startsWith(CONNECTED_TEXT) || (wasConnected && text !== DISCONNECTED_TEXT);
+
+  setAuthVisible(!isConnected);
   if (panel) panel.classList.toggle('cloud-connected', isConnected);
 }
 
