@@ -1,38 +1,115 @@
-# Roadmap Técnico
+# Roadmap do SnapQuest
 
-## Fase 1 — Fundação web
+Este roadmap registra para onde o projeto vai. Ele deve refletir o estado real e ser atualizado quando uma fase mudar.
 
-- Estrutura limpa.
-- Core de regras separado.
-- Inventário local-first.
-- Supabase opcional.
-- CI estático.
+## Fase 0 — Fundacao e governanca
 
-## Fase 2 — Batalha limpa
+Status: em andamento
 
-- Melhorar seleção de atacante/alvo.
-- Comprar automático.
-- Evitar ações inválidas.
-- Registrar battle logs.
-- Preparar testes de regra.
+Objetivo:
+- Manter MVP web rastreavel.
+- Consolidar documentacao viva.
+- Evitar gaps, falso verde e divida tecnica invisivel.
 
-## Fase 3 — Mobile real
+Entregas:
+- Governanca PMBOK adaptada.
+- Registro de riscos.
+- Registro de divida tecnica.
+- Skill de documentacao do projeto.
 
-- Migrar para React Native + Expo.
-- Câmera nativa.
-- Storage para fotos.
-- Auth real.
-- Build Android/iOS.
+## Fase 1 — MVP web validado
 
-## Fase 4 — GDD completo
+Status: parcialmente concluido
 
-- 6 classes.
-- MANA.
-- Habilidades especiais.
-- 20 categorias.
-- XP/level.
+Objetivo:
+- Validar se o loop foto -> carta/lutador -> inventario -> batalha e divertido.
+
+Entregas existentes:
+- Criacao local de lutadores.
+- Criacao local de cartas.
+- Inventario local.
+- Batalha local.
+- Supabase inicial.
+
+Pendencias:
+- UX de conta ainda nao e final.
+- Sincronizacao precisa de testes e melhorias.
+- Fotos ainda nao usam Storage.
+
+## Fase 2 — Bootstrap React Native + Expo
+
+Status: planejado
+
+Objetivo:
+- Criar base mobile sem quebrar o MVP web.
+- Reutilizar `src/js/core/`.
+- Preparar camera real e navegacao nativa.
+
+Regras:
+- Nao modificar `src/js/core/`.
+- Nao commitar `.env`.
+- Nao declarar sucesso sem `npx expo start` validado.
+- Nao apagar web ate existir substituto mobile validado.
+
+Entregas esperadas:
+- Estrutura Expo.
+- Navegacao mobile.
+- Tela inicial mobile.
+- Tela camera esqueleto.
+- Documentacao `docs/rn-migration.md`.
+
+## Fase 3 — Inventario mobile e persistencia
+
+Status: planejado
+
+Objetivo:
+- Criar inventario mobile real.
+- Adaptar persistencia local para React Native.
+- Integrar Supabase de forma segura.
+
+Entregas esperadas:
+- `useInventory`.
+- Adapter de storage mobile.
+- Lista com `FlatList`.
+- Sync com Supabase.
+
+## Fase 4 — Batalha mobile
+
+Status: planejado
+
+Objetivo:
+- Reutilizar o core de batalha em interface React Native.
+
+Entregas esperadas:
+- `useBattle` wrapping `src/js/core/battle.js`.
+- Tela de batalha mobile.
+- Passar celular entre dois jogadores.
+- Log de batalha nativo.
+
+## Fase 5 — Foto real, Storage e IA
+
+Status: planejado
+
+Objetivo:
+- Foto real vira lutador/carta com lore e atributos.
+
+Entregas esperadas:
+- Camera real.
+- Upload para Supabase Storage.
+- Gemini para lore/atributos.
+- Revisao humana antes de salvar.
+
+## Fase 6 — Produto familiar completo
+
+Status: futuro
+
+Objetivo:
+- Transformar o MVP em produto familiar recorrente.
+
+Possiveis entregas:
+- XP.
 - Conquistas.
-- Diário de batalhas.
-- Gemini.
-- Clima/metadados.
-- Multiplayer.
+- Diario de aventuras.
+- Colecoes.
+- Eventos semanais.
+- Multiplayer futuro.
