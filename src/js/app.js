@@ -16,11 +16,19 @@ import {
 import { loadLocalState, saveLocalState, clearLocalState } from './services/localStore.js';
 import { createSupabaseClient, signUp, signIn, signOut, getUser } from './services/supabaseClient.js';
 import { loadCloudInventory, upsertCloudInventory } from './services/inventoryRepository.js';
+import { getPublicConfig } from './services/publicConfig.js';
 import { $, $$, toast, go } from './ui/dom.js';
 
+const loadedState = loadLocalState();
+const publicConfig = getPublicConfig();
+const initialSupabaseConfig = {
+  url: publicConfig.supabaseUrl || loadedState.supabaseConfig?.url || '',
+  anonKey: publicConfig.supabaseAnonKey || loadedState.supabaseConfig?.anonKey || '',
+};
+
 const state = {
-  ...loadLocalState(),
-  supabaseConfig: loadLocalState().supabaseConfig || {},
+  ...loadedState,
+  supabaseConfig: initialSupabaseConfig,
   activeInventoryTab: 'fighters',
   selectedClassKey: null,
   selectedCategoryKey: null,
