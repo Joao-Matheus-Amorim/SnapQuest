@@ -20,6 +20,13 @@ export type CapturedPhotoInput = {
   filename?: string;
 };
 
+type CapturedPhotosListener = (photos: CapturedPhoto[]) => void;
+const capturedPhotosListeners = new Set<CapturedPhotosListener>();
+
+function emitCapturedPhotos(photos: CapturedPhoto[]) {
+  capturedPhotosListeners.forEach((listener) => listener(photos));
+}
+
 function createPhoto(input: CapturedPhotoInput): CapturedPhoto {
   const createdAt = new Date().toISOString();
 
@@ -57,7 +64,9 @@ async function readCapturedPhotos(): Promise<CapturedPhoto[]> {
 }
 
 async function writeCapturedPhotos(photos: CapturedPhoto[]) {
-  await setStorageItem(CAPTURED_PHOTOS_KEY, JSON.stringify(photos.slice(0, MAX_CAPTURED_PHOTOS)));
+  const next = photos.slice(0, MAX_CAPTURED_PHOTOS);
+  await setStorageItem(CAPTURED_PHOTOS_KEY, JSON.stringify(next));
+  emitCapturedPhotos(next);
 }
 
 export function useCapturedPhotos() {
@@ -72,16 +81,20 @@ export function useCapturedPhotos() {
   }, []);
 
   useEffect(() => {
+    capturedPhotosListeners.add(setCapturedPhotos);
     void reload();
+
+    return () => {
+      capturedPhotosListeners.delete(setCapturedPhotos);
+    };
   }, [reload]);
 
   const addCapturedPhoto = useCallback(async (input: CapturedPhotoInput) => {
     const existing = await readCapturedPhotos();
     const photo = createPhoto(input);
-    const next = [photo, ...existing].slice(0, MAX_CAPTURED_PHOTOS);
+    const next = [photo, ...existing];
 
     await writeCapturedPhotos(next);
-    setCapturedPhotos(next);
 
     return photo;
   }, []);
@@ -91,7 +104,6 @@ export function useCapturedPhotos() {
     const next = existing.filter((photo) => photo.id !== photoId);
 
     await writeCapturedPhotos(next);
-    setCapturedPhotos(next);
   }, []);
 
   return {
