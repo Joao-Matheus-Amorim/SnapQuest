@@ -54,11 +54,85 @@ export function totalHp(player) {
   return player.fighters.reduce((total, fighter) => total + Math.max(0, fighter.current_hp), 0);
 }
 
+export function getTurnGuidance(battle) {
+  const player = currentPlayer(battle);
+
+  if (!player.drawn_this_turn) {
+    return {
+      phase: 'Comprar carta',
+      hint: 'Toque em Comprar para iniciar o turno. Depois escolha atacante e alvo.',
+      nextAction: 'draw',
+    };
+  }
+
+  if (battle.selectedCardId) {
+    const card = player.hand.find(item => item.id === battle.selectedCardId && !item.used);
+    if (card?.polaridade === 'DEBUFF' && !battle.selectedEnemyId) {
+      return {
+        phase: 'Escolher alvo da carta',
+        hint: 'Essa carta é debuff. Toque em um inimigo para aplicar o efeito.',
+        nextAction: 'select-enemy-card-target',
+      };
+    }
+
+    if (card?.polaridade !== 'DEBUFF' && !battle.selectedOwnId) {
+      return {
+        phase: 'Escolher aliado da carta',
+        hint: 'Essa carta é bônus. Toque em um lutador do seu time para aplicar o efeito.',
+        nextAction: 'select-own-card-target',
+      };
+    }
+
+    return {
+      phase: 'Usar carta ou atacar',
+      hint: 'Você pode usar a carta selecionada ou partir para o ataque.',
+      nextAction: 'use-card',
+    };
+  }
+
+  if (!battle.selectedOwnId) {
+    return {
+      phase: 'Escolher atacante',
+      hint: 'Toque em um lutador do seu time para escolher quem vai atacar.',
+      nextAction: 'select-attacker',
+    };
+  }
+
+  if (!battle.selectedEnemyId) {
+    return {
+      phase: 'Escolher alvo',
+      hint: 'Agora toque em um lutador inimigo para mirar o ataque.',
+      nextAction: 'select-target',
+    };
+  }
+
+  return {
+    phase: 'Pronto para atacar',
+    hint: 'Tudo pronto. Toque em ATACAR para rolar o d20.',
+    nextAction: 'attack',
+  };
+}
+
+export function canUseSelectedCard(battle) {
+  const player = currentPlayer(battle);
+  const card = player.hand.find(item => item.id === battle.selectedCardId && !item.used);
+  if (!card) return false;
+
+  if (card.polaridade === 'DEBUFF') return Boolean(battle.selectedEnemyId);
+  return Boolean(battle.selectedOwnId);
+}
+
+export function canAttackSelectedTarget(battle) {
+  const player = currentPlayer(battle);
+  return Boolean(player.drawn_this_turn && battle.selectedOwnId && battle.selectedEnemyId);
+}
+
 export function drawCard(battle) {
   const player = currentPlayer(battle);
   if (player.drawn_this_turn) return { ok: false, message: 'Você já comprou neste turno.' };
 
   player.drawn_this_turn = true;
+  battle.selectedCardId = null;
 
   if (!player.deck.length) {
     battle.log.push(`🃏 ${player.name} tentou comprar, mas o deck está vazio.`);
