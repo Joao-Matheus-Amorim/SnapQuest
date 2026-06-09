@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
+import { getStorageItem, setStorageItem } from "../lib/mobileStorage";
 
 const CAPTURED_PHOTOS_KEY = "snapquest-captured-photos-v1";
 const MAX_CAPTURED_PHOTOS = 24;
@@ -35,7 +35,7 @@ function createPhoto(input: CapturedPhotoInput): CapturedPhoto {
 }
 
 async function readCapturedPhotos(): Promise<CapturedPhoto[]> {
-  const value = await SecureStore.getItemAsync(CAPTURED_PHOTOS_KEY);
+  const value = await getStorageItem(CAPTURED_PHOTOS_KEY);
 
   if (!value) return [];
 
@@ -57,10 +57,7 @@ async function readCapturedPhotos(): Promise<CapturedPhoto[]> {
 }
 
 async function writeCapturedPhotos(photos: CapturedPhoto[]) {
-  await SecureStore.setItemAsync(
-    CAPTURED_PHOTOS_KEY,
-    JSON.stringify(photos.slice(0, MAX_CAPTURED_PHOTOS))
-  );
+  await setStorageItem(CAPTURED_PHOTOS_KEY, JSON.stringify(photos.slice(0, MAX_CAPTURED_PHOTOS)));
 }
 
 export function useCapturedPhotos() {
