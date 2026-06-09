@@ -4,7 +4,7 @@ Este roadmap registra para onde o projeto vai. Ele deve refletir o estado real e
 
 ## Fase 0 — Fundacao e governanca
 
-Status: em andamento
+Status: concluido
 
 Objetivo:
 - Manter MVP web rastreavel.
@@ -38,39 +38,39 @@ Pendencias:
 
 ## Fase 2 — Bootstrap React Native + Expo
 
-Status: planejado
+Status: concluido
 
 Objetivo:
 - Criar base mobile sem quebrar o MVP web.
 - Reutilizar `src/js/core/`.
 - Preparar camera real e navegacao nativa.
 
-Regras:
-- Nao modificar `src/js/core/`.
-- Nao commitar `.env`.
-- Nao declarar sucesso sem `npx expo start` validado.
-- Nao apagar web ate existir substituto mobile validado.
-
-Entregas esperadas:
+Entregas realizadas:
 - Estrutura Expo.
-- Navegacao mobile.
+- Navegacao mobile com Expo Router.
 - Tela inicial mobile.
-- Tela camera esqueleto.
+- Tela camera esqueleto validada no Expo Go.
+- Telas Inventory e Battle esqueleto.
 - Documentacao `docs/rn-migration.md`.
 
 ## Fase 3 — Inventario mobile e persistencia
 
-Status: planejado
+Status: em andamento
 
 Objetivo:
 - Criar inventario mobile real.
 - Adaptar persistencia local para React Native.
 - Integrar Supabase de forma segura.
 
-Entregas esperadas:
-- `useInventory`.
+Entregas em andamento:
+- `useInventory` usando seed do core web.
+- Home mobile com contadores reais.
+- Inventory mobile renderizando fighters/cartas seeded.
+- Battle mobile alinhada ao requisito do core: 6 fighters + 6 cartas.
+
+Entregas futuras:
 - Adapter de storage mobile.
-- Lista com `FlatList`.
+- Persistencia local real.
 - Sync com Supabase.
 
 ## Fase 4 — Batalha mobile
@@ -98,7 +98,7 @@ Entregas existentes:
 - Documentacao em `docs/gemini-card-suggestions.md`.
 
 Entregas esperadas:
-- Camera real.
+- Persistencia local de fotos brutas capturadas.
 - Upload para Supabase Storage.
 - IA para lore/atributos.
 - Revisao humana antes de salvar.
