@@ -1,7 +1,14 @@
 let currentClient = null;
 
+function assertSafeFrontendKey(anonKey) {
+  if (anonKey.startsWith('sb_secret_')) {
+    throw new Error('A chave configurada é secreta. Use a publishable/anon public key do Supabase.');
+  }
+}
+
 export async function createSupabaseClient({ url, anonKey }) {
   if (!url || !anonKey) throw new Error('URL e anon key são obrigatórios.');
+  assertSafeFrontendKey(anonKey);
 
   const module = await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
   currentClient = module.createClient(url, anonKey);
