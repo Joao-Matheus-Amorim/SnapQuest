@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#0e0a24" />
+  <title>SnapQuest — MVP</title>
+  <link rel="stylesheet" href="./src/styles/app.css" />
+</head>
+<body>
+  <main class="app" id="appRoot">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">📸</div>
+        <div>
+          <h1>SnapQuest</h1>
+          <small id="topSubtitle">MVP pai & filho</small>
+        </div>
+      </div>
+      <button class="pill" id="resetBtn" type="button">Reset</button>
+    </header>
+
+    <section id="home" class="screen active">
+      <div class="hero">
+        <h2>Foto vira carta.</h2>
+        <p>Crie lutadores e cartas mágicas, salve no inventário e batalhe passando o celular.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Jogadores</h3>
+        <input class="text-input" id="playerName" placeholder="Seu nome" maxlength="20" />
+        <input class="text-input" id="player2Name" placeholder="Nome do(a) filho(a)" maxlength="20" />
+      </div>
+
+      <div class="panel cloud-panel">
+        <h3>Inventário recorrente</h3>
+        <p>Opcional no MVP. Sem configurar, o jogo continua usando inventário local.</p>
+        <input class="text-input" id="supabaseUrl" placeholder="Supabase Project URL" />
+        <input class="text-input" id="supabaseAnonKey" placeholder="Supabase anon public key" />
+        <input class="text-input" id="authEmail" placeholder="E-mail" />
+        <input class="text-input" id="authPassword" placeholder="Senha" type="password" />
+        <div class="grid two">
+          <button class="btn small primary" id="signUpBtn" type="button">Criar conta</button>
+          <button class="btn small green" id="signInBtn" type="button">Entrar</button>
+        </div>
+        <div class="grid two">
+          <button class="btn small blue" id="syncBtn" type="button">Sincronizar</button>
+          <button class="btn small ghost" id="signOutBtn" type="button">Sair</button>
+        </div>
+        <p id="cloudStatus" class="hint">Nuvem desconectada.</p>
+      </div>
+
+      <div class="status-row">
+        <div class="mini-stat" id="fightersStat"><strong id="fightersCount">0</strong><span>⚔️ Lutadores</span></div>
+        <div class="mini-stat" id="cardsStat"><strong id="cardsCount">0</strong><span>✨ Cartas</span></div>
+      </div>
+
+      <div class="grid two">
+        <button class="btn primary big" data-go="createFighter" type="button">📸 Criar Lutador</button>
+        <button class="btn green big" data-go="createCard" type="button">✨ Criar Carta</button>
+      </div>
+      <div class="grid two">
+        <button class="btn blue" data-go="inventory" type="button">🎒 Inventário</button>
+        <button class="btn red" id="startBattleBtn" type="button">⚔️ Batalhar</button>
+      </div>
+    </section>
+
+    <section id="createFighter" class="screen">
+      <div class="panel">
+        <h3>Criar Lutador</h3>
+        <div class="capture" id="fighterCapture"><div class="empty">📷<br>Foto simulada no MVP web</div></div>
+        <button class="btn ghost" id="mockFighterPhotoBtn" type="button">📸 Gerar foto simulada</button>
+
+        <h3>Classe</h3>
+        <div class="choice-grid" id="fighterClasses"></div>
+
+        <input class="text-input" id="fighterName" placeholder="Nome do lutador" maxlength="28" />
+        <button class="btn primary big" id="saveFighterBtn" type="button">👹 Alimentar monstro</button>
+      </div>
+    </section>
+
+    <section id="createCard" class="screen">
+      <div class="panel">
+        <h3>Criar Carta</h3>
+        <div class="capture" id="cardCapture"><div class="empty">📷<br>Foto simulada no MVP web</div></div>
+        <button class="btn ghost" id="mockCardPhotoBtn" type="button">📸 Gerar foto simulada</button>
+
+        <h3>Categoria</h3>
+        <div class="choice-grid" id="cardCategories"></div>
+
+        <input class="text-input" id="effectName" placeholder="Nome do efeito" maxlength="32" />
+        <button class="btn green big" id="saveCardBtn" type="button">👹 Chamar monstros</button>
+      </div>
+    </section>
+
+    <section id="inventory" class="screen">
+      <div class="hero">
+        <h2>Inventário</h2>
+        <p>Itens locais e sincronizados aparecem aqui.</p>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="tabFighters" type="button">⚔️ Lutadores</button>
+        <button class="tab" id="tabCards" type="button">✨ Cartas</button>
+      </div>
+      <div class="cards-grid" id="inventoryList"></div>
+    </section>
+
+    <section id="battle" class="screen">
+      <div class="battle-head">
+        <div class="player-box active" id="p1Box">
+          <strong id="p1Name">Jogador 1</strong>
+          <div>❤️ <span id="p1HpText">0</span></div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="player-box" id="p2Box">
+          <strong id="p2Name">Jogador 2</strong>
+          <div>❤️ <span id="p2HpText">0</span></div>
+        </div>
+      </div>
+
+      <div class="turn-banner">
+        <h3 id="turnTitle">Turno</h3>
+        <p id="turnHint">Compre, use carta se quiser e ataque.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Seu time</h3>
+        <div class="arena" id="ownArena"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Inimigos</h3>
+        <div class="arena" id="enemyArena"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Mão</h3>
+        <div class="hand" id="hand"></div>
+        <div class="grid two">
+          <button class="btn blue" id="drawBtn" type="button">Comprar</button>
+          <button class="btn green" id="useCardBtn" type="button">Usar carta</button>
+        </div>
+        <div class="grid two">
+          <button class="btn primary big" id="attackBtn" type="button">ATACAR</button>
+          <button class="btn ghost" id="passTurnBtn" type="button">Passar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Log</h3>
+        <div class="battle-log" id="battleLog"></div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="navbtn active" data-go="home" type="button"><b>🏠</b>Casa</button>
+      <button class="navbtn" data-go="createFighter" type="button"><b>📸</b>Lutador</button>
+      <button class="navbtn" data-go="createCard" type="button"><b>✨</b>Carta</button>
+      <button class="navbtn" data-go="inventory" type="button"><b>🎒</b>Bolsa</button>
+    </nav>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal" id="resultModal">
+    <div class="modal-card">
+      <span class="big-icon" id="resultIcon">🏆</span>
+      <h2 id="resultTitle">Vitória!</h2>
+      <p id="resultText">Partida finalizada.</p>
+      <button class="btn primary big" id="againBtn" type="button">Jogar de novo</button>
+      <button class="btn ghost" id="backHomeBtn" type="button">Voltar</button>
+    </div>
+  </div>
+
+  <script type="module" src="./src/js/app.js"></script>
+</body>
+</html>
