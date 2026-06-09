@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Alert, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
+import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 
 export default function CameraScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { addCapturedPhoto } = useCapturedPhotos();
 
   async function pickImage() {
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
@@ -11,17 +15,17 @@ export default function CameraScreen() {
     if (!cameraPermission.granted) {
       Alert.alert(
         "Permissão necessária",
-        "Autorize o acesso à câmera para criar um Fighter por foto."
+        "Autorize o acesso à câmera para capturar uma foto real."
       );
       return;
     }
 
-    const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const mediaPermission = await MediaLibrary.requestPermissionsAsync();
 
     if (!mediaPermission.granted) {
       Alert.alert(
         "Permissão necessária",
-        "Autorize o acesso às fotos para salvar ou retornar a imagem capturada."
+        "Autorize o acesso às fotos para manter a imagem capturada disponível localmente."
       );
       return;
     }
@@ -31,30 +35,46 @@ export default function CameraScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-      }
+      if (result.canceled) return;
+
+      setIsSaving(true);
+
+      const capturedUri = result.assets[0].uri;
+      const asset = await MediaLibrary.createAssetAsync(capturedUri);
+      const savedUri = asset.uri || capturedUri;
+
+      await addCapturedPhoto({
+        uri: savedUri,
+        assetId: asset.id,
+        filename: asset.filename,
+      });
+
+      setImageUri(savedUri);
     } catch {
       Alert.alert(
-        "Não foi possível abrir a câmera",
+        "Não foi possível salvar a foto",
         "Verifique as permissões do Expo Go nos ajustes do celular e tente novamente."
       );
+    } finally {
+      setIsSaving(false);
     }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📸 Novo Fighter</Text>
-      <Text style={styles.subtitle}>Capture uma foto para virar personagem no futuro.</Text>
+      <Text style={styles.title}>Nova foto</Text>
+      <Text style={styles.subtitle}>
+        Capture uma foto real. Ela fica salva como foto bruta e ainda não vira Fighter nem carta.
+      </Text>
 
-      <Pressable style={styles.button} onPress={pickImage}>
-        <Text style={styles.buttonText}>Tirar Foto</Text>
+      <Pressable style={styles.button} onPress={pickImage} disabled={isSaving}>
+        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "Tirar Foto"}</Text>
       </Pressable>
 
       {imageUri ? (
         <>
           <Image source={{ uri: imageUri }} style={styles.preview} />
-          <Text style={styles.success}>Foto capturada! ✅</Text>
+          <Text style={styles.success}>Foto bruta salva localmente.</Text>
         </>
       ) : null}
     </View>
@@ -100,5 +120,6 @@ const styles = StyleSheet.create({
   success: {
     color: "#ffffff",
     marginTop: 14,
+    textAlign: "center",
   },
 });
