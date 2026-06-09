@@ -20,6 +20,7 @@ import { loadLocalState, saveLocalState, clearLocalState } from './services/loca
 import { createSupabaseClient, signUp, signIn, signOut, getUser } from './services/supabaseClient.js';
 import { upsertCloudInventory } from './services/inventoryRepository.js';
 import { $, $$, toast, go } from './ui/dom.js';
+import './ui/cloudAccount.js';
 
 const loaded = loadLocalState();
 const state = {
