@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View, Text, StyleSheet } from "react-native";
 import { useCapturedPhotos, type CapturedPhoto } from "../hooks/useCapturedPhotos";
 import { useInventory } from "../hooks/useInventory";
 import { usePlayerDeck } from "../hooks/usePlayerDeck";
+import { transformCapturedPhoto } from "../services/geminiTransform";
 
 export default function InventoryScreen() {
   const inv = useInventory();
@@ -12,14 +13,16 @@ export default function InventoryScreen() {
 
   async function makeFighter(item: CapturedPhoto) {
     setBusy(item.id);
-    await deck.addFighterFromPhoto(item);
+    const transform = await transformCapturedPhoto({ photo: item, target: "fighter" });
+    await deck.addFighterFromPhoto(item, transform);
     await raw.removeCapturedPhoto(item.id);
     setBusy(null);
   }
 
   async function makeCard(item: CapturedPhoto) {
     setBusy(item.id);
-    await deck.addCardFromPhoto(item);
+    const transform = await transformCapturedPhoto({ photo: item, target: "effect_card" });
+    await deck.addCardFromPhoto(item, transform);
     await raw.removeCapturedPhoto(item.id);
     setBusy(null);
   }
@@ -40,10 +43,10 @@ export default function InventoryScreen() {
           <Text style={styles.cardText}>{new Date(item.createdAt).toLocaleString("pt-BR")}</Text>
           <View style={styles.actionRow}>
             <Pressable style={styles.button} disabled={busy === item.id} onPress={() => makeFighter(item)}>
-              <Text style={styles.buttonText}>Virar Fighter</Text>
+              <Text style={styles.buttonText}>{busy === item.id ? "Gerando..." : "Virar Fighter"}</Text>
             </Pressable>
             <Pressable style={styles.outlineButton} disabled={busy === item.id} onPress={() => makeCard(item)}>
-              <Text style={styles.outlineButtonText}>Virar Carta</Text>
+              <Text style={styles.outlineButtonText}>{busy === item.id ? "Gerando..." : "Virar Carta"}</Text>
             </Pressable>
           </View>
         </View>
