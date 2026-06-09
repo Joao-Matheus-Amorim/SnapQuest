@@ -125,6 +125,11 @@ input{outline:none}
 .text-input::placeholder{color:rgba(184,168,216,.7)}
 .text-input:focus{border-color:rgba(255,209,102,.6)}
 
+#supabaseUrl,
+#supabaseAnonKey{
+  display:none!important;
+}
+
 .capture{
   aspect-ratio:1/1;border-radius:22px;
   border:1px dashed rgba(255,255,255,.25);
