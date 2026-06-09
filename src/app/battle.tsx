@@ -8,9 +8,9 @@ export default function BattleScreen() {
   if (!battleRequirements.canBattle) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>⚔️ Batalha bloqueada</Text>
+        <Text style={styles.title}>Batalha bloqueada</Text>
         <Text style={styles.subtitle}>
-          Para batalhar, crie pelo menos {battleRequirements.minFighters} fighters e {battleRequirements.minItems} itens.
+          Para a batalha local pai e filho, o core web exige {battleRequirements.minFighters} fighters e {battleRequirements.minCards} cartas totais.
         </Text>
 
         <View style={styles.requirementsBox}>
@@ -18,19 +18,19 @@ export default function BattleScreen() {
             Fighters: {battleRequirements.fighterCount}/{battleRequirements.minFighters}
           </Text>
           <Text style={styles.requirementText}>
-            Itens: {battleRequirements.itemCount}/{battleRequirements.minItems}
+            Cartas: {battleRequirements.cardCount}/{battleRequirements.minCards}
           </Text>
         </View>
 
         <Link href="/camera" asChild>
           <Pressable style={styles.primaryButton}>
-            <Text style={styles.primaryText}>📸 Criar Fighter</Text>
+            <Text style={styles.primaryText}>Criar Fighter</Text>
           </Pressable>
         </Link>
 
         <Link href="/inventory" asChild>
           <Pressable style={styles.secondaryButton}>
-            <Text style={styles.secondaryText}>🃏 Ver Inventário</Text>
+            <Text style={styles.secondaryText}>Ver Inventário</Text>
           </Pressable>
         </Link>
       </View>
@@ -39,8 +39,8 @@ export default function BattleScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>⚔️ Batalha</Text>
-      <Text style={styles.subtitle}>Tela esqueleto. O hook useBattle vai reaproveitar src/js/core/battle.js.</Text>
+      <Text style={styles.title}>Batalha pronta</Text>
+      <Text style={styles.subtitle}>Inventário seeded atende o requisito do core. A batalha jogável entra no próximo PR.</Text>
     </View>
   );
 }
