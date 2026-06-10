@@ -39,13 +39,24 @@ export default function CameraScreen() {
       let filename = result.assets[0].fileName ?? undefined;
 
       if (Platform.OS !== "web") {
-        const mediaPermission = await MediaLibrary.requestPermissionsAsync();
-
-        if (mediaPermission.granted) {
-          const asset = await MediaLibrary.createAssetAsync(capturedUri);
-          assetId = asset.id;
-          filename = asset.filename;
-          savedUri = await resolveLocalUri(asset, capturedUri);
+        try {
+          const mediaResult = await Promise.race([
+            (async () => {
+              const perm = await MediaLibrary.requestPermissionsAsync();
+              if (!perm.granted) return null;
+              const asset = await MediaLibrary.createAssetAsync(capturedUri);
+              const localUri = await resolveLocalUri(asset, capturedUri);
+              return { assetId: asset.id, filename: asset.filename, savedUri: localUri };
+            })(),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+          ]);
+          if (mediaResult) {
+            assetId = mediaResult.assetId;
+            filename = mediaResult.filename;
+            savedUri = mediaResult.savedUri;
+          }
+        } catch {
+          // fallback: usa capturedUri
         }
       }
 
