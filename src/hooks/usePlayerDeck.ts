@@ -75,6 +75,17 @@ function makeNameFromPhoto(prefix: string, photo: CapturedPhoto) {
   return `${prefix} ${suffix}`;
 }
 
+export async function mergeDeckFromCloud(cloudFighters: Fighter[], cloudCards: EffectCard[]) {
+  const local = await readPlayerDeck();
+  const cloudFighterIds = new Set(cloudFighters.map((f) => f.id));
+  const cloudCardIds = new Set(cloudCards.map((c) => c.id));
+  const merged: PlayerDeck = {
+    fighters: [...cloudFighters, ...local.fighters.filter((f) => !cloudFighterIds.has(f.id))],
+    cards: [...cloudCards, ...local.cards.filter((c) => !cloudCardIds.has(c.id))],
+  };
+  await writePlayerDeck(merged);
+}
+
 export function usePlayerDeck() {
   const [deck, setDeck] = useState<PlayerDeck>(emptyDeck);
   const [isLoading, setIsLoading] = useState(true);

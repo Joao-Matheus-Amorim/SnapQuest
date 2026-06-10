@@ -1,6 +1,8 @@
 ﻿import { Stack } from "expo-router";
+import { useCloudSync } from "../hooks/useCloudSync";
 
 export default function RootLayout() {
+  useCloudSync();
   return (
     <Stack
       screenOptions={{
