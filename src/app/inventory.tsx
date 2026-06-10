@@ -4,11 +4,14 @@ import { useCapturedPhotos, type CapturedPhoto } from "../hooks/useCapturedPhoto
 import { useInventory } from "../hooks/useInventory";
 import { usePlayerDeck } from "../hooks/usePlayerDeck";
 import { transformCapturedPhoto } from "../services/geminiTransform";
+import { useAuth } from "../hooks/useAuth";
+import { syncFighterToCloud, syncCardToCloud } from "../services/cloudSync";
 
 export default function InventoryScreen() {
   const inv = useInventory();
   const raw = useCapturedPhotos();
   const deck = usePlayerDeck();
+  const { user } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
 
   async function makeFighter(item: CapturedPhoto) {
@@ -16,10 +19,11 @@ export default function InventoryScreen() {
 
     try {
       const transform = await transformCapturedPhoto({ photo: item, target: "fighter" });
-      await deck.addFighterFromPhoto(item, transform);
+      const fighter = await deck.addFighterFromPhoto(item, transform);
       await raw.removeCapturedPhoto(item.id);
       await inv.reload();
       await deck.reload();
+      if (user && fighter) syncFighterToCloud(fighter, user.id).catch(() => {});
     } finally {
       setBusy(null);
     }
@@ -30,10 +34,11 @@ export default function InventoryScreen() {
 
     try {
       const transform = await transformCapturedPhoto({ photo: item, target: "effect_card" });
-      await deck.addCardFromPhoto(item, transform);
+      const card = await deck.addCardFromPhoto(item, transform);
       await raw.removeCapturedPhoto(item.id);
       await inv.reload();
       await deck.reload();
+      if (user && card) syncCardToCloud(card, user.id).catch(() => {});
     } finally {
       setBusy(null);
     }

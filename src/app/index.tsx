@@ -1,9 +1,11 @@
 import { Link } from "expo-router";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useInventory } from "../hooks/useInventory";
+import { useAuth } from "../hooks/useAuth";
 
 export default function HomeScreen() {
   const { battleRequirements } = useInventory();
+  const { user, signOut } = useAuth();
 
   return (
     <View style={styles.container}>
@@ -30,6 +32,18 @@ export default function HomeScreen() {
           <Text style={styles.secondaryText}>Testar Batalha</Text>
         </Pressable>
       </Link>
+
+      {user ? (
+        <Pressable style={styles.accountButton} onPress={signOut}>
+          <Text style={styles.accountText}>☁ {user.email}  ·  Sair</Text>
+        </Pressable>
+      ) : (
+        <Link href="/login" asChild>
+          <Pressable style={styles.accountButton}>
+            <Text style={styles.accountText}>☁ Entrar na conta</Text>
+          </Pressable>
+        </Link>
+      )}
     </View>
   );
 }
@@ -90,5 +104,14 @@ const styles = StyleSheet.create({
     color: "#f5a623",
     fontSize: 18,
     fontWeight: "700",
+  },
+  accountButton: {
+    marginTop: 24,
+    paddingVertical: 8,
+  },
+  accountText: {
+    color: "rgba(255,255,255,.45)",
+    fontSize: 13,
+    textAlign: "center",
   },
 });

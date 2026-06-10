@@ -13,6 +13,7 @@ export default function RootLayout() {
       <Stack.Screen name="camera" options={{ title: "Novo Fighter" }} />
       <Stack.Screen name="inventory" options={{ title: "Inventário" }} />
       <Stack.Screen name="battle" options={{ title: "Batalha" }} />
+      <Stack.Screen name="login" options={{ title: "Conta" }} />
     </Stack>
   );
 }
