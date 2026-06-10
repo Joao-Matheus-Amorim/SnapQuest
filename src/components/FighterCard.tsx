@@ -1,17 +1,17 @@
 import { View, Text, Image, StyleSheet } from "react-native";
 import type { Fighter } from "../js/core/fighters.js";
+import {
+  fighterRarity, rarityGlow,
+  RARITY_COLORS, RARITY_BORDER, RARITY_LABELS,
+} from "../lib/rarityConfig";
 
 export const CARD_WIDTH = 160;
-export const CARD_HEIGHT = 240;
+export const CARD_HEIGHT = 256;
 
 const CLASS_COLORS: Record<string, string> = {
-  guerreiro: "#c0392b",
-  mago: "#8e44ad",
-  arqueiro: "#27ae60",
-  curandeiro: "#2980b9",
-  invocador: "#d35400",
-  sombrio: "#546e7a",
-  elemental: "#16a085",
+  guerreiro: "#c0392b", mago: "#8e44ad", arqueiro: "#27ae60",
+  curandeiro: "#2980b9", paladino: "#7f8c8d", invocador: "#d35400",
+  sombrio: "#546e7a", elemental: "#16a085",
 };
 
 function classColor(key: string) {
@@ -27,19 +27,26 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-export function FighterCard({ fighter }: { fighter: Fighter }) {
+export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter; width?: number }) {
+  const rarity = fighterRarity(fighter.bonus_intensidade ?? 1);
+  const rarityColor = RARITY_COLORS[rarity];
   const color = classColor(fighter.class_key ?? "");
   const hasPhoto = Boolean(fighter.foto);
+  const photoHeight = Math.round(width * 0.8);
 
   return (
-    <View style={[s.card, { borderColor: color }]}>
-      <View style={[s.photoArea, !hasPhoto && { backgroundColor: color + "22" }]}>
+    <View style={[
+      s.card,
+      { width, borderColor: rarityColor, borderWidth: RARITY_BORDER[rarity] },
+      rarityGlow(rarity),
+    ]}>
+      <View style={[s.photoArea, { width, height: photoHeight }, !hasPhoto && { backgroundColor: color + "22" }]}>
         {hasPhoto ? (
-          <Image source={{ uri: fighter.foto ?? undefined }} style={s.photo} resizeMode="cover" />
+          <Image source={{ uri: fighter.foto ?? undefined }} style={{ width, height: photoHeight }} resizeMode="cover" />
         ) : (
           <Text style={[s.placeholderIcon, { color }]}>{fighter.icon ?? "⚔️"}</Text>
         )}
-        <View style={[s.badge, { backgroundColor: color }]}>
+        <View style={[s.classBadge, { backgroundColor: color }]}>
           <Text style={s.badgeText}>{fighter.classe}</Text>
         </View>
       </View>
@@ -58,6 +65,9 @@ export function FighterCard({ fighter }: { fighter: Fighter }) {
           <Stat label="LCK" value={fighter.lck} />
           <Stat label="SPD" value={fighter.spd} />
         </View>
+        <View style={[s.rarityBar, { backgroundColor: rarityColor + "33" }]}>
+          <Text style={[s.rarityLabel, { color: rarityColor }]}>{RARITY_LABELS[rarity]}</Text>
+        </View>
       </View>
     </View>
   );
@@ -65,52 +75,40 @@ export function FighterCard({ fighter }: { fighter: Fighter }) {
 
 const s = StyleSheet.create({
   card: {
-    width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#16213e",
     borderRadius: 16,
-    borderWidth: 1.5,
-    marginRight: 12,
     overflow: "hidden",
   },
   photoArea: {
-    width: CARD_WIDTH,
-    height: 132,
     backgroundColor: "#0d1117",
     alignItems: "center",
     justifyContent: "center",
   },
-  photo: { width: CARD_WIDTH, height: 132 },
   placeholderIcon: { fontSize: 52 },
-  badge: {
-    position: "absolute",
-    bottom: 6,
-    left: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+  classBadge: {
+    position: "absolute", bottom: 6, left: 6,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
   },
   badgeText: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: "#fff", fontSize: 9, fontWeight: "800",
+    textTransform: "uppercase", letterSpacing: 0.5,
   },
   info: { flex: 1, padding: 8, justifyContent: "space-between" },
   name: { color: "#f5a623", fontSize: 12, fontWeight: "800" },
-  hpRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  hpRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   hpLabel: { color: "#fff", fontSize: 9, fontWeight: "700", width: 36 },
   hpTrack: { flex: 1, height: 4, backgroundColor: "#0d1117", borderRadius: 2 },
   hpFill: { width: "100%", height: 4, borderRadius: 2 },
   statsRow: { flexDirection: "row", gap: 3, marginTop: 4 },
   statPill: {
-    flex: 1,
-    backgroundColor: "#0d1117",
-    borderRadius: 6,
-    alignItems: "center",
-    paddingVertical: 3,
+    flex: 1, backgroundColor: "#0d1117", borderRadius: 6,
+    alignItems: "center", paddingVertical: 3,
   },
   statLabel: { color: "rgba(255,255,255,.5)", fontSize: 8, fontWeight: "700" },
   statValue: { color: "#f5a623", fontSize: 11, fontWeight: "800" },
+  rarityBar: {
+    borderRadius: 6, alignItems: "center", paddingVertical: 3, marginTop: 4,
+  },
+  rarityLabel: { fontSize: 9, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1 },
 });
