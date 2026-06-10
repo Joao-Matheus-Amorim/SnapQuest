@@ -12,6 +12,13 @@ export type PlayerDeck = {
   cards: EffectCard[];
 };
 
+type PlayerDeckListener = (deck: PlayerDeck) => void;
+const playerDeckListeners = new Set<PlayerDeckListener>();
+
+function emitPlayerDeck(deck: PlayerDeck) {
+  playerDeckListeners.forEach((listener) => listener(deck));
+}
+
 const emptyDeck: PlayerDeck = {
   fighters: [],
   cards: [],
@@ -56,6 +63,7 @@ async function readPlayerDeck(): Promise<PlayerDeck> {
 
 async function writePlayerDeck(deck: PlayerDeck) {
   await setStorageItem(PLAYER_DECK_KEY, JSON.stringify(deck));
+  emitPlayerDeck(deck);
 }
 
 function makeNameFromPhoto(prefix: string, photo: CapturedPhoto) {
@@ -79,7 +87,12 @@ export function usePlayerDeck() {
   }, []);
 
   useEffect(() => {
+    playerDeckListeners.add(setDeck);
     void reload();
+
+    return () => {
+      playerDeckListeners.delete(setDeck);
+    };
   }, [reload]);
 
   const addFighterFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult) => {
@@ -95,7 +108,6 @@ export function usePlayerDeck() {
     };
 
     await writePlayerDeck(nextDeck);
-    setDeck(nextDeck);
 
     return fighter;
   }, []);
@@ -113,7 +125,6 @@ export function usePlayerDeck() {
     };
 
     await writePlayerDeck(nextDeck);
-    setDeck(nextDeck);
 
     return card;
   }, []);
