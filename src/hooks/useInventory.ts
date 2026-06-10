@@ -20,6 +20,7 @@ export function useInventory() {
     playerFighters: playerDeck.fighters,
     playerCards: playerDeck.cards,
     isLoading: playerDeck.isLoading,
+    reload: playerDeck.reload,
     battleRequirements: {
       minFighters: MIN_FIGHTERS_TO_BATTLE,
       minCards: MIN_CARDS_TO_BATTLE,
