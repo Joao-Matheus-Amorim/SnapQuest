@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "check": "node scripts/check.mjs",
-    "test:core": "node --test test/core-battle.test.mjs",
+    "test": "npm run test:core",
+    "test:core": "node --test \"test/*.test.mjs\"",
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",

@@ -4,8 +4,12 @@ import { test } from 'node:test';
 import {
   attackSelectedTarget,
   canStartBattle,
+  canAttackSelectedTarget,
+  canUseSelectedCard,
   createBattle,
   drawCard,
+  getMatchupHint,
+  getTurnGuidance,
   getWinner,
   passTurn,
   useSelectedCard,
@@ -133,6 +137,7 @@ test('useSelectedCard applies bonus to own fighter and removes used cards on pas
   battle.selectedOwnId = 'p1-a';
   battle.selectedCardId = 'p1-card-a';
 
+  assert.equal(canUseSelectedCard(battle), true);
   const result = useSelectedCard(battle);
 
   assert.deepEqual(result, { ok: true });
@@ -169,6 +174,7 @@ test('attackSelectedTarget requires draw, damages target, and passes turn', () =
   battle.selectedOwnId = 'p1-a';
   battle.selectedEnemyId = 'p2-a';
 
+  assert.equal(canAttackSelectedTarget(battle), true);
   const result = withRandom(0.49, () => attackSelectedTarget(battle)); // d20 = 10
 
   assert.equal(result.ok, true);
@@ -199,4 +205,118 @@ test('attackSelectedTarget returns winner when last enemy falls', () => {
   assert.equal(result.ok, true);
   assert.equal(result.winner.name, 'Player 1');
   assert.equal(getWinner(battle).name, 'Player 1');
+});
+
+test('getTurnGuidance walks the expected player action phases', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+
+  assert.equal(getTurnGuidance(battle).nextAction, 'draw');
+
+  drawCard(battle);
+  assert.equal(getTurnGuidance(battle).nextAction, 'select-attacker');
+
+  battle.selectedOwnId = 'p1-a';
+  assert.equal(getTurnGuidance(battle).nextAction, 'select-target');
+
+  battle.selectedEnemyId = 'p2-a';
+  assert.equal(getTurnGuidance(battle).nextAction, 'attack');
+});
+
+test('class advantage and disadvantage are exposed for selected matchup', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+
+  battle.selectedOwnId = 'p1-a'; // guerreiro
+  battle.selectedEnemyId = 'p2-c'; // arqueiro
+  assert.equal(getMatchupHint(battle), 'vantagem');
+
+  battle.selectedOwnId = 'p1-b'; // arqueiro
+  battle.selectedEnemyId = 'p2-b'; // guerreiro
+  assert.equal(getMatchupHint(battle), 'desvantagem');
+});
+
+test('class advantage changes final damage after the d20 roll', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const defender = battle.players[1].fighters[2]; // arqueiro
+  defender.hp = 100;
+  defender.max_hp = 100;
+  defender.current_hp = 100;
+  defender.def = 4;
+
+  drawCard(battle);
+  battle.selectedOwnId = 'p1-a'; // guerreiro has advantage over arqueiro
+  battle.selectedEnemyId = 'p2-c';
+
+  const result = withRandom(0.49, () => attackSelectedTarget(battle)); // d20 = 10
+
+  assert.equal(result.damage, 18);
+  assert.equal(defender.current_hp, 82);
+});
+
+test('high LCK expands critical hit threshold', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const attacker = battle.players[0].fighters[0];
+  const defender = battle.players[1].fighters[0];
+  attacker.lck = 9; // crit threshold becomes 17
+  attacker.atk = 8;
+  defender.class_key = 'mago';
+  defender.def = 4;
+  defender.hp = 100;
+  defender.max_hp = 100;
+  defender.current_hp = 100;
+
+  drawCard(battle);
+  battle.selectedOwnId = attacker.id;
+  battle.selectedEnemyId = defender.id;
+
+  const result = withRandom(0.8, () => attackSelectedTarget(battle)); // d20 = 17
+
+  assert.equal(result.d20, 17);
+  assert.equal(result.damage, 42);
+  assert.match(battle.log.at(-2), /CRÍTICO/);
+});
+
+test('natural 1 causes critical failure with minimum damage', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const defender = battle.players[1].fighters[0];
+  defender.hp = 100;
+  defender.max_hp = 100;
+  defender.current_hp = 100;
+
+  drawCard(battle);
+  battle.selectedOwnId = 'p1-a';
+  battle.selectedEnemyId = 'p2-a';
+
+  const result = withRandom(0, () => attackSelectedTarget(battle)); // d20 = 1
+
+  assert.equal(result.damage, 1);
+  assert.equal(defender.current_hp, 99);
+  assert.match(battle.log.at(-2), /FALHA/);
+});
+
+test('reserve fighter enters the field when an active fighter falls', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const activeDefender = battle.players[1].fighters[0];
+  const reserve = battle.players[1].fighters[2];
+  activeDefender.current_hp = 1;
+  reserve.reserve = true;
+  reserve.active = false;
+  reserve.alive = true;
+
+  drawCard(battle);
+  battle.selectedOwnId = 'p1-a';
+  battle.selectedEnemyId = activeDefender.id;
+
+  const result = withRandom(0.99, () => attackSelectedTarget(battle)); // d20 = 20
+
+  assert.equal(result.ok, true);
+  assert.equal(activeDefender.alive, false);
+  assert.equal(reserve.reserve, false);
+  assert.equal(reserve.active, true);
+  assert.equal(battle.log.some((line) => line.includes('colocou')), true);
 });

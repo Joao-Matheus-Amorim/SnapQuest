@@ -116,6 +116,12 @@ Rodar testes do core de batalha:
 npm run test:core
 ```
 
+Atalho padrao de testes:
+
+```bash
+npm test
+```
+
 Validar TypeScript:
 
 ```bash

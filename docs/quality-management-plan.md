@@ -19,7 +19,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 |---|---|---|
 | Dependencias limpas | `npm ci` | Setup e CI |
 | Expo dependency check | `npx expo install --check` | Mudancas mobile/deps |
-| Core battle tests | `npm run test:core` | Mudancas em `src/js/core/battle.js`, hooks de batalha ou regras de gameplay |
+| Core tests | `npm run test:core` | Mudancas em core, batalha, factories, balanceamento ou sugestao de cartas |
 | TypeScript | `npx tsc --noEmit` | Todo PR com TS/TSX |
 | Static check | `npm run check` | Todo PR |
 | Web build | `npm run build` | Mudancas web/build/config |
@@ -31,7 +31,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 | Area | Cobertura | Lacuna |
 |---|---|---|
 | Presenca de arquivos criticos | `scripts/check.mjs` | Nao valida comportamento real completo. |
-| Core de batalha | `npm run test:core` cobre requisitos minimos, compra, carta, dano, turno e vencedor | Ainda falta cobrir todo balanceamento, LCK/SPD e cenarios de reserva em profundidade. |
+| Core de jogo | `npm run test:core` cobre balanceamento, factories, sugestao de cartas, compra, cartas, dano, turno, vencedor, critico, falha critica, matchup e reserva | Nao substitui E2E mobile nem validacao RLS real. |
 | RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()` | Nao prova politicas com usuarios reais. |
 | Mobile storage | `scripts/check.mjs` verifica fallback web/native | Nao testa falhas reais de plataforma. |
 | Gemini/mock | `scripts/check.mjs` verifica contrato basico | Nao testa API real nem cota. |
@@ -88,8 +88,7 @@ Um PR esta pronto quando:
 
 | Prioridade | Melhoria | Motivo |
 |---|---|---|
-| Alta | Expandir testes unitarios do core de batalha | Cobertura inicial existe; falta ampliar balanceamento e atributos. |
-| Alta | Testes ou fixtures para RLS/catalogo | O contrato atual de catalogo tem gap de schema. |
+| Alta | Testes ou fixtures para RLS/catalogo | O contrato esta versionado; falta evidencia funcional com usuario comum e dono. |
 | Alta | Plano de upgrade para vulnerabilidades moderadas | `npm audit` aponta Expo/Vite/transitivas com upgrades potencialmente quebradores. |
 | Media | Smoke test mobile/web | Prova minima de navegacao principal. |
 | Media | Check automatizado contra `service_role` e `sb_secret_` | Evita vazamento acidental. |

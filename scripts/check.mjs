@@ -22,7 +22,10 @@ const required = [
   'src/hooks/useCapturedPhotos.ts',
   'src/hooks/usePlayerDeck.ts',
   'src/services/geminiTransform.ts',
+  'test/core-balance.test.mjs',
   'test/core-battle.test.mjs',
+  'test/core-factories.test.mjs',
+  'test/card-suggestion.test.mjs',
   'docs/gemini-card-suggestions.md',
   'docs/gemini-transform-flow.md',
   'supabase/schema.sql',
@@ -47,8 +50,12 @@ if (!html.includes('type="module"')) {
 }
 
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-if (packageJson.scripts?.['test:core'] !== 'node --test test/core-battle.test.mjs') {
-  fail('package.json must expose npm run test:core for battle core coverage.');
+if (packageJson.scripts?.test !== 'npm run test:core') {
+  fail('package.json must expose npm test as the standard automated test entrypoint.');
+}
+
+if (packageJson.scripts?.['test:core'] !== 'node --test "test/*.test.mjs"') {
+  fail('package.json must expose npm run test:core for automated core coverage.');
 }
 
 const schema = fs.readFileSync('supabase/schema.sql', 'utf8');

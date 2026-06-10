@@ -70,8 +70,10 @@ O repositorio possui:
 - GitHub Actions com Node 22.
 - `npx expo install --check`.
 - `npx tsc --noEmit`.
+- `npm run test:core`.
 - `npm run check`.
 - `npm run build`.
+- Testes automatizados para balanceamento, factories, sugestao de cartas e batalha local.
 - Checks estaticos para arquivos criticos, RLS basica, storage mobile e contrato Gemini/mock.
 
 ## Parcial ou em validacao
@@ -100,7 +102,7 @@ O repositorio possui:
 | GAP-001 | Schema versionado de catalogo precisava alinhar `is_catalog` e permissao de escrita. | Catalogo cloud podia quebrar em banco novo. | Fechado: schema versionado e aplicado manualmente no Supabase em 2026-06-10; validacao RLS real segue em GAP-006. |
 | GAP-002 | Gemini roda no app com env publica. | Chave fica exposta em bundle mobile. | Mover para backend/edge antes de producao. |
 | GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
-| GAP-004 | Cobertura automatizada de comportamento ainda e inicial. | Regressao pode passar em cenarios nao cobertos. | Expandir suite de core, criar smoke tests e validar RLS. |
+| GAP-004 | Cobertura automatizada de comportamento era inicial. | Regressao podia passar em cenarios de core nao cobertos. | Fechado: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada. |
 | GAP-005 | LCK/SPD nao tem efeito completo. | Atributos parecem mais ricos que a regra real. | Definir design e implementar em PR proprio. |
 | GAP-006 | RLS de catalogo ainda nao foi provada com usuario comum e usuario dono em teste documentado. | Policy pode estar correta no schema, mas sem evidencia funcional. | Executar roteiro de validacao Supabase e registrar resultado. |
 
@@ -108,8 +110,7 @@ O repositorio possui:
 
 A prioridade tecnica e validar RLS de catalogo com usuario comum e usuario dono. Depois disso, a ordem recomendada e:
 
-1. testes de core de batalha;
-2. Storage para fotos;
-3. Gemini via backend/edge;
-4. cerimonia visual final;
-5. regras completas de LCK/SPD.
+1. Storage para fotos;
+2. Gemini via backend/edge;
+3. cerimonia visual final;
+4. regras completas de LCK/SPD.

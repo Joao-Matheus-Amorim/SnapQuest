@@ -80,7 +80,7 @@ Entregas:
 Divida:
 
 - LCK e SPD ainda nao tem efeito completo.
-- Cobertura automatizada inicial existe; faltam cenarios avancados de balanceamento.
+- Cobertura automatizada do core MVP esta completa para balance, factories, sugestao de cartas e batalha local.
 
 ## Fase 5 - Cerimonia de criacao e IA
 
@@ -134,7 +134,6 @@ Possiveis entregas:
 ## Prioridade imediata recomendada
 
 1. Validar RLS de catalogo no Supabase real.
-2. Expandir testes de core para LCK/SPD/reserva e criar smoke tests.
-3. Criar Storage para fotos.
-4. Mover Gemini para backend/edge.
-5. Refinar cerimonia visual.
+2. Criar Storage para fotos.
+3. Mover Gemini para backend/edge.
+4. Refinar cerimonia visual.

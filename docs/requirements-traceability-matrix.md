@@ -8,8 +8,8 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 |---|---|---|---|---|
 | REQ-001 | Preservar MVP web jogavel. | `index.html`, `src/js/app.js`, `src/styles/app.css` | `npm run build`, `npm run check` | Implementado |
 | REQ-002 | Manter core de jogo separado da UI. | `src/js/core/` | `scripts/check.mjs` verifica arquivos core | Implementado |
-| REQ-003 | Criar Fighters por regra pura. | `src/js/core/fighters.js` | Check estatico e uso em mobile/web | Implementado |
-| REQ-004 | Criar Cartas por regra pura. | `src/js/core/cards.js` | Check estatico e uso em mobile/web | Implementado |
+| REQ-003 | Criar Fighters por regra pura. | `src/js/core/fighters.js` | `npm run test:core` e uso em mobile/web | Implementado |
+| REQ-004 | Criar Cartas por regra pura. | `src/js/core/cards.js` | `npm run test:core` e uso em mobile/web | Implementado |
 | REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx` | `npm run test:core`, TypeScript e uso manual esperado | Implementado em MVP |
 | REQ-006 | Bloquear batalha sem inventario minimo. | `src/hooks/useInventory.ts`, `src/app/battle.tsx` | `npm run test:core`; regra lida via `canStartBattle` | Implementado |
 | REQ-007 | Capturar foto no mobile. | `src/app/camera.tsx`, `expo-image-picker`, `expo-media-library` | TypeScript; check de `getAssetInfoAsync` | Implementado |
@@ -40,7 +40,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-018 | Sync depende de contrato cloud ainda pouco testado. | Testar login, merge local/cloud e erro offline. |
 | REQ-019 | Catalogo precisa de evidencia de leitura real no Supabase aplicado. | Validar leitura/fallback no app. |
 | REQ-022 | RLS de catalogo precisa ser provada com usuario comum e dono. | Criar teste/roteiro de RLS e executar no Supabase. |
-| REQ-025 | CI ainda nao cobre testes mobile/E2E nem RLS real. | Adicionar smoke tests e roteiro de RLS. |
+| REQ-025 | CI ainda nao cobre RLS real. | Executar roteiro de RLS em TD-011. |
 
 ## Regra de manutencao
 
