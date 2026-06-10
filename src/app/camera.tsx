@@ -1,8 +1,17 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-import { Alert, View, Text, Pressable, StyleSheet, Image } from "react-native";
+import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
+
+async function resolveLocalUri(asset: MediaLibrary.Asset, fallback: string): Promise<string> {
+  const info = await Promise.race([
+    MediaLibrary.getAssetInfoAsync(asset),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+  ]);
+  return info?.localUri || fallback;
+}
 
 export default function CameraScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -25,10 +34,22 @@ export default function CameraScreen() {
       setIsSaving(true);
 
       const capturedUri = result.assets[0].uri;
-      const assetId = result.assets[0].assetId ?? undefined;
-      const filename = result.assets[0].fileName ?? undefined;
+      let savedUri = capturedUri;
+      let assetId = result.assets[0].assetId ?? undefined;
+      let filename = result.assets[0].fileName ?? undefined;
 
-      await addCapturedPhoto({ uri: capturedUri, assetId, filename });
+      if (Platform.OS !== "web") {
+        const mediaPermission = await MediaLibrary.requestPermissionsAsync();
+
+        if (mediaPermission.granted) {
+          const asset = await MediaLibrary.createAssetAsync(capturedUri);
+          assetId = asset.id;
+          filename = asset.filename;
+          savedUri = await resolveLocalUri(asset, capturedUri);
+        }
+      }
+
+      await addCapturedPhoto({ uri: savedUri, assetId, filename });
       setImageUri(savedUri);
     } catch {
       Alert.alert("Não foi possível salvar a captura", "Verifique as permissões do Expo Go e tente novamente.");
