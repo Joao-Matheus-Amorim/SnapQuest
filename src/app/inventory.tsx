@@ -48,7 +48,9 @@ export default function InventoryScreen() {
         <Text style={styles.summaryText}>Cartas: {inv.battleRequirements.cardCount}/{inv.battleRequirements.minCards}</Text>
         <Text style={styles.rawText}>Pendentes: {raw.capturedPhotos.length}</Text>
       </View>
+
       <Text style={styles.sectionTitle}>Pendentes</Text>
+      {raw.capturedPhotos.length === 0 ? <Text style={styles.emptyText}>Nenhuma captura bruta pendente.</Text> : null}
       {raw.capturedPhotos.map((item) => (
         <View key={item.id} style={styles.card}>
           <Text style={styles.cardTitle}>Item pendente</Text>
@@ -63,18 +65,39 @@ export default function InventoryScreen() {
           </View>
         </View>
       ))}
-      <Text style={styles.sectionTitle}>Fighters</Text>
-      {inv.fighters.map((item) => (
-        <View key={item.id} style={styles.card}>
+
+      <Text style={styles.sectionTitle}>Suas Cartas</Text>
+      {inv.playerCards.length === 0 ? <Text style={styles.emptyText}>Nenhuma carta criada ainda.</Text> : null}
+      {inv.playerCards.map((item) => (
+        <View key={item.id} style={styles.highlightCard}>
+          <Text style={styles.cardTitle}>{item.icon} {item.nome_efeito}</Text>
+          <Text style={styles.cardText}>{item.categoria} · {item.raridade}</Text>
+          <Text style={styles.cardText}>{item.polaridade} {item.atributo} +{item.intensidade}</Text>
+        </View>
+      ))}
+
+      <Text style={styles.sectionTitle}>Seus Fighters</Text>
+      {inv.playerFighters.length === 0 ? <Text style={styles.emptyText}>Nenhum fighter criado ainda.</Text> : null}
+      {inv.playerFighters.map((item) => (
+        <View key={item.id} style={styles.highlightCard}>
           <Text style={styles.cardTitle}>{item.icon} {item.nome}</Text>
           <Text style={styles.cardText}>{item.classe}</Text>
         </View>
       ))}
-      <Text style={styles.sectionTitle}>Cartas</Text>
-      {inv.cards.map((item) => (
+
+      <Text style={styles.sectionTitle}>Cartas Base</Text>
+      {inv.cards.slice(inv.playerCards.length).map((item) => (
         <View key={item.id} style={styles.card}>
           <Text style={styles.cardTitle}>{item.icon} {item.nome_efeito}</Text>
           <Text style={styles.cardText}>{item.categoria} · {item.raridade}</Text>
+        </View>
+      ))}
+
+      <Text style={styles.sectionTitle}>Fighters Base</Text>
+      {inv.fighters.slice(inv.playerFighters.length).map((item) => (
+        <View key={item.id} style={styles.card}>
+          <Text style={styles.cardTitle}>{item.icon} {item.nome}</Text>
+          <Text style={styles.cardText}>{item.classe}</Text>
         </View>
       ))}
     </ScrollView>
@@ -90,6 +113,7 @@ const styles = StyleSheet.create({
   rawText: { color: "#f5a623", fontSize: 14, fontWeight: "700", textAlign: "center", marginTop: 4 },
   sectionTitle: { color: "#f5a623", fontSize: 20, fontWeight: "800", marginBottom: 10, marginTop: 8 },
   card: { backgroundColor: "#16213e", borderColor: "rgba(245,166,35,.35)", borderWidth: 1, borderRadius: 18, padding: 14, marginBottom: 12 },
+  highlightCard: { backgroundColor: "#21335f", borderColor: "#f5a623", borderWidth: 1, borderRadius: 18, padding: 14, marginBottom: 12 },
   actionRow: { flexDirection: "row", gap: 8, marginTop: 10, flexWrap: "wrap" },
   button: { backgroundColor: "#e94560", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
   buttonText: { color: "#ffffff", fontSize: 13, fontWeight: "800" },
@@ -97,4 +121,5 @@ const styles = StyleSheet.create({
   outlineButtonText: { color: "#f5a623", fontSize: 13, fontWeight: "800" },
   cardTitle: { color: "#f5a623", fontSize: 17, fontWeight: "800", marginBottom: 4 },
   cardText: { color: "#ffffff", fontSize: 14, marginBottom: 2 },
+  emptyText: { color: "rgba(255,255,255,.72)", fontSize: 14, marginBottom: 12 },
 });
