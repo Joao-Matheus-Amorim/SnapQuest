@@ -87,7 +87,7 @@ O repositorio possui:
 
 - Supabase Storage para fotos.
 - Backend/edge function para proteger chamada Gemini.
-- Testes automatizados robustos de batalha e RLS.
+- Testes automatizados robustos de RLS.
 - XP, conquistas, diario de aventuras e colecoes completas.
 - Multiplayer online.
 - Publicacao em loja.
@@ -100,7 +100,7 @@ O repositorio possui:
 | GAP-001 | Schema versionado de catalogo precisava alinhar `is_catalog` e permissao de escrita. | Catalogo cloud podia quebrar em banco novo. | Fechado: schema versionado e aplicado manualmente no Supabase em 2026-06-10; validacao RLS real segue em GAP-006. |
 | GAP-002 | Gemini roda no app com env publica. | Chave fica exposta em bundle mobile. | Mover para backend/edge antes de producao. |
 | GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
-| GAP-004 | Poucos testes automatizados de comportamento. | Regressao pode passar se typecheck/build passar. | Criar suite de core e smoke tests. |
+| GAP-004 | Cobertura automatizada de comportamento ainda e inicial. | Regressao pode passar em cenarios nao cobertos. | Expandir suite de core, criar smoke tests e validar RLS. |
 | GAP-005 | LCK/SPD nao tem efeito completo. | Atributos parecem mais ricos que a regra real. | Definir design e implementar em PR proprio. |
 | GAP-006 | RLS de catalogo ainda nao foi provada com usuario comum e usuario dono em teste documentado. | Policy pode estar correta no schema, mas sem evidencia funcional. | Executar roteiro de validacao Supabase e registrar resultado. |
 

@@ -35,6 +35,9 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      - name: Core battle tests
+        run: npm run test:core
+
       - name: Static checks
         run: npm run check
 

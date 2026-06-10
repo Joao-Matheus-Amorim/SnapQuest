@@ -19,6 +19,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 |---|---|---|
 | Dependencias limpas | `npm ci` | Setup e CI |
 | Expo dependency check | `npx expo install --check` | Mudancas mobile/deps |
+| Core battle tests | `npm run test:core` | Mudancas em `src/js/core/battle.js`, hooks de batalha ou regras de gameplay |
 | TypeScript | `npx tsc --noEmit` | Todo PR com TS/TSX |
 | Static check | `npm run check` | Todo PR |
 | Web build | `npm run build` | Mudancas web/build/config |
@@ -30,6 +31,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 | Area | Cobertura | Lacuna |
 |---|---|---|
 | Presenca de arquivos criticos | `scripts/check.mjs` | Nao valida comportamento real completo. |
+| Core de batalha | `npm run test:core` cobre requisitos minimos, compra, carta, dano, turno e vencedor | Ainda falta cobrir todo balanceamento, LCK/SPD e cenarios de reserva em profundidade. |
 | RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()` | Nao prova politicas com usuarios reais. |
 | Mobile storage | `scripts/check.mjs` verifica fallback web/native | Nao testa falhas reais de plataforma. |
 | Gemini/mock | `scripts/check.mjs` verifica contrato basico | Nao testa API real nem cota. |
@@ -86,7 +88,7 @@ Um PR esta pronto quando:
 
 | Prioridade | Melhoria | Motivo |
 |---|---|---|
-| Alta | Testes unitarios do core de batalha | Reduz risco de regressao no gameplay. |
+| Alta | Expandir testes unitarios do core de batalha | Cobertura inicial existe; falta ampliar balanceamento e atributos. |
 | Alta | Testes ou fixtures para RLS/catalogo | O contrato atual de catalogo tem gap de schema. |
 | Alta | Plano de upgrade para vulnerabilidades moderadas | `npm audit` aponta Expo/Vite/transitivas com upgrades potencialmente quebradores. |
 | Media | Smoke test mobile/web | Prova minima de navegacao principal. |

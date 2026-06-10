@@ -82,6 +82,7 @@ Fonte detalhada: `quality-management-plan.md`.
 Gates minimos por PR:
 
 - `npm run check`
+- `npm run test:core` quando a mudanca afeta regra de jogo
 - `npx tsc --noEmit`
 - `npm run build` quando web/build for afetado
 - `npx expo install --check` quando mobile/deps forem afetados

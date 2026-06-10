@@ -22,6 +22,7 @@ const required = [
   'src/hooks/useCapturedPhotos.ts',
   'src/hooks/usePlayerDeck.ts',
   'src/services/geminiTransform.ts',
+  'test/core-battle.test.mjs',
   'docs/gemini-card-suggestions.md',
   'docs/gemini-transform-flow.md',
   'supabase/schema.sql',
@@ -43,6 +44,11 @@ for (const file of required) {
 const html = fs.readFileSync('index.html', 'utf8');
 if (!html.includes('type="module"')) {
   fail('index.html must load src/js/app.js as type="module".');
+}
+
+const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+if (packageJson.scripts?.['test:core'] !== 'node --test test/core-battle.test.mjs') {
+  fail('package.json must expose npm run test:core for battle core coverage.');
 }
 
 const schema = fs.readFileSync('supabase/schema.sql', 'utf8');

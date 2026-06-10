@@ -10,8 +10,8 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-002 | Manter core de jogo separado da UI. | `src/js/core/` | `scripts/check.mjs` verifica arquivos core | Implementado |
 | REQ-003 | Criar Fighters por regra pura. | `src/js/core/fighters.js` | Check estatico e uso em mobile/web | Implementado |
 | REQ-004 | Criar Cartas por regra pura. | `src/js/core/cards.js` | Check estatico e uso em mobile/web | Implementado |
-| REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx` | TypeScript e uso manual esperado | Implementado em MVP |
-| REQ-006 | Bloquear batalha sem inventario minimo. | `src/hooks/useInventory.ts`, `src/app/battle.tsx` | TypeScript; regra lida via `canStartBattle` | Implementado |
+| REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx` | `npm run test:core`, TypeScript e uso manual esperado | Implementado em MVP |
+| REQ-006 | Bloquear batalha sem inventario minimo. | `src/hooks/useInventory.ts`, `src/app/battle.tsx` | `npm run test:core`; regra lida via `canStartBattle` | Implementado |
 | REQ-007 | Capturar foto no mobile. | `src/app/camera.tsx`, `expo-image-picker`, `expo-media-library` | TypeScript; check de `getAssetInfoAsync` | Implementado |
 | REQ-008 | Guardar capturas brutas separadas do deck. | `src/hooks/useCapturedPhotos.ts` | `npm run check` verifica contrato | Implementado |
 | REQ-009 | Persistir foto final em arquivo local permanente. | `src/lib/photoStorage.ts` | TypeScript | Implementado |
@@ -30,7 +30,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-022 | Suportar catalogo compartilhado. | `cloudSync.ts`, `is_catalog`, `can_manage_catalog`, RLS | Check estatico de schema; falta teste real de RLS | Implementado e aplicado; validar RLS real |
 | REQ-023 | Evitar segredo privado no frontend. | `.env.example`, docs, `supabase.ts` | Revisao manual; check parcial | Implementado como regra |
 | REQ-024 | Deploy web na Vercel. | `vercel.json`, `vite.config.js` | `npm run build` | Implementado |
-| REQ-025 | CI minima. | `.github/workflows/ci.yml`, `.github/workflows/static-check.yml` | GitHub Actions | Implementado |
+| REQ-025 | CI minima. | `.github/workflows/ci.yml`, `.github/workflows/static-check.yml` | GitHub Actions com test:core, typecheck, static check e build | Implementado |
 | REQ-026 | Documentacao de governanca e estado. | `docs/` | Revisao documental | Implementado |
 
 ## Gaps por requisito
@@ -40,7 +40,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-018 | Sync depende de contrato cloud ainda pouco testado. | Testar login, merge local/cloud e erro offline. |
 | REQ-019 | Catalogo precisa de evidencia de leitura real no Supabase aplicado. | Validar leitura/fallback no app. |
 | REQ-022 | RLS de catalogo precisa ser provada com usuario comum e dono. | Criar teste/roteiro de RLS e executar no Supabase. |
-| REQ-025 | CI nao roda testes de gameplay porque eles ainda nao existem. | Adicionar suite de core. |
+| REQ-025 | CI ainda nao cobre testes mobile/E2E nem RLS real. | Adicionar smoke tests e roteiro de RLS. |
 
 ## Regra de manutencao
 

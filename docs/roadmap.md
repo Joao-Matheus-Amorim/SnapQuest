@@ -80,7 +80,7 @@ Entregas:
 Divida:
 
 - LCK e SPD ainda nao tem efeito completo.
-- Faltam testes automatizados de regra.
+- Cobertura automatizada inicial existe; faltam cenarios avancados de balanceamento.
 
 ## Fase 5 - Cerimonia de criacao e IA
 
@@ -134,7 +134,7 @@ Possiveis entregas:
 ## Prioridade imediata recomendada
 
 1. Validar RLS de catalogo no Supabase real.
-2. Criar testes de core de batalha.
+2. Expandir testes de core para LCK/SPD/reserva e criar smoke tests.
 3. Criar Storage para fotos.
 4. Mover Gemini para backend/edge.
 5. Refinar cerimonia visual.

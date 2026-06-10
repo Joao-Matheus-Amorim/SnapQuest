@@ -110,6 +110,12 @@ Rodar checks estaticos:
 npm run check
 ```
 
+Rodar testes do core de batalha:
+
+```bash
+npm run test:core
+```
+
 Validar TypeScript:
 
 ```bash
@@ -181,6 +187,7 @@ Uma entrega so pode ser tratada como pronta quando:
 
 - o codigo esta no escopo aprovado;
 - `npm run check` passa;
+- `npm run test:core` passa quando a mudanca afeta regra de jogo;
 - `npx tsc --noEmit` passa;
 - `npm run build` passa quando a mudanca afeta web/build;
 - `npx expo install --check` passa quando a mudanca afeta mobile;

@@ -5,7 +5,7 @@ Ultima atualizacao: 2026-06-10.
 | ID | Item | Motivo | Impacto | Plano | Status |
 |---|---|---|---:|---|---|
 | TD-001 | Fotos em `photo_data_url` no banco | MVP sem Storage remoto | Alto | Migrar para Supabase Storage e guardar URL | Aberto |
-| TD-002 | Testes automatizados ainda minimos | Fase de validacao rapida | Alto | Criar testes do core de batalha e smoke tests | Aberto |
+| TD-002 | Testes automatizados ainda minimos | Fase de validacao rapida | Alto | Cobertura inicial de core criada; expandir smoke tests, RLS e cenarios avancados | Em mitigacao |
 | TD-003 | LCK e SPD sem efeito completo | Regra de batalha ainda simples | Medio | Definir design de atributo e implementar | Aberto |
 | TD-004 | Auth/conta com UX de MVP | Validacao antes de polimento | Medio | Melhorar sessao, mensagens, estados e sync | Aberto |
 | TD-005 | `App.tsx` legado ainda no repo | Entry atual usa Expo Router | Baixo | Remover ou marcar oficialmente quando nao for mais necessario | Aberto |
