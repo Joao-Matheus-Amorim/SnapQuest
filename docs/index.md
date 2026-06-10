@@ -25,6 +25,7 @@ Este indice e a porta de entrada oficial para a documentacao do SnapQuest.
 - `database.md`: banco Supabase, RLS e pendencias.
 - `deploy-vercel.md`: deploy web.
 - `rn-migration.md`: historico e status da migracao React Native + Expo.
+- `battle-rules.md`: contrato de regras de batalha, LCK, SPD, critico, classe e reserva.
 - `gemini-transform-flow.md`: fluxo foto -> IA -> item jogavel.
 - `gemini-card-suggestions.md`: contrato de sugestao de cartas.
 

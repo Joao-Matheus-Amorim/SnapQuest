@@ -41,7 +41,7 @@ Este documento consolida a gestao do SnapQuest em formato PMBOK adaptado para um
 - Loja.
 - Supabase Storage em producao.
 - Backend seguro para Gemini.
-- Testes automatizados completos.
+- Testes automatizados E2E/mobile completos.
 - Publicacao em loja mobile.
 - Sistema completo de XP, conquistas e diario.
 
@@ -150,5 +150,5 @@ O projeto e considerado tecnicamente rastreavel quando:
 | GAP-001 | Contrato de catalogo precisava de `is_catalog` e controle de admin. | Fechado: tratado no schema versionado e aplicado manualmente em 2026-06-10. |
 | GAP-002 | Gemini roda no app com chave publica. | Migrar para backend/edge function antes de producao. |
 | GAP-003 | Fotos ainda podem ir como `photo_data_url`. | Migrar para Supabase Storage. |
-| GAP-004 | Poucos testes automatizados de comportamento. | Criar testes de core e smoke mobile/web. |
-| GAP-005 | LCK e SPD nao tem efeito completo na batalha. | Definir regra de design e implementar em PR proprio. |
+| GAP-004 | Poucos testes automatizados de comportamento. | Fechado para core: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada; smoke mobile/web segue como melhoria. |
+| GAP-005 | LCK e SPD nao tinham efeito completo na batalha. | Fechado: regra documentada em `battle-rules.md`, implementada no core e coberta por testes. |

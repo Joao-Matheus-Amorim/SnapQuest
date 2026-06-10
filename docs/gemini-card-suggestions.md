@@ -114,4 +114,4 @@ Antes de producao:
 - Design visual da cerimonia.
 - Supabase Storage.
 - RLS de catalogo.
-- Balanceamento completo de LCK/SPD.
+- Regras de batalha de LCK/SPD; fonte atual: `battle-rules.md`.

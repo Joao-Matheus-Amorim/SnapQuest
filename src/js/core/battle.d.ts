@@ -35,6 +35,7 @@ export interface ActionResult {
   winner?: BattlePlayer | { name: string };
   damage?: number;
   d20?: number;
+  speedModifier?: number;
 }
 
 export interface TurnGuidance {
@@ -44,6 +45,13 @@ export interface TurnGuidance {
 }
 
 export function canStartBattle(fighters: unknown[], cards: unknown[]): boolean;
+export function effectiveStat(fighter: BattleFighter, stat: "atk" | "def" | "lck" | "spd"): number;
+export function effectiveBattleStats(fighter: BattleFighter): {
+  atk: number;
+  def: number;
+  lck: number;
+  spd: number;
+};
 export function createBattle(opts: {
   fighters: unknown[];
   cards: unknown[];

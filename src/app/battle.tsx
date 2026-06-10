@@ -4,6 +4,7 @@ import { ScrollView, View, Text, Pressable, TextInput, Image, StyleSheet } from 
 import { useInventory } from "../hooks/useInventory";
 import { useBattle } from "../hooks/useBattle";
 import type { BattleFighter, BattleCard, BattlePlayer } from "../js/core/battle.js";
+import { effectiveBattleStats } from "../js/core/battle.js";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 import { fighterRarity, RARITY_COLORS } from "../lib/rarityConfig";
 
@@ -34,6 +35,7 @@ function FighterBtn({
   const dead = !fighter.alive;
   const rarity = fighterRarity((fighter as any).bonus_intensidade ?? 1);
   const rarityColor = RARITY_COLORS[rarity];
+  const stats = effectiveBattleStats(fighter);
   return (
     <Pressable
       onPress={dead ? undefined : onPress}
@@ -50,6 +52,7 @@ function FighterBtn({
         <View style={fStyles.info}>
           <Text style={fStyles.name}>{fighter.nome}</Text>
           <Text style={fStyles.detail}>{fighter.classe} Â· HP {fighter.current_hp}/{fighter.max_hp}</Text>
+          <Text style={fStyles.stats}>ATK {stats.atk} · DEF {stats.def} · LCK {stats.lck} · SPD {stats.spd}</Text>
           {!dead && <HpBar current={fighter.current_hp!} max={fighter.max_hp!} />}
           {dead && <Text style={fStyles.deadLabel}>ðŸ’€ Derrotado</Text>}
         </View>
@@ -76,6 +79,7 @@ const fStyles = StyleSheet.create({
   info: { flex: 1 },
   name: { color: "#f5a623", fontWeight: "800", fontSize: 14 },
   detail: { color: "rgba(255,255,255,.7)", fontSize: 11, marginTop: 1 },
+  stats: { color: "rgba(255,255,255,.78)", fontSize: 11, marginTop: 2 },
   deadLabel: { color: "#e94560", fontSize: 11, marginTop: 2 },
 });
 

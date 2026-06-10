@@ -8,6 +8,8 @@ import {
   canUseSelectedCard,
   createBattle,
   drawCard,
+  effectiveBattleStats,
+  effectiveStat,
   getMatchupHint,
   getTurnGuidance,
   getWinner,
@@ -164,6 +166,26 @@ test('useSelectedCard applies debuff to enemy fighter', () => {
   assert.equal(battle.players[1].fighters[0].buffs.def, -3);
 });
 
+test('effective battle stats include buffs and never go below zero', () => {
+  const battle = makeBattle();
+  const target = battle.players[0].fighters[0];
+
+  target.buffs.atk = 2;
+  target.buffs.def = -99;
+  target.buffs.lck = 4;
+  target.buffs.spd = -1;
+
+  assert.equal(effectiveStat(target, 'atk'), 10);
+  assert.equal(effectiveStat(target, 'def'), 0);
+  assert.deepEqual(effectiveBattleStats(target), {
+    atk: 10,
+    def: 0,
+    lck: 4,
+    spd: 0,
+  });
+  assert.throws(() => effectiveStat(target, 'hp'), /Atributo de batalha invalido/);
+});
+
 test('attackSelectedTarget requires draw, damages target, and passes turn', () => {
   const battle = makeBattle();
   battle.turn = 0;
@@ -244,6 +266,7 @@ test('class advantage changes final damage after the d20 roll', () => {
   defender.max_hp = 100;
   defender.current_hp = 100;
   defender.def = 4;
+  defender.spd = 1;
 
   drawCard(battle);
   battle.selectedOwnId = 'p1-a'; // guerreiro has advantage over arqueiro
@@ -264,6 +287,7 @@ test('high LCK expands critical hit threshold', () => {
   attacker.atk = 8;
   defender.class_key = 'mago';
   defender.def = 4;
+  defender.spd = 1;
   defender.hp = 100;
   defender.max_hp = 100;
   defender.current_hp = 100;
@@ -277,6 +301,60 @@ test('high LCK expands critical hit threshold', () => {
   assert.equal(result.d20, 17);
   assert.equal(result.damage, 42);
   assert.match(battle.log.at(-2), /CRÍTICO/);
+});
+
+test('SPD changes attack pressure and is capped for balance', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const attacker = battle.players[0].fighters[0];
+  const defender = battle.players[1].fighters[0];
+  attacker.atk = 8;
+  attacker.spd = 15;
+  defender.class_key = 'mago';
+  defender.def = 4;
+  defender.spd = 1;
+  defender.hp = 100;
+  defender.max_hp = 100;
+  defender.current_hp = 100;
+
+  drawCard(battle);
+  battle.selectedOwnId = attacker.id;
+  battle.selectedEnemyId = defender.id;
+
+  const result = withRandom(0.49, () => attackSelectedTarget(battle)); // d20 = 10
+
+  assert.equal(result.speedModifier, 3);
+  assert.equal(result.damage, 17);
+  assert.equal(defender.current_hp, 83);
+  assert.match(battle.log.at(-2), /velocidade \+3/);
+});
+
+test('SPD cards change effective speed before attack', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const attacker = battle.players[0].fighters[0];
+  const defender = battle.players[1].fighters[0];
+  attacker.spd = 1;
+  defender.spd = 1;
+  defender.class_key = 'mago';
+  defender.def = 4;
+  defender.hp = 100;
+  defender.max_hp = 100;
+  defender.current_hp = 100;
+  battle.players[0].hand = [card({ id: 'manual-spd', polaridade: 'BONUS', atributo: 'SPD', intensidade: 6 })];
+  battle.players[0].drawn_this_turn = true;
+  battle.selectedOwnId = attacker.id;
+  battle.selectedCardId = 'manual-spd';
+
+  assert.deepEqual(useSelectedCard(battle), { ok: true });
+  assert.equal(effectiveStat(attacker, 'spd'), 7);
+
+  battle.selectedOwnId = attacker.id;
+  battle.selectedEnemyId = defender.id;
+  const result = withRandom(0.49, () => attackSelectedTarget(battle)); // d20 = 10
+
+  assert.equal(result.speedModifier, 2);
+  assert.equal(result.damage, 16);
 });
 
 test('natural 1 causes critical failure with minimum damage', () => {

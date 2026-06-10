@@ -135,6 +135,7 @@ Fontes principais:
 - `quality-management-plan.md`
 - `current-state.md`
 - `roadmap.md`
+- `battle-rules.md`
 - `risk-register.md`
 - `technical-debt-register.md`
 

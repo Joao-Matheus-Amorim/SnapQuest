@@ -76,11 +76,12 @@ Entregas:
 - Passar celular entre turnos.
 - Compra, carta, ataque e vencedor.
 - UI com HP, selecao e log.
+- LCK com faixa de critico e SPD com iniciativa/modificador de ataque.
 
 Divida:
 
-- LCK e SPD ainda nao tem efeito completo.
-- Cobertura automatizada do core MVP esta completa para balance, factories, sugestao de cartas e batalha local.
+- TD-002 fechado: cobertura automatizada do core MVP esta completa para balance, factories, sugestao de cartas e batalha local.
+- TD-003 fechado: regras de LCK/SPD estao documentadas em `battle-rules.md`, implementadas no core e expostas na UI.
 
 ## Fase 5 - Cerimonia de criacao e IA
 

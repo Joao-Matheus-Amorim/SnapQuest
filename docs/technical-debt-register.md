@@ -6,7 +6,7 @@ Ultima atualizacao: 2026-06-10.
 |---|---|---|---:|---|---|
 | TD-001 | Fotos em `photo_data_url` no banco | MVP sem Storage remoto | Alto | Migrar para Supabase Storage e guardar URL | Aberto |
 | TD-002 | Testes automatizados ainda minimos | Fase de validacao rapida | Alto | Fechado com `npm run test:core`: balance, factories, sugestao de carta e batalha avancada | Fechado |
-| TD-003 | LCK e SPD sem efeito completo | Regra de batalha ainda simples | Medio | Definir design de atributo e implementar | Aberto |
+| TD-003 | LCK e SPD sem efeito completo | Regra de batalha ainda simples | Medio | Fechado: LCK define faixa de critico; SPD define iniciativa e modificador de ataque capado; stats efetivos documentados e testados | Fechado |
 | TD-004 | Auth/conta com UX de MVP | Validacao antes de polimento | Medio | Melhorar sessao, mensagens, estados e sync | Aberto |
 | TD-005 | `App.tsx` legado ainda no repo | Entry atual usa Expo Router | Baixo | Remover ou marcar oficialmente quando nao for mais necessario | Aberto |
 | TD-006 | Gemini chamado diretamente do app | Prototipo rapido de IA | Alto | Criar backend/edge function para proxy seguro | Aberto |

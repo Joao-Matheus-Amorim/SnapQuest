@@ -14,14 +14,14 @@ Data de referencia: 2026-06-10.
 | Area | Status | Observacao |
 |---|---|---|
 | MVP web | Implementado | Valida o loop base e preserva a entrada `index.html`. |
-| Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile. |
+| Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; LCK e SPD tem efeito completo na batalha local. |
 | Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
 | Supabase Auth | Implementado no mobile | Login/cadastro com anon key publica. UX ainda nao e final. |
 | Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog` e controle por `can_manage_catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
 | Gemini | Implementado com fallback | IA opcional sob demanda; fallback deterministico quando chave/cota/modelo falha. |
 | Fotos | Parcial | Mobile persiste arquivo local comprimido; banco ainda aceita `photo_data_url`. Storage remoto e pendente. |
-| Qualidade automatizada | Parcial | CI roda Expo check, TypeScript, checks estaticos e build web. Faltam testes de comportamento. |
+| Qualidade automatizada | Parcial | CI roda Expo check, TypeScript, checks estaticos, build web e testes automatizados do core. |
 
 ## Fluxos principais
 
@@ -170,6 +170,7 @@ Ponto de atencao atual: o schema de catalogo foi versionado e aplicado manualmen
 - [Plano de qualidade](docs/quality-management-plan.md)
 - [Estado atual](docs/current-state.md)
 - [Mapa do projeto](docs/project-map.md)
+- [Regras de batalha](docs/battle-rules.md)
 - [Roadmap](docs/roadmap.md)
 - [Banco de dados](docs/database.md)
 - [Registro de riscos](docs/risk-register.md)
@@ -204,7 +205,7 @@ Uma entrega so pode ser tratada como pronta quando:
 ## Proximas prioridades tecnicas
 
 1. Validar RLS de catalogo com usuario comum e usuario dono.
-2. Criar testes automatizados do core de batalha.
-3. Migrar fotos para Supabase Storage.
-4. Mover chamada Gemini para backend/edge function antes de producao.
-5. Implementar efeito real de LCK e SPD na batalha.
+2. Migrar fotos para Supabase Storage.
+3. Mover chamada Gemini para backend/edge function antes de producao.
+4. Refinar cerimonia visual.
+5. Criar smoke test mobile/web.

@@ -1,4 +1,4 @@
-import { clone, rand } from './utils.js';
+import { clamp, clone, rand } from './utils.js';
 
 // Triângulo de vantagem entre classes (cada um vence o próximo, em ciclo).
 // guerreiro → arqueiro → mago → paladino → guerreiro
@@ -19,6 +19,27 @@ function classMatchup(attacker, defender) {
 // LCK amplia a faixa de crítico. Sorte 0-2: crítico só no 20. Sorte alta: até 17-20.
 function critThreshold(lck) {
   return 20 - Math.min(3, Math.floor((lck || 0) / 3));
+}
+
+const BATTLE_STATS = ['atk', 'def', 'lck', 'spd'];
+
+export function effectiveStat(fighter, stat) {
+  if (!BATTLE_STATS.includes(stat)) throw new Error('Atributo de batalha invalido.');
+  return Math.max(0, (fighter?.[stat] || 0) + (fighter?.buffs?.[stat] || 0));
+}
+
+export function effectiveBattleStats(fighter) {
+  return {
+    atk: effectiveStat(fighter, 'atk'),
+    def: effectiveStat(fighter, 'def'),
+    lck: effectiveStat(fighter, 'lck'),
+    spd: effectiveStat(fighter, 'spd'),
+  };
+}
+
+function speedDamageModifier(attacker, defender) {
+  const speedDelta = effectiveStat(attacker, 'spd') - effectiveStat(defender, 'spd');
+  return clamp(Math.trunc(speedDelta / 3), -3, 3);
 }
 
 export function canStartBattle(fighters, cards) {
@@ -54,7 +75,7 @@ export function createBattle({ fighters, cards, playerName, player2Name }) {
   });
 
   // Iniciativa: o time mais rápido (maior SPD total) começa. Empate → Jogador 1.
-  const teamSpd = (p) => p.fighters.reduce((total, f) => total + (f.spd || 0), 0);
+  const teamSpd = (p) => p.fighters.reduce((total, f) => total + effectiveStat(f, 'spd'), 0);
   const turn = teamSpd(players[1]) > teamSpd(players[0]) ? 1 : 0;
 
   return {
@@ -217,9 +238,10 @@ export function attackSelectedTarget(battle) {
   if (!attacker || !defender) return { ok: false, message: 'Atacante ou alvo inválido.' };
 
   const d20 = rand(1, 20);
-  const atk = attacker.atk + (attacker.buffs.atk || 0);
-  const def = defender.def + (defender.buffs.def || 0);
-  const lck = attacker.lck + (attacker.buffs.lck || 0);
+  const atk = effectiveStat(attacker, 'atk');
+  const def = effectiveStat(defender, 'def');
+  const lck = effectiveStat(attacker, 'lck');
+  const speedModifier = speedDamageModifier(attacker, defender);
   const matchup = classMatchup(attacker, defender);
 
   // Texto da matchup pro log.
@@ -229,7 +251,13 @@ export function attackSelectedTarget(battle) {
       ? ' 🛡️ resistido (desvantagem)'
       : '';
 
-  let damage = Math.max(1, atk + d20 - def);
+  const speedText = speedModifier > 0
+    ? ` velocidade +${speedModifier}`
+    : speedModifier < 0
+      ? ` alvo mais rapido ${speedModifier}`
+      : '';
+
+  let damage = Math.max(1, atk + d20 + speedModifier - def);
 
   if (d20 === 1) {
     // Falha crítica — usa o "vacilo" do fighter (ignora vantagem).
@@ -243,7 +271,7 @@ export function attackSelectedTarget(battle) {
     damage = Math.max(1, Math.round(damage * matchup.mult));
     const golpe = attacker.golpe || 'um golpe';
     const critText = isCrit ? '💥 CRÍTICO! ' : '';
-    battle.log.push(`🎲 d20=${d20}. ${critText}${attacker.nome} usou ${golpe}${advText} e causou ${damage} em ${defender.nome}.`);
+    battle.log.push(`🎲 d20=${d20}. ${critText}${attacker.nome} usou ${golpe}${advText}${speedText} e causou ${damage} em ${defender.nome}.`);
   }
 
   defender.current_hp = Math.max(0, defender.current_hp - damage);
@@ -256,10 +284,10 @@ export function attackSelectedTarget(battle) {
   }
 
   const winner = getWinner(battle);
-  if (winner) return { ok: true, winner, damage, d20 };
+  if (winner) return { ok: true, winner, damage, d20, speedModifier };
 
   passTurn(battle);
-  return { ok: true, damage, d20 };
+  return { ok: true, damage, d20, speedModifier };
 }
 
 function bringReserve(player, battle) {

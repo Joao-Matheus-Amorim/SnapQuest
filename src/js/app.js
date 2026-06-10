@@ -15,6 +15,7 @@ import {
   getTurnGuidance,
   canUseSelectedCard,
   canAttackSelectedTarget,
+  effectiveBattleStats,
 } from './core/battle.js';
 import { loadLocalState, saveLocalState, clearLocalState } from './services/localStore.js';
 import { createSupabaseClient, signUp, signIn, signOut, getUser } from './services/supabaseClient.js';
@@ -197,12 +198,13 @@ function fighterSlotHtml(fighter) {
   const selected = state.battle?.selectedOwnId === fighter.id;
   const target = state.battle?.selectedEnemyId === fighter.id;
   const hpPct = clamp((fighter.current_hp / fighter.max_hp) * 100, 0, 100);
+  const stats = effectiveBattleStats(fighter);
   return `
     <button class="fighter-slot ${selected ? 'selected' : ''} ${target ? 'target' : ''} ${fighter.alive ? '' : 'dead'}" data-id="${fighter.id}" type="button">
       <div class="fighter-img" style="background:${fighter.foto ? 'rgba(0,0,0,.2)' : fighter.foto_fake}">${imgHtml(fighter, fighter.icon || '⚔️')}</div>
       <h4>${escapeHtml(fighter.nome)}</h4>
       <p>${fighter.icon} ${fighter.classe}</p>
-      <div class="stat-line"><span class="stat-pill">❤️ ${fighter.current_hp}/${fighter.max_hp}</span><span class="stat-pill">⚔️ ${fighter.atk + (fighter.buffs.atk || 0)}</span><span class="stat-pill">🛡️ ${fighter.def + (fighter.buffs.def || 0)}</span></div>
+      <div class="stat-line"><span class="stat-pill">❤️ ${fighter.current_hp}/${fighter.max_hp}</span><span class="stat-pill">⚔️ ${stats.atk}</span><span class="stat-pill">🛡️ ${stats.def}</span><span class="stat-pill">LCK ${stats.lck}</span><span class="stat-pill">SPD ${stats.spd}</span></div>
       <div class="hpbar" style="height:8px;margin-top:8px;background:rgba(0,0,0,.25);border-radius:999px;overflow:hidden"><i style="display:block;height:100%;width:${hpPct}%;background:linear-gradient(90deg,#79f2c0,#ffd166)"></i></div>
     </button>
   `;

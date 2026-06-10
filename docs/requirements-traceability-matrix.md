@@ -10,7 +10,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-002 | Manter core de jogo separado da UI. | `src/js/core/` | `scripts/check.mjs` verifica arquivos core | Implementado |
 | REQ-003 | Criar Fighters por regra pura. | `src/js/core/fighters.js` | `npm run test:core` e uso em mobile/web | Implementado |
 | REQ-004 | Criar Cartas por regra pura. | `src/js/core/cards.js` | `npm run test:core` e uso em mobile/web | Implementado |
-| REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx` | `npm run test:core`, TypeScript e uso manual esperado | Implementado em MVP |
+| REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx`, `docs/battle-rules.md` | `npm run test:core` cobre turnos, cartas, dano, classe, LCK, SPD, critico, falha, reserva e vencedor; TypeScript | Implementado |
 | REQ-006 | Bloquear batalha sem inventario minimo. | `src/hooks/useInventory.ts`, `src/app/battle.tsx` | `npm run test:core`; regra lida via `canStartBattle` | Implementado |
 | REQ-007 | Capturar foto no mobile. | `src/app/camera.tsx`, `expo-image-picker`, `expo-media-library` | TypeScript; check de `getAssetInfoAsync` | Implementado |
 | REQ-008 | Guardar capturas brutas separadas do deck. | `src/hooks/useCapturedPhotos.ts` | `npm run check` verifica contrato | Implementado |
