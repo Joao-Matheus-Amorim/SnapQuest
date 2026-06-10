@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react-native";
+import { Alert, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 
 export default function CameraScreen() {
@@ -26,26 +25,10 @@ export default function CameraScreen() {
       setIsSaving(true);
 
       const capturedUri = result.assets[0].uri;
-      let savedUri = capturedUri;
-      let assetId = result.assets[0].assetId ?? undefined;
-      let filename = result.assets[0].fileName ?? undefined;
+      const assetId = result.assets[0].assetId ?? undefined;
+      const filename = result.assets[0].fileName ?? undefined;
 
-      if (Platform.OS !== "web") {
-        const mediaPermission = await MediaLibrary.requestPermissionsAsync();
-
-        if (!mediaPermission.granted) {
-          Alert.alert("Permissão necessária", "Autorize o acesso às fotos para salvar a captura.");
-          return;
-        }
-
-        const asset = await MediaLibrary.createAssetAsync(capturedUri);
-        const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-        savedUri = assetInfo.localUri || capturedUri;
-        assetId = asset.id;
-        filename = asset.filename;
-      }
-
-      await addCapturedPhoto({ uri: savedUri, assetId, filename });
+      await addCapturedPhoto({ uri: capturedUri, assetId, filename });
       setImageUri(savedUri);
     } catch {
       Alert.alert("Não foi possível salvar a captura", "Verifique as permissões do Expo Go e tente novamente.");

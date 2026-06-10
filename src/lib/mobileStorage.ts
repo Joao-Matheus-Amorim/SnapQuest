@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function getWebValue(key: string) {
   if (typeof window === "undefined") return null;
@@ -13,7 +13,7 @@ function setWebValue(key: string, value: string) {
 
 export async function getStorageItem(key: string) {
   if (Platform.OS === "web") return getWebValue(key);
-  return SecureStore.getItemAsync(key);
+  return AsyncStorage.getItem(key);
 }
 
 export async function setStorageItem(key: string, value: string) {
@@ -21,6 +21,5 @@ export async function setStorageItem(key: string, value: string) {
     setWebValue(key, value);
     return;
   }
-
-  await SecureStore.setItemAsync(key, value);
+  await AsyncStorage.setItem(key, value);
 }
