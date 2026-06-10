@@ -4,6 +4,8 @@ import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
+import { useAuth } from "../hooks/useAuth";
+import { isOwner } from "../lib/ownerConfig";
 
 function isRenderableUri(uri: string) {
   return uri.startsWith("file://") || uri.startsWith("http");
@@ -22,28 +24,43 @@ export default function CameraScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { addCapturedPhoto } = useCapturedPhotos();
+  const { user } = useAuth();
+  const ownerMode = isOwner(user?.email);
 
-  async function pickImage() {
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (!cameraPermission.granted) {
-      Alert.alert("Permissão necessária", "Autorize o acesso à câmera para capturar uma foto real.");
+  async function pickFromCamera() {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permissão necessária", "Autorize o acesso à câmera.");
       return;
     }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    if (result.canceled) return;
+    await saveCapture(result.assets[0].uri, result.assets[0].assetId ?? undefined, result.assets[0].fileName ?? undefined, "camera");
+  }
 
+  async function pickFromGallery() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permissão necessária", "Autorize o acesso à galeria.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.9, mediaTypes: ImagePicker.MediaTypeOptions.Images });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    const uri = isRenderableUri(asset.uri) ? asset.uri : null;
+    if (!uri) {
+      Alert.alert("Foto inválida", "Selecione uma foto da galeria.");
+      return;
+    }
+    await saveCapture(uri, asset.assetId ?? undefined, asset.fileName ?? undefined, "gallery");
+  }
+
+  async function saveCapture(capturedUri: string, assetId: string | undefined, filename: string | undefined, source: "camera" | "gallery") {
+    setIsSaving(true);
     try {
-      const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
-
-      if (result.canceled) return;
-
-      setIsSaving(true);
-
-      const capturedUri = result.assets[0].uri;
       let savedUri = capturedUri;
-      let assetId = result.assets[0].assetId ?? undefined;
-      let filename = result.assets[0].fileName ?? undefined;
 
-      if (Platform.OS !== "web") {
+      if (Platform.OS !== "web" && source === "camera") {
         try {
           const mediaResult = await Promise.race([
             (async () => {
@@ -61,18 +78,18 @@ export default function CameraScreen() {
             filename = mediaResult.filename;
             savedUri = mediaResult.savedUri;
           } else if (!isRenderableUri(savedUri)) {
-            Alert.alert("Não foi possível salvar", "O iOS não liberou o arquivo da foto. Tente novamente.");
+            Alert.alert("Não foi possível salvar", "O iOS não liberou o arquivo. Tente novamente.");
             return;
           }
         } catch {
-          // fallback: usa capturedUri
+          // fallback: capturedUri
         }
       }
 
-      await addCapturedPhoto({ uri: savedUri, assetId, filename });
+      await addCapturedPhoto({ uri: savedUri, assetId, filename, source });
       setImageUri(savedUri);
     } catch {
-      Alert.alert("Não foi possível salvar a captura", "Verifique as permissões do Expo Go e tente novamente.");
+      Alert.alert("Erro ao salvar", "Verifique as permissões e tente novamente.");
     } finally {
       setIsSaving(false);
     }
@@ -82,12 +99,20 @@ export default function CameraScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>📸 Nova Captura</Text>
       <Text style={styles.subtitle}>
-        A foto original fica nas Capturas Brutas. Para jogar, transforme em Fighter ou Carta no Inventário.
+        {ownerMode
+          ? "Modo dono: câmera para deck pessoal, galeria para catálogo base."
+          : "A foto fica nas Capturas Brutas. Transforme em Fighter ou Carta no Inventário."}
       </Text>
 
-      <Pressable style={styles.button} onPress={pickImage} disabled={isSaving}>
-        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "Tirar Foto"}</Text>
+      <Pressable style={styles.button} onPress={pickFromCamera} disabled={isSaving}>
+        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "📷 Tirar Foto"}</Text>
       </Pressable>
+
+      {ownerMode && (
+        <Pressable style={[styles.button, styles.galleryButton]} onPress={pickFromGallery} disabled={isSaving}>
+          <Text style={styles.buttonText}>🖼️ Galeria (Catálogo)</Text>
+        </Pressable>
+      )}
 
       {imageUri ? (
         <>
@@ -111,52 +136,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
+    gap: 14,
   },
-  title: {
-    color: "#f5a623",
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    color: "#ffffff",
-    textAlign: "center",
-    marginBottom: 28,
-  },
+  title: { color: "#f5a623", fontSize: 28, fontWeight: "800", textAlign: "center" },
+  subtitle: { color: "#ffffff", textAlign: "center" },
   button: {
     backgroundColor: "#e94560",
     paddingHorizontal: 28,
     paddingVertical: 16,
     borderRadius: 18,
+    width: "100%",
+    maxWidth: 320,
+    alignItems: "center",
   },
-  buttonText: {
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: 18,
-  },
+  galleryButton: { backgroundColor: "#8e44ad" },
+  buttonText: { color: "#ffffff", fontWeight: "700", fontSize: 18 },
   secondaryButton: {
     borderColor: "#f5a623",
     borderWidth: 1,
     paddingHorizontal: 22,
     paddingVertical: 12,
     borderRadius: 16,
-    marginTop: 16,
   },
-  secondaryButtonText: {
-    color: "#f5a623",
-    fontWeight: "800",
-    fontSize: 15,
-  },
-  preview: {
-    width: 220,
-    height: 220,
-    borderRadius: 24,
-    marginTop: 28,
-  },
-  success: {
-    color: "#ffffff",
-    marginTop: 14,
-    textAlign: "center",
-  },
+  secondaryButtonText: { color: "#f5a623", fontWeight: "800", fontSize: 15 },
+  preview: { width: 220, height: 220, borderRadius: 24 },
+  success: { color: "#ffffff", textAlign: "center" },
 });

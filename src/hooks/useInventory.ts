@@ -1,18 +1,16 @@
 import { canStartBattle } from "../js/core/battle.js";
-import { seedCards } from "../js/core/cards.js";
-import { seedFighters } from "../js/core/fighters.js";
 import { usePlayerDeck } from "./usePlayerDeck";
+import { useCatalog } from "./useCatalog";
 
 export const MIN_FIGHTERS_TO_BATTLE = 6;
 export const MIN_CARDS_TO_BATTLE = 6;
 
-const seededFighters = seedFighters();
-const seededCards = seedCards();
-
 export function useInventory() {
   const playerDeck = usePlayerDeck();
-  const fighters = [...playerDeck.fighters, ...seededFighters];
-  const cards = [...playerDeck.cards, ...seededCards];
+  const catalog = useCatalog();
+
+  const fighters = [...playerDeck.fighters, ...catalog.fighters];
+  const cards = [...playerDeck.cards, ...catalog.cards];
 
   return {
     cards,

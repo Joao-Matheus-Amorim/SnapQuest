@@ -5,7 +5,10 @@ import { useInventory } from "../hooks/useInventory";
 import { usePlayerDeck } from "../hooks/usePlayerDeck";
 import { transformCapturedPhoto } from "../services/geminiTransform";
 import { useAuth } from "../hooks/useAuth";
-import { syncFighterToCloud, syncCardToCloud } from "../services/cloudSync";
+import { syncFighterToCloud, syncCardToCloud, syncCatalogFighter, syncCatalogCard } from "../services/cloudSync";
+import { isOwner } from "../lib/ownerConfig";
+import { createFighter } from "../js/core/fighters.js";
+import { createEffectCard } from "../js/core/cards.js";
 import { FighterCard } from "../components/FighterCard";
 import { CardItem } from "../components/CardItem";
 import type { Fighter } from "../js/core/fighters.js";
@@ -22,11 +25,15 @@ function PendingCapture({
   onFighter: () => void;
   onCard: () => void;
 }) {
+  const isCatalog = item.source === "gallery";
   return (
     <View style={s.pendingRow}>
       <Image source={{ uri: item.uri }} style={s.pendingPhoto} resizeMode="cover" />
       <View style={s.pendingInfo}>
-        <Text style={s.pendingLabel}>Captura bruta</Text>
+        <View style={s.pendingLabelRow}>
+          <Text style={s.pendingLabel}>Captura bruta</Text>
+          {isCatalog && <View style={s.catalogBadge}><Text style={s.catalogBadgeText}>CATÁLOGO</Text></View>}
+        </View>
         <Text style={s.pendingDate}>{new Date(item.createdAt).toLocaleString("pt-BR")}</Text>
         <View style={s.pendingActions}>
           <Pressable style={s.btnFighter} disabled={busy} onPress={onFighter}>
@@ -57,17 +64,30 @@ export default function InventoryScreen() {
   const raw = useCapturedPhotos();
   const deck = usePlayerDeck();
   const { user } = useAuth();
+  const ownerMode = isOwner(user?.email);
   const [busy, setBusy] = useState<string | null>(null);
 
   async function makeFighter(item: CapturedPhoto) {
     setBusy(item.id);
     try {
       const transform = await transformCapturedPhoto({ photo: item, target: "fighter" });
-      const fighter = await deck.addFighterFromPhoto(item, transform);
-      await raw.removeCapturedPhoto(item.id);
-      await inv.reload();
-      await deck.reload();
-      if (user && fighter) syncFighterToCloud(fighter, user.id).catch(() => {});
+
+      if (ownerMode && item.source === "gallery" && user) {
+        const fighter = createFighter({
+          classKey: transform?.target === "fighter" ? transform.key : "guerreiro",
+          name: transform?.target === "fighter" ? transform.name : "Fighter Base",
+          photo: item.uri,
+        });
+        await syncCatalogFighter(fighter, user.id);
+        await raw.removeCapturedPhoto(item.id);
+        await inv.reload();
+      } else {
+        const fighter = await deck.addFighterFromPhoto(item, transform);
+        await raw.removeCapturedPhoto(item.id);
+        await inv.reload();
+        await deck.reload();
+        if (user && fighter) syncFighterToCloud(fighter, user.id).catch(() => {});
+      }
     } finally {
       setBusy(null);
     }
@@ -77,11 +97,23 @@ export default function InventoryScreen() {
     setBusy(item.id);
     try {
       const transform = await transformCapturedPhoto({ photo: item, target: "effect_card" });
-      const card = await deck.addCardFromPhoto(item, transform);
-      await raw.removeCapturedPhoto(item.id);
-      await inv.reload();
-      await deck.reload();
-      if (user && card) syncCardToCloud(card, user.id).catch(() => {});
+
+      if (ownerMode && item.source === "gallery" && user) {
+        const card = createEffectCard({
+          categoryKey: transform?.target === "effect_card" ? transform.key : "criatura",
+          name: transform?.target === "effect_card" ? transform.name : "Carta Base",
+          photo: item.uri,
+        });
+        await syncCatalogCard(card, user.id);
+        await raw.removeCapturedPhoto(item.id);
+        await inv.reload();
+      } else {
+        const card = await deck.addCardFromPhoto(item, transform);
+        await raw.removeCapturedPhoto(item.id);
+        await inv.reload();
+        await deck.reload();
+        if (user && card) syncCardToCloud(card, user.id).catch(() => {});
+      }
     } finally {
       setBusy(null);
     }
@@ -202,7 +234,10 @@ const s = StyleSheet.create({
     padding: 10,
     justifyContent: "space-between",
   },
+  pendingLabelRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 },
   pendingLabel: { color: "#f5a623", fontSize: 13, fontWeight: "800" },
+  catalogBadge: { backgroundColor: "#8e44ad", borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
+  catalogBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 },
   pendingDate: { color: "rgba(255,255,255,.6)", fontSize: 11 },
   pendingActions: { flexDirection: "row", gap: 8 },
   btnFighter: {

@@ -4,8 +4,8 @@ import type { EffectCard } from "../js/core/cards.js";
 
 export async function loadCloudDeck(userId: string): Promise<{ fighters: Fighter[]; cards: EffectCard[] }> {
   const [{ data: fRows, error: fErr }, { data: cRows, error: cErr }] = await Promise.all([
-    supabase.from("snapquest_fighters").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-    supabase.from("snapquest_effect_cards").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    supabase.from("snapquest_fighters").select("*").eq("user_id", userId).eq("is_catalog", false).order("created_at", { ascending: false }),
+    supabase.from("snapquest_effect_cards").select("*").eq("user_id", userId).eq("is_catalog", false).order("created_at", { ascending: false }),
   ]);
   if (fErr) throw fErr;
   if (cErr) throw cErr;
@@ -15,7 +15,18 @@ export async function loadCloudDeck(userId: string): Promise<{ fighters: Fighter
   };
 }
 
-function fromDbFighter(row: Record<string, unknown>): Fighter {
+export async function loadCatalog(): Promise<{ fighters: Fighter[]; cards: EffectCard[] }> {
+  const [{ data: fRows }, { data: cRows }] = await Promise.all([
+    supabase.from("snapquest_fighters").select("*").eq("is_catalog", true).order("created_at", { ascending: true }),
+    supabase.from("snapquest_effect_cards").select("*").eq("is_catalog", true).order("created_at", { ascending: true }),
+  ]);
+  return {
+    fighters: (fRows ?? []).map(fromDbFighter),
+    cards: (cRows ?? []).map(fromDbCard),
+  };
+}
+
+export function fromDbFighter(row: Record<string, unknown>): Fighter {
   return {
     id: row.id,
     type: "fighter",
@@ -36,7 +47,7 @@ function fromDbFighter(row: Record<string, unknown>): Fighter {
   } as Fighter;
 }
 
-function fromDbCard(row: Record<string, unknown>): EffectCard {
+export function fromDbCard(row: Record<string, unknown>): EffectCard {
   return {
     id: row.id,
     type: "effect_card",
@@ -56,23 +67,11 @@ function fromDbCard(row: Record<string, unknown>): EffectCard {
 
 export async function syncFighterToCloud(fighter: Fighter, userId: string): Promise<void> {
   const { error } = await supabase.from("snapquest_fighters").upsert(
-    {
-      id: fighter.id,
-      user_id: userId,
-      name: fighter.nome,
-      photo_data_url: fighter.foto ?? null,
-      photo_fake: fighter.foto_fake ?? null,
-      class_key: fighter.class_key,
-      class_name: fighter.classe,
-      icon: fighter.icon,
-      hp: fighter.hp,
-      atk: fighter.atk,
-      def: fighter.def,
-      lck: fighter.lck,
-      spd: fighter.spd,
-      bonus_attribute: fighter.bonus_atributo,
-      bonus_intensity: fighter.bonus_intensidade,
-    },
+    { id: fighter.id, user_id: userId, name: fighter.nome, photo_data_url: fighter.foto ?? null,
+      photo_fake: fighter.foto_fake ?? null, class_key: fighter.class_key, class_name: fighter.classe,
+      icon: fighter.icon, hp: fighter.hp, atk: fighter.atk, def: fighter.def, lck: fighter.lck,
+      spd: fighter.spd, bonus_attribute: fighter.bonus_atributo, bonus_intensity: fighter.bonus_intensidade,
+      is_catalog: false },
     { onConflict: "id" }
   );
   if (error) throw error;
@@ -80,20 +79,33 @@ export async function syncFighterToCloud(fighter: Fighter, userId: string): Prom
 
 export async function syncCardToCloud(card: EffectCard, userId: string): Promise<void> {
   const { error } = await supabase.from("snapquest_effect_cards").upsert(
-    {
-      id: card.id,
-      user_id: userId,
-      name: card.nome_efeito,
-      photo_data_url: card.foto ?? null,
-      photo_fake: card.foto_fake ?? null,
-      category_key: card.categoria_key,
-      category_name: card.categoria,
-      icon: card.icon,
-      polarity: card.polaridade,
-      attribute: card.atributo,
-      intensity: card.intensidade,
-      rarity: card.raridade,
-    },
+    { id: card.id, user_id: userId, name: card.nome_efeito, photo_data_url: card.foto ?? null,
+      photo_fake: card.foto_fake ?? null, category_key: card.categoria_key, category_name: card.categoria,
+      icon: card.icon, polarity: card.polaridade, attribute: card.atributo, intensity: card.intensidade,
+      rarity: card.raridade, is_catalog: false },
+    { onConflict: "id" }
+  );
+  if (error) throw error;
+}
+
+export async function syncCatalogFighter(fighter: Fighter, userId: string): Promise<void> {
+  const { error } = await supabase.from("snapquest_fighters").upsert(
+    { id: fighter.id, user_id: userId, name: fighter.nome, photo_data_url: fighter.foto ?? null,
+      photo_fake: fighter.foto_fake ?? null, class_key: fighter.class_key, class_name: fighter.classe,
+      icon: fighter.icon, hp: fighter.hp, atk: fighter.atk, def: fighter.def, lck: fighter.lck,
+      spd: fighter.spd, bonus_attribute: fighter.bonus_atributo, bonus_intensity: fighter.bonus_intensidade,
+      is_catalog: true },
+    { onConflict: "id" }
+  );
+  if (error) throw error;
+}
+
+export async function syncCatalogCard(card: EffectCard, userId: string): Promise<void> {
+  const { error } = await supabase.from("snapquest_effect_cards").upsert(
+    { id: card.id, user_id: userId, name: card.nome_efeito, photo_data_url: card.foto ?? null,
+      photo_fake: card.foto_fake ?? null, category_key: card.categoria_key, category_name: card.categoria,
+      icon: card.icon, polarity: card.polaridade, attribute: card.atributo, intensity: card.intensidade,
+      rarity: card.raridade, is_catalog: true },
     { onConflict: "id" }
   );
   if (error) throw error;

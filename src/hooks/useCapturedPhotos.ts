@@ -10,7 +10,7 @@ export type CapturedPhoto = {
   assetId?: string;
   filename?: string;
   createdAt: string;
-  source: "camera";
+  source: "camera" | "gallery";
   status: "raw";
 };
 
@@ -18,6 +18,7 @@ export type CapturedPhotoInput = {
   uri: string;
   assetId?: string;
   filename?: string;
+  source?: "camera" | "gallery";
 };
 
 type CapturedPhotosListener = (photos: CapturedPhoto[]) => void;
@@ -36,7 +37,7 @@ function createPhoto(input: CapturedPhotoInput): CapturedPhoto {
     assetId: input.assetId,
     filename: input.filename,
     createdAt,
-    source: "camera",
+    source: input.source ?? "camera",
     status: "raw",
   };
 }
