@@ -35,7 +35,7 @@ export function CardItem({ card }: { card: EffectCard }) {
     <View style={[s.card, { borderColor: color }]}>
       <View style={[s.photoArea, !hasPhoto && { backgroundColor: color + "22" }]}>
         {hasPhoto ? (
-          <Image source={{ uri: card.foto }} style={s.photo} resizeMode="cover" />
+          <Image source={{ uri: card.foto ?? undefined }} style={s.photo} resizeMode="cover" />
         ) : (
           <Text style={[s.placeholderIcon, { color }]}>{card.icon ?? "✨"}</Text>
         )}

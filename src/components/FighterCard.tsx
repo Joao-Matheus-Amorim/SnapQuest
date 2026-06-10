@@ -35,7 +35,7 @@ export function FighterCard({ fighter }: { fighter: Fighter }) {
     <View style={[s.card, { borderColor: color }]}>
       <View style={[s.photoArea, !hasPhoto && { backgroundColor: color + "22" }]}>
         {hasPhoto ? (
-          <Image source={{ uri: fighter.foto }} style={s.photo} resizeMode="cover" />
+          <Image source={{ uri: fighter.foto ?? undefined }} style={s.photo} resizeMode="cover" />
         ) : (
           <Text style={[s.placeholderIcon, { color }]}>{fighter.icon ?? "⚔️"}</Text>
         )}
