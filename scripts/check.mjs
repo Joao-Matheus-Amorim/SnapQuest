@@ -22,12 +22,14 @@ const required = [
   'src/hooks/useCapturedPhotos.ts',
   'src/hooks/usePlayerDeck.ts',
   'src/services/geminiTransform.ts',
+  'scripts/validate-catalog-rls.mjs',
   'test/core-balance.test.mjs',
   'test/core-battle.test.mjs',
   'test/core-factories.test.mjs',
   'test/card-suggestion.test.mjs',
   'docs/gemini-card-suggestions.md',
   'docs/gemini-transform-flow.md',
+  'docs/catalog-rls-validation.md',
   'supabase/schema.sql',
 ];
 
@@ -85,6 +87,21 @@ if (!schema.includes('revoke update (can_manage_catalog)')) {
 
 if (!schema.includes('snapquest_fighters_catalog_idx') || !schema.includes('snapquest_effect_cards_catalog_idx')) {
   fail('schema.sql must index catalog lookups for fighters and cards.');
+}
+
+const rlsValidation = fs.readFileSync('scripts/validate-catalog-rls.mjs', 'utf8');
+for (const requiredRlsCheck of [
+  'common cannot insert catalog fighter',
+  'common cannot insert catalog card',
+  'common cannot self-promote can_manage_catalog',
+  'owner can insert catalog fighter',
+  'owner can insert catalog card',
+  'common can read catalog fighter',
+  'common cannot delete catalog fighter',
+]) {
+  if (!rlsValidation.includes(requiredRlsCheck)) {
+    fail(`catalog RLS validation must cover: ${requiredRlsCheck}.`);
+  }
 }
 
 const mobileStorage = fs.readFileSync('src/lib/mobileStorage.ts', 'utf8');

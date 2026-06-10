@@ -74,6 +74,7 @@ O repositorio possui:
 - `npx expo install --check`.
 - `npx tsc --noEmit`.
 - `npm run test:core`.
+- `npm run test:rls:catalog` para validacao real de RLS de catalogo quando `RLS_TEST_*` estiver configurado.
 - `npm run check`.
 - `npm run build`.
 - Testes automatizados para balanceamento, factories, sugestao de cartas e batalha local.
@@ -92,7 +93,7 @@ O repositorio possui:
 
 - Supabase Storage para fotos.
 - Backend/edge function para proteger chamada Gemini.
-- Testes automatizados robustos de RLS.
+- Execucao validada do harness RLS contra usuarios reais.
 - XP, conquistas, diario de aventuras e colecoes completas.
 - Multiplayer online.
 - Publicacao em loja.
@@ -106,7 +107,7 @@ O repositorio possui:
 | GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
 | GAP-004 | Cobertura automatizada de comportamento era inicial. | Regressao podia passar em cenarios de core nao cobertos. | Fechado: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada. |
 | GAP-005 | LCK/SPD nao tinham efeito completo. | Atributos pareciam mais ricos que a regra real. | Fechado: regra definida em `docs/battle-rules.md`, implementada no core e coberta por `npm run test:core`. |
-| GAP-006 | RLS de catalogo ainda nao foi provada com usuario comum e usuario dono em teste documentado. | Policy pode estar correta no schema, mas sem evidencia funcional. | Executar roteiro de validacao Supabase e registrar resultado. |
+| GAP-006 | RLS de catalogo ainda nao foi provada com usuario comum e usuario dono em execucao real. | Policy pode estar correta no schema, mas sem evidencia funcional registrada. | Preencher `RLS_TEST_*`, rodar `npm run test:rls:catalog` e registrar evidencia em `docs/catalog-rls-validation.md`. |
 
 ## Decisao atual
 

@@ -23,6 +23,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 | TypeScript | `npx tsc --noEmit` | Todo PR com TS/TSX |
 | Static check | `npm run check` | Todo PR |
 | Web build | `npm run build` | Mudancas web/build/config |
+| Catalog RLS real | `npm run test:rls:catalog` | Mudancas em Supabase/catalogo/RLS, com `RLS_TEST_*` local |
 | Security audit | `npm audit` | Revisao de dependencias; bloqueio manual quando houver high/critical |
 | Revisao de docs | Manual | Todo PR com comportamento, arquitetura, risco ou debito |
 
@@ -32,7 +33,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 |---|---|---|
 | Presenca de arquivos criticos | `scripts/check.mjs` | Nao valida comportamento real completo. |
 | Core de jogo | `npm run test:core` cobre balanceamento, factories, sugestao de cartas, compra, cartas, dano, turno, vencedor, critico, falha critica, matchup e reserva | Nao substitui E2E mobile nem validacao RLS real. |
-| RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()` | Nao prova politicas com usuarios reais. |
+| RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()`; `npm run test:rls:catalog` prova fluxo real quando credenciais `RLS_TEST_*` existem | Execucao real ainda depende de usuarios de teste no Supabase. |
 | Mobile storage | `scripts/check.mjs` verifica fallback web/native | Nao testa falhas reais de plataforma. |
 | Gemini/mock | `scripts/check.mjs` verifica contrato basico | Nao testa API real nem cota. |
 | TypeScript | `npx tsc --noEmit` | Nao substitui teste funcional. |
@@ -88,7 +89,7 @@ Um PR esta pronto quando:
 
 | Prioridade | Melhoria | Motivo |
 |---|---|---|
-| Alta | Testes ou fixtures para RLS/catalogo | O contrato esta versionado; falta evidencia funcional com usuario comum e dono. |
+| Alta | Executar `npm run test:rls:catalog` e registrar evidencia | Harness existe; falta preencher usuarios `RLS_TEST_*` e rodar contra Supabase real. |
 | Alta | Plano de upgrade para vulnerabilidades moderadas | `npm audit` aponta Expo/Vite/transitivas com upgrades potencialmente quebradores. |
 | Media | Smoke test mobile/web | Prova minima de navegacao principal. |
 | Media | Check automatizado contra `service_role` e `sb_secret_` | Evita vazamento acidental. |

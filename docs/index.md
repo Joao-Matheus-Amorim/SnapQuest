@@ -23,6 +23,7 @@ Este indice e a porta de entrada oficial para a documentacao do SnapQuest.
 
 - `project-map.md`: mapa dos diretorios e responsabilidades.
 - `database.md`: banco Supabase, RLS e pendencias.
+- `catalog-rls-validation.md`: roteiro executavel para validar RLS do catalogo com usuario comum e dono.
 - `deploy-vercel.md`: deploy web.
 - `rn-migration.md`: historico e status da migracao React Native + Expo.
 - `battle-rules.md`: contrato de regras de batalha, LCK, SPD, critico, classe e reserva.

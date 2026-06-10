@@ -116,6 +116,12 @@ Rodar testes do core de batalha:
 npm run test:core
 ```
 
+Validar RLS real do catalogo:
+
+```bash
+npm run test:rls:catalog
+```
+
 Atalho padrao de testes:
 
 ```bash
@@ -162,6 +168,8 @@ O schema cria:
 
 Ponto de atencao atual: o schema de catalogo foi versionado e aplicado manualmente no Supabase em 2026-06-10. Para escrever no catalogo compartilhado, o perfil do usuario dono precisa ter `can_manage_catalog = true`. Essa permissao nao e alteravel pelo frontend.
 
+O roteiro executavel de validacao esta em [Validacao RLS do Catalogo](docs/catalog-rls-validation.md). Ele usa apenas anon key e dois usuarios autenticados de teste.
+
 ## Documentacao principal
 
 - [Indice de documentacao](docs/index.md)
@@ -204,7 +212,7 @@ Uma entrega so pode ser tratada como pronta quando:
 
 ## Proximas prioridades tecnicas
 
-1. Validar RLS de catalogo com usuario comum e usuario dono.
+1. Preencher `RLS_TEST_*` e rodar `npm run test:rls:catalog`.
 2. Migrar fotos para Supabase Storage.
 3. Mover chamada Gemini para backend/edge function antes de producao.
 4. Refinar cerimonia visual.

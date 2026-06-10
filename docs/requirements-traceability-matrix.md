@@ -27,7 +27,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-019 | Carregar catalogo da nuvem com fallback seed. | `src/hooks/useCatalog.ts`, `src/services/cloudSync.ts`, `supabase/schema.sql` | TypeScript e check estatico de schema | Implementado e aplicado; validar leitura real |
 | REQ-020 | Modo dono para catalogo via galeria. | `src/app/camera.tsx`, `src/app/inventory.tsx`, `src/lib/ownerConfig.ts` | TypeScript | Implementado com risco de schema |
 | REQ-021 | Proteger dados por usuario no banco. | `supabase/schema.sql` | `npm run check` verifica RLS e `auth.uid()` | Implementado para inventario pessoal |
-| REQ-022 | Suportar catalogo compartilhado. | `cloudSync.ts`, `is_catalog`, `can_manage_catalog`, RLS | Check estatico de schema; falta teste real de RLS | Implementado e aplicado; validar RLS real |
+| REQ-022 | Suportar catalogo compartilhado. | `cloudSync.ts`, `is_catalog`, `can_manage_catalog`, RLS, `scripts/validate-catalog-rls.mjs` | Check estatico de schema; `npm run test:rls:catalog` criado e pendente de execucao com `RLS_TEST_*` | Implementado e aplicado; validar RLS real |
 | REQ-023 | Evitar segredo privado no frontend. | `.env.example`, docs, `supabase.ts` | Revisao manual; check parcial | Implementado como regra |
 | REQ-024 | Deploy web na Vercel. | `vercel.json`, `vite.config.js` | `npm run build` | Implementado |
 | REQ-025 | CI minima. | `.github/workflows/ci.yml`, `.github/workflows/static-check.yml` | GitHub Actions com test:core, typecheck, static check e build | Implementado |
@@ -39,8 +39,8 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 |---|---|---|
 | REQ-018 | Sync depende de contrato cloud ainda pouco testado. | Testar login, merge local/cloud e erro offline. |
 | REQ-019 | Catalogo precisa de evidencia de leitura real no Supabase aplicado. | Validar leitura/fallback no app. |
-| REQ-022 | RLS de catalogo precisa ser provada com usuario comum e dono. | Criar teste/roteiro de RLS e executar no Supabase. |
-| REQ-025 | CI ainda nao cobre RLS real. | Executar roteiro de RLS em TD-011. |
+| REQ-022 | RLS de catalogo precisa ser provada com usuario comum e dono. | Preencher `RLS_TEST_*`, rodar `npm run test:rls:catalog` e registrar evidencia. |
+| REQ-025 | CI ainda nao cobre RLS real. | Manter `test:rls:catalog` como gate manual/local porque depende de usuarios reais. |
 
 ## Regra de manutencao
 

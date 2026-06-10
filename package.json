@@ -7,6 +7,7 @@
     "check": "node scripts/check.mjs",
     "test": "npm run test:core",
     "test:core": "node --test \"test/*.test.mjs\"",
+    "test:rls:catalog": "node scripts/validate-catalog-rls.mjs",
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",

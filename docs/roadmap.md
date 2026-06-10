@@ -63,7 +63,7 @@ Entregas:
 
 Pendencia operacional:
 
-- Validar RLS de catalogo em ambiente real com usuario comum e usuario dono.
+- Executar `npm run test:rls:catalog` em ambiente real com usuario comum e usuario dono.
 
 ## Fase 4 - Batalha mobile
 
@@ -115,7 +115,7 @@ Entregas:
 - Migration para catalogo (`is_catalog`) ou redesign do catalogo.
 - Politicas RLS para catalogo compartilhado, se mantido.
 - Supabase Storage para fotos.
-- Testes de RLS ou fixtures de banco.
+- Evidencia registrada da execucao `npm run test:rls:catalog`.
 - Sync local/cloud validado.
 
 ## Fase 7 - Produto familiar completo
@@ -134,7 +134,7 @@ Possiveis entregas:
 
 ## Prioridade imediata recomendada
 
-1. Validar RLS de catalogo no Supabase real.
+1. Preencher `RLS_TEST_*` e rodar `npm run test:rls:catalog` no Supabase real.
 2. Criar Storage para fotos.
 3. Mover Gemini para backend/edge.
 4. Refinar cerimonia visual.

@@ -100,4 +100,4 @@ Decisao: versionar `is_catalog` nas tabelas de Fighters/Cartas e `can_manage_cat
 
 Motivo: o app atual consulta e grava catalogo via `is_catalog`; sem esse contrato no banco, um ambiente novo nao sustenta o fluxo.
 
-Consequencia: o schema foi aplicado manualmente no Supabase em 2026-06-10. A proxima etapa e validar RLS com usuario comum e usuario dono.
+Consequencia: o schema foi aplicado manualmente no Supabase em 2026-06-10. A validacao real deve usar `npm run test:rls:catalog` com `RLS_TEST_*`.

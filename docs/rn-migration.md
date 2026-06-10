@@ -41,7 +41,7 @@ O projeto esta alinhado ao Expo SDK 54 para compatibilidade com o dispositivo de
 ## Pendencias mobile
 
 - Validar fluxo completo em dispositivo fisico atualizado.
-- Validar RLS de catalogo no Supabase com usuario comum e usuario dono.
+- Rodar `npm run test:rls:catalog` com usuario comum e usuario dono no Supabase real.
 - Migrar fotos para Supabase Storage.
 - Criar backend/edge para Gemini antes de producao.
 - Adicionar testes automatizados de batalha.

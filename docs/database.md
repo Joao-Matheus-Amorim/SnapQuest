@@ -88,16 +88,23 @@ where id = '<user_id_do_dono>';
 
 Use somente o SQL Editor/Service Role para esse ajuste. Nao exponha Service Role no app.
 
-## Validacao operacional pendente
+## Validacao operacional
 
-O contrato esta versionado e foi aplicado, mas ainda precisa de evidencia funcional documentada com usuario comum e usuario dono.
+O contrato esta versionado e foi aplicado. A validacao funcional foi automatizada em:
 
-Acao necessaria:
+```bash
+npm run test:rls:catalog
+```
 
-1. Validar leitura de catalogo com usuario autenticado comum.
-2. Validar que usuario comum nao consegue escrever item de catalogo.
-3. Validar que usuario dono consegue escrever item de catalogo.
-4. Registrar evidencia no PR/doc correspondente.
+Roteiro completo: `docs/catalog-rls-validation.md`.
+
+Acao pendente:
+
+1. Configurar `RLS_TEST_COMMON_EMAIL` e `RLS_TEST_COMMON_PASSWORD`.
+2. Configurar `RLS_TEST_OWNER_EMAIL` e `RLS_TEST_OWNER_PASSWORD`.
+3. Garantir `can_manage_catalog = true` para o dono via SQL Editor.
+4. Rodar `npm run test:rls:catalog`.
+5. Registrar a evidencia em `docs/catalog-rls-validation.md`.
 
 ## Fotos
 
@@ -125,4 +132,4 @@ O banco deve passar a guardar URL/path de Storage, nao a imagem inteira.
 - Atualizar `risk-register.md`.
 - Atualizar `technical-debt-register.md`.
 - Rodar `npm run check`.
-- Validar RLS com pelo menos dois usuarios antes de producao.
+- Rodar `npm run test:rls:catalog` com pelo menos dois usuarios antes de producao.
