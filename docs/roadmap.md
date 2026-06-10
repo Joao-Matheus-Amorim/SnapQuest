@@ -103,7 +103,7 @@ Entregas em andamento:
 - Tela de transformacao com cerimonia: analise da foto, revelacao de classe/categoria, roleta de dados para cada atributo.
 
 Entregas futuras:
-- IA real (Gemini) para lore e atributos baseados na foto.
+- Prompt Gemini refinado para lore e atributos baseados no conteudo real da foto (integracao base ja feita).
 - Upload para Supabase Storage.
 - Revisao humana antes de salvar.
 - LCK e SPD com efeito real no combate.

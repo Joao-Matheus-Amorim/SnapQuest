@@ -23,8 +23,8 @@ O repositorio contem um MVP web em HTML/CSS/JavaScript puro com Vite, integracao
 - Bootstrap React Native + Expo.
 - Camera mobile captura foto e salva como captura bruta (`useCapturedPhotos`).
 - Inventario mobile renderiza fighters/cartas (seed + deck do jogador).
-- Conversao de foto bruta em Fighter ou Carta via mock Gemini.
-- Persistencia local do deck do jogador via SecureStore (`usePlayerDeck`).
+- Conversao de foto bruta em Fighter ou Carta via Gemini real (fallback para mock sem chave).
+- Persistencia local do deck do jogador via SecureStore + AsyncStorage (`usePlayerDeck`, `mobileStorage.ts`).
 - Batalha mobile completa: setup, turno por turno, passar celular, vencedor.
 - `useBattle` encapsulando todo o core de batalha (`battle.js`).
 - Tipos TypeScript completos para o core (`battle.d.ts`, `fighters.d.ts`, `cards.d.ts`).
@@ -35,13 +35,12 @@ O repositorio contem um MVP web em HTML/CSS/JavaScript puro com Vite, integracao
 - Auth Supabase no MVP web.
 - Sincronizacao de inventario com Supabase.
 - UX de Conta/Nuvem ainda nao e produto final.
-- Mock Gemini nao chama backend real.
+- Gemini real integrado com fallback para mock; lore/atributos ainda nao sao gerados com base no conteudo real da foto.
 
 ### Nao implementado
 
 - Tela de transformacao com cerimonia (animacao, roleta de dados ao vivo).
 - LCK e SPD sem efeito real na batalha.
-- IA real (Gemini) para lore/atributos por foto.
 - Supabase Storage para fotos.
 - Auth nativo consolidado.
 - Testes automatizados robustos.
@@ -60,4 +59,4 @@ O repositorio contem um MVP web em HTML/CSS/JavaScript puro com Vite, integracao
 O proximo passo e construir a tela de transformacao com cerimonia visual:
 foto -> animacao de analise -> revelacao da classe/categoria -> roleta de dados ao vivo para cada atributo -> card finalizado.
 
-Gemini/IA continua como mock por enquanto. O foco e a experiencia visual da criacao antes de ligar a IA real.
+Gemini real esta integrado com fallback para mock. O proximo passo e a cerimonia visual de transformacao antes de refinar o prompt Gemini para lore/atributos baseados no conteudo da foto.
