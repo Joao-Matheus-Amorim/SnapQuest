@@ -129,6 +129,26 @@ revoke update (can_manage_catalog)
 on public.snapquest_profiles
 from anon, authenticated;
 
+create or replace function public.snapquest_guard_catalog_admin_flag()
+returns trigger
+language plpgsql
+as $$
+begin
+  if current_user in ('anon', 'authenticated')
+    and new.can_manage_catalog is distinct from old.can_manage_catalog
+  then
+    raise exception 'can_manage_catalog can only be changed by an administrative database role';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists snapquest_profiles_guard_catalog_admin_flag on public.snapquest_profiles;
+create trigger snapquest_profiles_guard_catalog_admin_flag
+before update on public.snapquest_profiles
+for each row execute function public.snapquest_guard_catalog_admin_flag();
+
 create policy "fighters_select_own"
 on public.snapquest_fighters for select
 to authenticated

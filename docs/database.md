@@ -90,21 +90,22 @@ Use somente o SQL Editor/Service Role para esse ajuste. Nao exponha Service Role
 
 ## Validacao operacional
 
-O contrato esta versionado e foi aplicado. A validacao funcional foi automatizada em:
+O contrato esta versionado, aplicado e validado contra o Supabase real em 2026-06-10. A validacao funcional fica automatizada em:
 
 ```bash
 npm run test:rls:catalog
 ```
 
-Roteiro completo: `docs/catalog-rls-validation.md`.
+Roteiro e evidencia: `docs/catalog-rls-validation.md`.
 
-Acao pendente:
+Resultado registrado:
 
-1. Configurar `RLS_TEST_COMMON_EMAIL` e `RLS_TEST_COMMON_PASSWORD`.
-2. Configurar `RLS_TEST_OWNER_EMAIL` e `RLS_TEST_OWNER_PASSWORD`.
-3. Garantir `can_manage_catalog = true` para o dono via SQL Editor.
-4. Rodar `npm run test:rls:catalog`.
-5. Registrar a evidencia em `docs/catalog-rls-validation.md`.
+- usuario comum cria/remove item pessoal;
+- usuario comum nao escreve catalogo;
+- usuario comum nao se autopromove com `can_manage_catalog`;
+- usuario dono escreve/remove catalogo;
+- usuario comum le catalogo;
+- usuario comum nao atualiza/remove catalogo.
 
 ## Fotos
 
@@ -132,4 +133,4 @@ O banco deve passar a guardar URL/path de Storage, nao a imagem inteira.
 - Atualizar `risk-register.md`.
 - Atualizar `technical-debt-register.md`.
 - Rodar `npm run check`.
-- Rodar `npm run test:rls:catalog` com pelo menos dois usuarios antes de producao.
+- Rodar `npm run test:rls:catalog` com pelo menos dois usuarios apos qualquer mudanca em catalogo/RLS.

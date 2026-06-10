@@ -12,9 +12,9 @@ Ultima atualizacao: 2026-06-10.
 | TD-006 | Gemini chamado diretamente do app | Prototipo rapido de IA | Alto | Criar backend/edge function para proxy seguro | Aberto |
 | TD-007 | Schema sem `is_catalog` usado pelo app | Evolucao de catalogo nao refletida no SQL | Critico | Fechado no schema versionado e aplicado manualmente em 2026-06-10 | Fechado |
 | TD-008 | CI duplicada entre `ci.yml` e `static-check.yml` | Evolucao incremental | Baixo | Consolidar workflows ou documentar razao da duplicidade | Aberto |
-| TD-009 | Catalogo compartilhado sem contrato RLS completo | Modo dono foi adicionado antes do desenho final de banco | Alto | Definir ownership, leitura publica/autenticada e escrita restrita | Aberto |
+| TD-009 | Catalogo compartilhado sem contrato RLS completo | Modo dono foi adicionado antes do desenho final de banco | Alto | Fechado: ownership, leitura autenticada, escrita restrita ao dono e bloqueio de autopromocao foram validados por `npm run test:rls:catalog` | Fechado |
 | TD-010 | `npm audit` reporta 16 vulnerabilidades moderadas | Dependencias Expo/Vite e transitivas exigem upgrades com risco de compatibilidade | Medio | Avaliar upgrade Expo/Vite em PR proprio, com Expo check, typecheck, build e teste em dispositivo | Aberto |
-| TD-011 | RLS de catalogo sem teste funcional executado | Schema foi aplicado; harness documentado existe, mas falta rodar com usuario comum e dono reais | Alto | Preencher `RLS_TEST_*` no `.env`, rodar `npm run test:rls:catalog` e registrar evidencia | Aberto |
+| TD-011 | RLS de catalogo sem evidencia funcional | Schema foi aplicado; faltava evidencia real com usuario comum e dono | Alto | Fechado: `npm run test:rls:catalog` passou no Supabase real em 2026-06-10 e evidencia foi registrada | Fechado |
 
 ## Regra
 

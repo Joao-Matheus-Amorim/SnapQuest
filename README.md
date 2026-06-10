@@ -17,7 +17,7 @@ Data de referencia: 2026-06-10.
 | Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; LCK e SPD tem efeito completo na batalha local. |
 | Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
 | Supabase Auth | Implementado no mobile | Login/cadastro com anon key publica. UX ainda nao e final. |
-| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog` e controle por `can_manage_catalog`. |
+| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog`, controle por `can_manage_catalog` e validacao real via `test:rls:catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
 | Gemini | Implementado com fallback | IA opcional sob demanda; fallback deterministico quando chave/cota/modelo falha. |
 | Fotos | Parcial | Mobile persiste arquivo local comprimido; banco ainda aceita `photo_data_url`. Storage remoto e pendente. |
@@ -168,7 +168,7 @@ O schema cria:
 
 Ponto de atencao atual: o schema de catalogo foi versionado e aplicado manualmente no Supabase em 2026-06-10. Para escrever no catalogo compartilhado, o perfil do usuario dono precisa ter `can_manage_catalog = true`. Essa permissao nao e alteravel pelo frontend.
 
-O roteiro executavel de validacao esta em [Validacao RLS do Catalogo](docs/catalog-rls-validation.md). Ele usa apenas anon key e dois usuarios autenticados de teste.
+O roteiro executavel de validacao esta em [Validacao RLS do Catalogo](docs/catalog-rls-validation.md). Ele usa apenas anon key e dois usuarios autenticados de teste. A ultima execucao real passou em 2026-06-10.
 
 ## Documentacao principal
 
@@ -212,8 +212,7 @@ Uma entrega so pode ser tratada como pronta quando:
 
 ## Proximas prioridades tecnicas
 
-1. Preencher `RLS_TEST_*` e rodar `npm run test:rls:catalog`.
-2. Migrar fotos para Supabase Storage.
-3. Mover chamada Gemini para backend/edge function antes de producao.
-4. Refinar cerimonia visual.
-5. Criar smoke test mobile/web.
+1. Migrar fotos para Supabase Storage.
+2. Mover chamada Gemini para backend/edge function antes de producao.
+3. Refinar cerimonia visual.
+4. Criar smoke test mobile/web.

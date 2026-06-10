@@ -79,6 +79,7 @@ O repositorio possui:
 - `npm run build`.
 - Testes automatizados para balanceamento, factories, sugestao de cartas e batalha local.
 - Checks estaticos para arquivos criticos, RLS basica, storage mobile e contrato Gemini/mock.
+- Validacao RLS real de catalogo com usuario comum e dono.
 
 ## Parcial ou em validacao
 
@@ -93,7 +94,6 @@ O repositorio possui:
 
 - Supabase Storage para fotos.
 - Backend/edge function para proteger chamada Gemini.
-- Execucao validada do harness RLS contra usuarios reais.
 - XP, conquistas, diario de aventuras e colecoes completas.
 - Multiplayer online.
 - Publicacao em loja.
@@ -102,16 +102,16 @@ O repositorio possui:
 
 | ID | Gap | Impacto | Proxima acao |
 |---|---|---|---|
-| GAP-001 | Schema versionado de catalogo precisava alinhar `is_catalog` e permissao de escrita. | Catalogo cloud podia quebrar em banco novo. | Fechado: schema versionado e aplicado manualmente no Supabase em 2026-06-10; validacao RLS real segue em GAP-006. |
+| GAP-001 | Schema versionado de catalogo precisava alinhar `is_catalog` e permissao de escrita. | Catalogo cloud podia quebrar em banco novo. | Fechado: schema versionado e aplicado manualmente no Supabase em 2026-06-10. |
 | GAP-002 | Gemini roda no app com env publica. | Chave fica exposta em bundle mobile. | Mover para backend/edge antes de producao. |
 | GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
 | GAP-004 | Cobertura automatizada de comportamento era inicial. | Regressao podia passar em cenarios de core nao cobertos. | Fechado: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada. |
 | GAP-005 | LCK/SPD nao tinham efeito completo. | Atributos pareciam mais ricos que a regra real. | Fechado: regra definida em `docs/battle-rules.md`, implementada no core e coberta por `npm run test:core`. |
-| GAP-006 | RLS de catalogo ainda nao foi provada com usuario comum e usuario dono em execucao real. | Policy pode estar correta no schema, mas sem evidencia funcional registrada. | Preencher `RLS_TEST_*`, rodar `npm run test:rls:catalog` e registrar evidencia em `docs/catalog-rls-validation.md`. |
+| GAP-006 | RLS de catalogo ainda nao tinha prova real com usuario comum e usuario dono. | Risco fechado com evidencia funcional registrada. | Fechado: `npm run test:rls:catalog` passou no Supabase real em 2026-06-10. |
 
 ## Decisao atual
 
-A prioridade tecnica e validar RLS de catalogo com usuario comum e usuario dono. Depois disso, a ordem recomendada e:
+A prioridade tecnica recomendada agora e:
 
 1. Storage para fotos;
 2. Gemini via backend/edge;

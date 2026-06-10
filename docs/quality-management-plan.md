@@ -33,7 +33,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 |---|---|---|
 | Presenca de arquivos criticos | `scripts/check.mjs` | Nao valida comportamento real completo. |
 | Core de jogo | `npm run test:core` cobre balanceamento, factories, sugestao de cartas, compra, cartas, dano, turno, vencedor, critico, falha critica, matchup e reserva | Nao substitui E2E mobile nem validacao RLS real. |
-| RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()`; `npm run test:rls:catalog` prova fluxo real quando credenciais `RLS_TEST_*` existem | Execucao real ainda depende de usuarios de teste no Supabase. |
+| RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()`; `npm run test:rls:catalog` passou no Supabase real em 2026-06-10 | Rerodar quando catalogo/RLS mudar. |
 | Mobile storage | `scripts/check.mjs` verifica fallback web/native | Nao testa falhas reais de plataforma. |
 | Gemini/mock | `scripts/check.mjs` verifica contrato basico | Nao testa API real nem cota. |
 | TypeScript | `npx tsc --noEmit` | Nao substitui teste funcional. |
@@ -89,7 +89,7 @@ Um PR esta pronto quando:
 
 | Prioridade | Melhoria | Motivo |
 |---|---|---|
-| Alta | Executar `npm run test:rls:catalog` e registrar evidencia | Harness existe; falta preencher usuarios `RLS_TEST_*` e rodar contra Supabase real. |
+| Alta | Rerodar `npm run test:rls:catalog` em mudancas de catalogo/RLS | Evidencia inicial registrada; manter como gate manual por depender de usuarios reais. |
 | Alta | Plano de upgrade para vulnerabilidades moderadas | `npm audit` aponta Expo/Vite/transitivas com upgrades potencialmente quebradores. |
 | Media | Smoke test mobile/web | Prova minima de navegacao principal. |
 | Media | Check automatizado contra `service_role` e `sb_secret_` | Evita vazamento acidental. |

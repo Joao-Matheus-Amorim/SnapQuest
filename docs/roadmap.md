@@ -61,9 +61,9 @@ Entregas:
 - Catalogo cloud com fallback seed.
 - Modo dono para catalogo via galeria.
 
-Pendencia operacional:
+Validacao operacional:
 
-- Executar `npm run test:rls:catalog` em ambiente real com usuario comum e usuario dono.
+- `npm run test:rls:catalog` passou no Supabase real em 2026-06-10 com usuario comum e usuario dono.
 
 ## Fase 4 - Batalha mobile
 
@@ -115,7 +115,7 @@ Entregas:
 - Migration para catalogo (`is_catalog`) ou redesign do catalogo.
 - Politicas RLS para catalogo compartilhado, se mantido.
 - Supabase Storage para fotos.
-- Evidencia registrada da execucao `npm run test:rls:catalog`.
+- Rerodar `npm run test:rls:catalog` apos qualquer mudanca em catalogo/RLS.
 - Sync local/cloud validado.
 
 ## Fase 7 - Produto familiar completo
@@ -134,7 +134,6 @@ Possiveis entregas:
 
 ## Prioridade imediata recomendada
 
-1. Preencher `RLS_TEST_*` e rodar `npm run test:rls:catalog` no Supabase real.
-2. Criar Storage para fotos.
-3. Mover Gemini para backend/edge.
-4. Refinar cerimonia visual.
+1. Criar Storage para fotos.
+2. Mover Gemini para backend/edge.
+3. Refinar cerimonia visual.

@@ -85,6 +85,10 @@ if (!schema.includes('revoke update (can_manage_catalog)')) {
   fail('schema.sql must prevent users from self-promoting catalog admin access.');
 }
 
+if (!schema.includes('snapquest_guard_catalog_admin_flag')) {
+  fail('schema.sql must guard can_manage_catalog updates with a database trigger.');
+}
+
 if (!schema.includes('snapquest_fighters_catalog_idx') || !schema.includes('snapquest_effect_cards_catalog_idx')) {
   fail('schema.sql must index catalog lookups for fighters and cards.');
 }

@@ -13,7 +13,7 @@ Este documento consolida a gestao do SnapQuest em formato PMBOK adaptado para um
 | Objetivo | Validar e evoluir um loop familiar de captura, colecao e batalha com base reutilizavel para mobile. |
 | Entrega atual | MVP web preservado e MVP mobile Expo com captura, inventario, transformacao e batalha local. |
 | Principal restricao | Segredos nao podem entrar no frontend. |
-| Principal risco atual | Harness de RLS do catalogo existe, mas precisa ser executado com `RLS_TEST_*` em ambiente real. |
+| Principal risco atual | Fotos ainda usam `photo_data_url` e Gemini ainda roda no app antes do backend seguro. |
 
 ## 2. Escopo do produto
 

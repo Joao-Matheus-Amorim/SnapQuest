@@ -168,9 +168,14 @@ async function assertOwnerCatalogPermission(client, userId) {
     .from('snapquest_profiles')
     .select('can_manage_catalog')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(`Could not read owner profile: ${error.message}`);
+  if (!data) {
+    throw new Error(
+      'Owner RLS user has no visible snapquest_profiles row. Run the owner promotion SQL in docs/catalog-rls-validation.md for RLS_TEST_OWNER_EMAIL.'
+    );
+  }
   if (data?.can_manage_catalog !== true) {
     throw new Error(
       'Owner RLS user must have can_manage_catalog=true. Run the SQL in docs/catalog-rls-validation.md first.'
