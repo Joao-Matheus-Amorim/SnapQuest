@@ -32,5 +32,11 @@ jobs:
       - name: Expo dependency check
         run: npx expo install --check
 
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
       - name: Static checks
         run: npm run check
+
+      - name: Web build
+        run: npm run build
