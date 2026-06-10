@@ -13,7 +13,7 @@ Este documento consolida a gestao do SnapQuest em formato PMBOK adaptado para um
 | Objetivo | Validar e evoluir um loop familiar de captura, colecao e batalha com base reutilizavel para mobile. |
 | Entrega atual | MVP web preservado e MVP mobile Expo com captura, inventario, transformacao e batalha local. |
 | Principal restricao | Segredos nao podem entrar no frontend. |
-| Principal risco atual | Divergencia entre schema Supabase versionado e contrato atual de catalogo usado pelo app. |
+| Principal risco atual | RLS de catalogo precisa ser validada com usuario comum e usuario dono em ambiente real. |
 
 ## 2. Escopo do produto
 
@@ -146,7 +146,7 @@ O projeto e considerado tecnicamente rastreavel quando:
 
 | ID | Lacuna | Plano |
 |---|---|---|
-| GAP-001 | Schema Supabase sem `is_catalog`, mas app usa esse campo. | Criar migration ou ajustar contrato do app. |
+| GAP-001 | Contrato de catalogo precisava de `is_catalog` e controle de admin. | Fechado: tratado no schema versionado e aplicado manualmente em 2026-06-10. |
 | GAP-002 | Gemini roda no app com chave publica. | Migrar para backend/edge function antes de producao. |
 | GAP-003 | Fotos ainda podem ir como `photo_data_url`. | Migrar para Supabase Storage. |
 | GAP-004 | Poucos testes automatizados de comportamento. | Criar testes de core e smoke mobile/web. |

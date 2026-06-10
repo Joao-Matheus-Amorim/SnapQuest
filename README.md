@@ -17,7 +17,7 @@ Data de referencia: 2026-06-10.
 | Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile. |
 | Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
 | Supabase Auth | Implementado no mobile | Login/cadastro com anon key publica. UX ainda nao e final. |
-| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo usa `is_catalog` no app, mas schema precisa ser alinhado. |
+| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog` e controle por `can_manage_catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
 | Gemini | Implementado com fallback | IA opcional sob demanda; fallback deterministico quando chave/cota/modelo falha. |
 | Fotos | Parcial | Mobile persiste arquivo local comprimido; banco ainda aceita `photo_data_url`. Storage remoto e pendente. |
@@ -148,7 +148,7 @@ O schema cria:
 - policies por `auth.uid()`
 - trigger de `updated_at`
 
-Ponto de atencao atual: o app usa `is_catalog` em `src/services/cloudSync.ts`, mas o schema versionado ainda nao possui essa coluna. Isso esta registrado como gap critico de banco em `docs/technical-debt-register.md` e `docs/risk-register.md`.
+Ponto de atencao atual: o schema de catalogo foi versionado e aplicado manualmente no Supabase em 2026-06-10. Para escrever no catalogo compartilhado, o perfil do usuario dono precisa ter `can_manage_catalog = true`. Essa permissao nao e alteravel pelo frontend.
 
 ## Documentacao principal
 
@@ -190,7 +190,7 @@ Uma entrega so pode ser tratada como pronta quando:
 
 ## Proximas prioridades tecnicas
 
-1. Alinhar `supabase/schema.sql` com o contrato atual de catalogo (`is_catalog`) ou remover esse uso do app.
+1. Validar RLS de catalogo com usuario comum e usuario dono.
 2. Criar testes automatizados do core de batalha.
 3. Migrar fotos para Supabase Storage.
 4. Mover chamada Gemini para backend/edge function antes de producao.

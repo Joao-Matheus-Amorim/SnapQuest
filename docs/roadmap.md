@@ -61,9 +61,9 @@ Entregas:
 - Catalogo cloud com fallback seed.
 - Modo dono para catalogo via galeria.
 
-Pendencia critica:
+Pendencia operacional:
 
-- Alinhar schema Supabase com `is_catalog`.
+- Validar RLS de catalogo em ambiente real com usuario comum e usuario dono.
 
 ## Fase 4 - Batalha mobile
 
@@ -133,7 +133,7 @@ Possiveis entregas:
 
 ## Prioridade imediata recomendada
 
-1. Resolver GAP-001: schema/catalogo.
+1. Validar RLS de catalogo no Supabase real.
 2. Criar testes de core de batalha.
 3. Criar Storage para fotos.
 4. Mover Gemini para backend/edge.

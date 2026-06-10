@@ -8,6 +8,7 @@ create table if not exists public.snapquest_profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   player2_name text,
+  can_manage_catalog boolean not null default false,
   xp integer not null default 0,
   level integer not null default 1,
   created_at timestamptz not null default now(),
@@ -30,6 +31,7 @@ create table if not exists public.snapquest_fighters (
   spd integer not null check (spd >= 0),
   bonus_attribute text not null,
   bonus_intensity integer not null check (bonus_intensity between 1 and 5),
+  is_catalog boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -47,9 +49,31 @@ create table if not exists public.snapquest_effect_cards (
   attribute text not null check (attribute in ('ATK', 'DEF', 'LCK', 'SPD', 'HP', 'MANA')),
   intensity integer not null check (intensity between 1 and 5),
   rarity text not null,
+  is_catalog boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.snapquest_profiles
+add column if not exists can_manage_catalog boolean not null default false;
+
+alter table public.snapquest_fighters
+add column if not exists is_catalog boolean not null default false;
+
+alter table public.snapquest_effect_cards
+add column if not exists is_catalog boolean not null default false;
+
+create index if not exists snapquest_fighters_user_id_idx
+on public.snapquest_fighters (user_id);
+
+create index if not exists snapquest_fighters_catalog_idx
+on public.snapquest_fighters (is_catalog, created_at);
+
+create index if not exists snapquest_effect_cards_user_id_idx
+on public.snapquest_effect_cards (user_id);
+
+create index if not exists snapquest_effect_cards_catalog_idx
+on public.snapquest_effect_cards (is_catalog, created_at);
 
 create table if not exists public.snapquest_battle_logs (
   id uuid primary key default gen_random_uuid(),
@@ -84,58 +108,200 @@ drop policy if exists "battle_logs_insert_own" on public.snapquest_battle_logs;
 
 create policy "profiles_select_own"
 on public.snapquest_profiles for select
-using (auth.uid() = id);
+to authenticated
+using ((select auth.uid()) = id);
 
 create policy "profiles_insert_own"
 on public.snapquest_profiles for insert
-with check (auth.uid() = id);
+to authenticated
+with check (
+  (select auth.uid()) = id
+  and can_manage_catalog = false
+);
 
 create policy "profiles_update_own"
 on public.snapquest_profiles for update
-using (auth.uid() = id)
-with check (auth.uid() = id);
+to authenticated
+using ((select auth.uid()) = id)
+with check ((select auth.uid()) = id);
+
+revoke update (can_manage_catalog)
+on public.snapquest_profiles
+from anon, authenticated;
 
 create policy "fighters_select_own"
 on public.snapquest_fighters for select
-using (auth.uid() = user_id);
+to authenticated
+using (
+  is_catalog = true
+  or (select auth.uid()) = user_id
+);
 
 create policy "fighters_insert_own"
 on public.snapquest_fighters for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    (select auth.uid()) = user_id
+    and is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+);
 
 create policy "fighters_update_own"
 on public.snapquest_fighters for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+)
+with check (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    (select auth.uid()) = user_id
+    and is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+);
 
 create policy "fighters_delete_own"
 on public.snapquest_fighters for delete
-using (auth.uid() = user_id);
+to authenticated
+using (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+);
 
 create policy "cards_select_own"
 on public.snapquest_effect_cards for select
-using (auth.uid() = user_id);
+to authenticated
+using (
+  is_catalog = true
+  or (select auth.uid()) = user_id
+);
 
 create policy "cards_insert_own"
 on public.snapquest_effect_cards for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    (select auth.uid()) = user_id
+    and is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+);
 
 create policy "cards_update_own"
 on public.snapquest_effect_cards for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+)
+with check (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    (select auth.uid()) = user_id
+    and is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+);
 
 create policy "cards_delete_own"
 on public.snapquest_effect_cards for delete
-using (auth.uid() = user_id);
+to authenticated
+using (
+  (
+    (select auth.uid()) = user_id
+    and is_catalog = false
+  )
+  or (
+    is_catalog = true
+    and exists (
+      select 1
+      from public.snapquest_profiles
+      where id = (select auth.uid())
+        and can_manage_catalog = true
+    )
+  )
+);
 
 create policy "battle_logs_select_own"
 on public.snapquest_battle_logs for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "battle_logs_insert_own"
 on public.snapquest_battle_logs for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check ((select auth.uid()) = user_id);
 
 create or replace function public.snapquest_touch_updated_at()
 returns trigger

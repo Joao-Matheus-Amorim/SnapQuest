@@ -24,10 +24,10 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-016 | Limpar deck local no logout. | `src/hooks/useAuth.ts`, `clearPlayerDeck` | TypeScript | Implementado |
 | REQ-017 | Login/cadastro Supabase. | `src/app/login.tsx`, `src/hooks/useAuth.ts`, `src/lib/supabase.ts` | TypeScript | Implementado em MVP |
 | REQ-018 | Sincronizar deck pessoal com nuvem. | `src/services/cloudSync.ts` | TypeScript | Parcial |
-| REQ-019 | Carregar catalogo da nuvem com fallback seed. | `src/hooks/useCatalog.ts`, `src/services/cloudSync.ts` | TypeScript | Parcial com gap de schema |
+| REQ-019 | Carregar catalogo da nuvem com fallback seed. | `src/hooks/useCatalog.ts`, `src/services/cloudSync.ts`, `supabase/schema.sql` | TypeScript e check estatico de schema | Implementado e aplicado; validar leitura real |
 | REQ-020 | Modo dono para catalogo via galeria. | `src/app/camera.tsx`, `src/app/inventory.tsx`, `src/lib/ownerConfig.ts` | TypeScript | Implementado com risco de schema |
 | REQ-021 | Proteger dados por usuario no banco. | `supabase/schema.sql` | `npm run check` verifica RLS e `auth.uid()` | Implementado para inventario pessoal |
-| REQ-022 | Suportar catalogo compartilhado. | `cloudSync.ts` usa `is_catalog` | Sem suporte no schema atual | Gap critico |
+| REQ-022 | Suportar catalogo compartilhado. | `cloudSync.ts`, `is_catalog`, `can_manage_catalog`, RLS | Check estatico de schema; falta teste real de RLS | Implementado e aplicado; validar RLS real |
 | REQ-023 | Evitar segredo privado no frontend. | `.env.example`, docs, `supabase.ts` | Revisao manual; check parcial | Implementado como regra |
 | REQ-024 | Deploy web na Vercel. | `vercel.json`, `vite.config.js` | `npm run build` | Implementado |
 | REQ-025 | CI minima. | `.github/workflows/ci.yml`, `.github/workflows/static-check.yml` | GitHub Actions | Implementado |
@@ -38,8 +38,8 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | Requisito | Gap | Acao necessaria |
 |---|---|---|
 | REQ-018 | Sync depende de contrato cloud ainda pouco testado. | Testar login, merge local/cloud e erro offline. |
-| REQ-019 | Catalogo depende de coluna `is_catalog` ausente no schema. | Criar migration ou remover dependencia. |
-| REQ-022 | RLS atual isola por `user_id`; catalogo compartilhado precisa politica propria. | Definir modelo de catalogo e aplicar RLS. |
+| REQ-019 | Catalogo precisa de evidencia de leitura real no Supabase aplicado. | Validar leitura/fallback no app. |
+| REQ-022 | RLS de catalogo precisa ser provada com usuario comum e dono. | Criar teste/roteiro de RLS e executar no Supabase. |
 | REQ-025 | CI nao roda testes de gameplay porque eles ainda nao existem. | Adicionar suite de core. |
 
 ## Regra de manutencao

@@ -54,6 +54,26 @@ if (!schema.includes('auth.uid()')) {
   fail('schema.sql must scope policies by auth.uid().');
 }
 
+if (!schema.includes('is_catalog boolean not null default false')) {
+  fail('schema.sql must define is_catalog for catalog-backed inventory.');
+}
+
+if (!schema.includes('can_manage_catalog boolean not null default false')) {
+  fail('schema.sql must define can_manage_catalog for catalog write control.');
+}
+
+if (!schema.includes('to authenticated')) {
+  fail('schema.sql policies must explicitly target authenticated users.');
+}
+
+if (!schema.includes('revoke update (can_manage_catalog)')) {
+  fail('schema.sql must prevent users from self-promoting catalog admin access.');
+}
+
+if (!schema.includes('snapquest_fighters_catalog_idx') || !schema.includes('snapquest_effect_cards_catalog_idx')) {
+  fail('schema.sql must index catalog lookups for fighters and cards.');
+}
+
 const mobileStorage = fs.readFileSync('src/lib/mobileStorage.ts', 'utf8');
 if (!mobileStorage.includes('Platform.OS === "web"')) {
   fail('mobileStorage must fallback to localStorage on web.');

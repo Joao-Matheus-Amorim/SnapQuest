@@ -112,7 +112,7 @@ Responsabilidade:
 - criar policies por usuario;
 - criar trigger de `updated_at`.
 
-Atencao: o app atual usa `is_catalog` para catalogo, mas o schema versionado ainda nao tem essa coluna.
+Atencao: o app atual usa `is_catalog` para catalogo, e o schema versionado tambem declara `can_manage_catalog` para controlar escrita administrativa.
 
 ## Scripts e CI
 

@@ -47,6 +47,7 @@ O app mobile atual usa:
 - `user_id`
 - `photo_data_url`
 - campos de atributos, classe/categoria e raridade
+- `can_manage_catalog` em `snapquest_profiles` para permitir escrita administrativa no catalogo
 
 Arquivos principais:
 
@@ -55,24 +56,48 @@ Arquivos principais:
 - `src/hooks/useInventory.ts`
 - `src/app/inventory.tsx`
 
-## Gap critico conhecido
+## Catalogo compartilhado
 
-`src/services/cloudSync.ts` consulta e grava `.eq("is_catalog", true|false)`, mas `supabase/schema.sql` ainda nao declara a coluna `is_catalog`.
+`src/services/cloudSync.ts` consulta e grava `.eq("is_catalog", true|false)`.
 
-Impacto:
+O schema versionado declara:
 
-- Em um banco novo criado apenas com `schema.sql`, chamadas de catalogo podem falhar.
-- RLS atual protege itens por `user_id`, mas nao define uma politica clara para catalogo compartilhado.
+```sql
+is_catalog boolean not null default false
+can_manage_catalog boolean not null default false
+```
+
+Modelo de acesso:
+
+- usuarios autenticados podem ler itens de catalogo;
+- usuarios autenticados podem ler/escrever seus proprios itens pessoais;
+- somente perfis com `can_manage_catalog = true` podem inserir, atualizar ou excluir itens de catalogo;
+- `can_manage_catalog` nao pode ser atualizado pelo frontend autenticado.
+
+## Aplicacao em ambiente real
+
+Status: aplicado manualmente no Supabase em 2026-06-10, conforme confirmacao operacional.
+
+Para novos ambientes, depois de aplicar `supabase/schema.sql`, habilite o dono do catalogo com SQL administrativo:
+
+```sql
+update public.snapquest_profiles
+set can_manage_catalog = true
+where id = '<user_id_do_dono>';
+```
+
+Use somente o SQL Editor/Service Role para esse ajuste. Nao exponha Service Role no app.
+
+## Validacao operacional pendente
+
+O contrato esta versionado e foi aplicado, mas ainda precisa de evidencia funcional documentada com usuario comum e usuario dono.
 
 Acao necessaria:
 
-1. Definir se catalogo sera publico para usuarios autenticados ou restrito por dono.
-2. Adicionar coluna `is_catalog boolean not null default false`.
-3. Criar policies compativeis:
-   - leitura de itens pessoais pelo dono;
-   - leitura de catalogo pelos usuarios permitidos;
-   - escrita de catalogo apenas pelo dono/admin.
-4. Atualizar `schema.sql`, docs e checks.
+1. Validar leitura de catalogo com usuario autenticado comum.
+2. Validar que usuario comum nao consegue escrever item de catalogo.
+3. Validar que usuario dono consegue escrever item de catalogo.
+4. Registrar evidencia no PR/doc correspondente.
 
 ## Fotos
 

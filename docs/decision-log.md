@@ -92,12 +92,12 @@ Motivo: o projeto ja possui web, mobile, banco, IA, CI e documentacao historica.
 
 Consequencia: todo PR que muda comportamento, risco, divida, arquitetura ou qualidade deve avaliar esses documentos alem dos registros existentes.
 
-## D-010 — Tratar catalogo Supabase como gap critico ate alinhar schema
+## D-010 — Tratar catalogo Supabase como contrato versionado
 
 Data: 2026-06-10
 
-Decisao: registrar explicitamente que o app atual usa `is_catalog` em `cloudSync.ts`, mas `supabase/schema.sql` ainda nao declara essa coluna.
+Decisao: versionar `is_catalog` nas tabelas de Fighters/Cartas e `can_manage_catalog` em perfis para controlar escrita administrativa de catalogo.
 
-Motivo: um banco criado do zero pelo schema versionado pode nao sustentar o fluxo de catalogo do app.
+Motivo: o app atual consulta e grava catalogo via `is_catalog`; sem esse contrato no banco, um ambiente novo nao sustenta o fluxo.
 
-Consequencia: novas features de catalogo/nuvem devem primeiro resolver o contrato de banco ou trabalhar fora desse escopo.
+Consequencia: o schema foi aplicado manualmente no Supabase em 2026-06-10. A proxima etapa e validar RLS com usuario comum e usuario dono.

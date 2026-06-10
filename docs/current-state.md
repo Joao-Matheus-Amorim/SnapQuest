@@ -77,7 +77,7 @@ O repositorio possui:
 ## Parcial ou em validacao
 
 - Sync cloud/local precisa de validacao de fluxo completo com usuario real.
-- Catalogo cloud usa `is_catalog` no app, mas o schema versionado ainda nao tem essa coluna.
+- Catalogo cloud tem contrato versionado com `is_catalog`; schema aplicado manualmente no Supabase em 2026-06-10; escrita de catalogo depende de perfil com `can_manage_catalog = true`.
 - Auth existe, mas UX de conta ainda e MVP.
 - Gemini funciona como chamada publica no app; aceitavel para prototipo, nao para producao.
 - Fotos finais podem ser sincronizadas como `photo_data_url`; Storage remoto ainda nao foi implantado.
@@ -97,15 +97,16 @@ O repositorio possui:
 
 | ID | Gap | Impacto | Proxima acao |
 |---|---|---|---|
-| GAP-001 | `cloudSync.ts` usa `is_catalog`, mas `supabase/schema.sql` nao declara essa coluna. | Catalogo cloud pode quebrar em banco novo. | Criar migration/schema para catalogo ou ajustar app. |
+| GAP-001 | Schema versionado de catalogo precisava alinhar `is_catalog` e permissao de escrita. | Catalogo cloud podia quebrar em banco novo. | Fechado: schema versionado e aplicado manualmente no Supabase em 2026-06-10; validacao RLS real segue em GAP-006. |
 | GAP-002 | Gemini roda no app com env publica. | Chave fica exposta em bundle mobile. | Mover para backend/edge antes de producao. |
 | GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
 | GAP-004 | Poucos testes automatizados de comportamento. | Regressao pode passar se typecheck/build passar. | Criar suite de core e smoke tests. |
 | GAP-005 | LCK/SPD nao tem efeito completo. | Atributos parecem mais ricos que a regra real. | Definir design e implementar em PR proprio. |
+| GAP-006 | RLS de catalogo ainda nao foi provada com usuario comum e usuario dono em teste documentado. | Policy pode estar correta no schema, mas sem evidencia funcional. | Executar roteiro de validacao Supabase e registrar resultado. |
 
 ## Decisao atual
 
-A prioridade tecnica e fechar o gap entre app e banco para catalogo (`is_catalog`) antes de ampliar funcionalidades. Depois disso, a ordem recomendada e:
+A prioridade tecnica e validar RLS de catalogo com usuario comum e usuario dono. Depois disso, a ordem recomendada e:
 
 1. testes de core de batalha;
 2. Storage para fotos;
