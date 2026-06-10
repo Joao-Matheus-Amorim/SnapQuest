@@ -13,18 +13,30 @@ export default function InventoryScreen() {
 
   async function makeFighter(item: CapturedPhoto) {
     setBusy(item.id);
-    const transform = await transformCapturedPhoto({ photo: item, target: "fighter" });
-    await deck.addFighterFromPhoto(item, transform);
-    await raw.removeCapturedPhoto(item.id);
-    setBusy(null);
+
+    try {
+      const transform = await transformCapturedPhoto({ photo: item, target: "fighter" });
+      await deck.addFighterFromPhoto(item, transform);
+      await raw.removeCapturedPhoto(item.id);
+      await inv.reload();
+      await deck.reload();
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function makeCard(item: CapturedPhoto) {
     setBusy(item.id);
-    const transform = await transformCapturedPhoto({ photo: item, target: "effect_card" });
-    await deck.addCardFromPhoto(item, transform);
-    await raw.removeCapturedPhoto(item.id);
-    setBusy(null);
+
+    try {
+      const transform = await transformCapturedPhoto({ photo: item, target: "effect_card" });
+      await deck.addCardFromPhoto(item, transform);
+      await raw.removeCapturedPhoto(item.id);
+      await inv.reload();
+      await deck.reload();
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
