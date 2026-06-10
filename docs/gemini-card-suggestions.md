@@ -1,14 +1,56 @@
-# Gemini para sugestao de cartas
+# Gemini para Sugestao de Cartas
+
+Ultima atualizacao: 2026-06-10.
 
 ## Objetivo
 
 Usar IA como assistente criativo para sugerir cartas a partir de fotos reais, sem substituir as regras do jogo.
 
-O fluxo alvo e:
+## Dois contratos existem hoje
+
+### 1. Contrato web/legado de sugestao
+
+Local:
 
 ```txt
-foto real -> sugestao estruturada -> revisao humana -> core cria carta valida -> inventario
+src/js/services/cardSuggestionService.js
 ```
+
+Funcao:
+
+```js
+suggestCardFromPhoto({ photoUri, visualHint })
+```
+
+Status:
+
+- mock/local;
+- usado para travar contrato de sugestao estruturada;
+- coberto por `scripts/check.mjs` e `scripts/check-card-suggestion.mjs`.
+
+### 2. Contrato mobile de transformacao
+
+Local:
+
+```txt
+src/services/geminiTransform.ts
+```
+
+Funcao:
+
+```ts
+transformCapturedPhoto({
+  photo,
+  target: "fighter" | "effect_card"
+})
+```
+
+Status:
+
+- Gemini real opcional;
+- fallback offline deterministico;
+- usado por `src/app/inventory.tsx`;
+- documentado em `docs/gemini-transform-flow.md`.
 
 ## Regra principal
 
@@ -16,11 +58,12 @@ A IA nao cria carta final sozinha.
 
 Ela pode sugerir:
 
-- nome da carta;
-- lore curta;
+- nome;
 - categoria provavel;
 - atributo provavel;
 - polaridade provavel;
+- golpe/efeito;
+- descricao curta;
 - justificativa visual.
 
 O core continua responsavel por:
@@ -29,24 +72,10 @@ O core continua responsavel por:
 - validar atributo;
 - validar polaridade;
 - limitar intensidade;
-- criar a carta real;
+- criar a Carta real;
 - manter balanceamento.
 
-## Contrato inicial
-
-O contrato inicial vive em:
-
-```txt
-src/js/services/cardSuggestionService.js
-```
-
-A funcao principal e:
-
-```js
-suggestCardFromPhoto({ photoUri, visualHint })
-```
-
-Ela retorna uma sugestao estruturada, por exemplo:
+## Exemplo do contrato legado
 
 ```json
 {
@@ -57,38 +86,32 @@ Ela retorna uma sugestao estruturada, por exemplo:
   "polarityHint": "BÔNUS",
   "attributeHint": "LCK",
   "intensityHint": 1,
-  "rarityHint": "⚪ Comum",
+  "rarityHint": "Comum",
   "visualReason": "Sugestao baseada na pista visual.",
   "requiresReview": true,
   "source": "mock"
 }
 ```
 
-## Estado atual
+Observacao: o contrato legado atual valida `BÔNUS` e `DEBUFF`.
 
-Nesta etapa, a implementacao e mock/local.
+## Seguranca
 
-Ela existe para travar o contrato antes da integracao real com Gemini.
+O contrato mobile atual chama Gemini diretamente do app quando `EXPO_PUBLIC_GEMINI_API_KEY` existe.
 
-## Segurança
+Isso e aceitavel para prototipo, mas nao para producao.
 
-A chave da IA nao deve ficar no frontend web nem no app mobile.
+Antes de producao:
 
-Quando a integracao real entrar, o app deve chamar uma camada controlada de backend/Edge Function. Essa camada chama Gemini e devolve apenas a sugestao estruturada.
+- mover chamada Gemini para backend/edge function;
+- guardar chave em env privada;
+- aplicar rate limit;
+- registrar falhas;
+- preservar fallback offline.
 
-## Fora do escopo deste contrato
+## Fora do escopo deste documento
 
-- Chamar Gemini real.
-- Salvar carta no inventario.
-- Salvar foto em Storage.
-- Criar Fighter.
-- Alterar balanceamento.
-- Liberar batalha.
-
-## Proximos PRs
-
-1. Ligar tela de foto/carta ao adapter mock.
-2. Criar revisao humana antes de salvar.
-3. Chamar backend/Edge Function para IA real.
-4. Validar retorno da IA contra o contrato.
-5. Integrar com `createEffectCard` para criar carta real aprovada.
+- Design visual da cerimonia.
+- Supabase Storage.
+- RLS de catalogo.
+- Balanceamento completo de LCK/SPD.

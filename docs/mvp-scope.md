@@ -1,41 +1,59 @@
 # Escopo do MVP
 
+Ultima atualizacao: 2026-06-10.
+
 ## Objetivo
 
-Validar se o ciclo central do SnapQuest é divertido:
+Validar se o ciclo central do SnapQuest e divertido:
 
 ```txt
-foto -> roleta -> inventário -> batalha -> jogar de novo
+foto -> captura bruta -> Fighter/Carta -> inventario -> batalha -> jogar de novo
 ```
 
-## Incluído agora
+## Incluido no MVP atual
 
-- App web estático.
-- Inventário local.
-- Supabase opcional para recorrência.
-- 4 classes de lutador.
-- 8 categorias de carta.
+- MVP web preservado.
+- App mobile Expo.
+- Captura por camera.
+- Galeria no modo dono.
+- Inventario local.
+- Catalogo com fallback seed.
+- Supabase Auth.
+- Sync inicial com Supabase.
+- 4 classes de Fighter.
+- 8 categorias de Carta.
+- Gemini opcional para melhorar nome/golpe/vacilo.
+- Fallback offline sem IA.
 - Batalha local passando o celular.
-- Botões grandes e fluxo mobile-first.
+- Fluxo mobile-first.
 
 ## Fora do MVP atual
 
-- React Native + Expo.
-- Supabase Storage.
-- Gemini.
-- OpenWeather.
-- Geolocalização real.
+- Multiplayer online.
+- Loja.
+- Monetizacao.
+- Supabase Storage em producao.
+- Backend/edge function para Gemini.
 - XP/level completo.
 - Conquistas completas.
-- Multiplayer online.
-- Deck manual.
+- Diario de aventuras.
+- Deck builder avancado.
 - MANA global.
-- Habilidades especiais.
+- Habilidades especiais completas.
+- Publicacao em app stores.
 
-## Critério de sucesso
+## Criterio de sucesso
 
-- Cria 3+ lutadores.
-- Cria 3+ cartas.
-- Joga partida do começo ao fim.
-- Pai e filho entendem sem explicação longa.
-- Dá vontade de jogar outra.
+- Criar capturas reais.
+- Transformar pelo menos 6 Fighters e 6 Cartas.
+- Jogar uma partida do comeco ao fim.
+- Entender o fluxo sem explicacao longa.
+- Ter vontade de jogar outra partida.
+
+## Criterio tecnico minimo
+
+- `npm run check` passa.
+- `npx tsc --noEmit` passa.
+- `npm run build` passa quando web for afetado.
+- `npx expo install --check` passa quando mobile/deps forem afetados.
+- Riscos e dividas conhecidos estao documentados.

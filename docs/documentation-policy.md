@@ -10,6 +10,10 @@ Se a documentacao nao precisar mudar, o PR deve explicar o motivo.
 
 ## Documentos que devem ser avaliados em todo PR
 
+- `docs/index.md`
+- `docs/project-management-plan.md`
+- `docs/requirements-traceability-matrix.md`
+- `docs/quality-management-plan.md`
 - `docs/current-state.md`
 - `docs/project-map.md`
 - `docs/roadmap.md`

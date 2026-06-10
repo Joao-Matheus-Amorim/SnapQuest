@@ -1,121 +1,147 @@
 # Mapa do Projeto SnapQuest
 
-Este documento mostra onde cada parte do SnapQuest vive e qual responsabilidade cada area possui.
+Data de referencia: 2026-06-10.
+
+Este documento descreve onde cada parte do SnapQuest vive e qual responsabilidade cada area possui.
 
 ## Raiz
 
-- `index.html`: entrada do MVP web. Web only.
-- `vite.config.js`: build Vite do MVP web. Web only.
-- `vercel.json`: deploy do MVP web na Vercel. Web only.
-- `package.json`: scripts e dependencias do MVP web e comandos iniciais mobile.
-- `app.json`: configuracao Expo do app mobile.
-- `App.tsx`: arquivo legado do bootstrap inicial; o entry atual usa Expo Router via `expo-router/entry`.
-- `.env.example`: exemplo de env publica segura.
+| Caminho | Responsabilidade |
+|---|---|
+| `README.md` | Entrada principal do projeto. |
+| `package.json` | Scripts, dependencias web/mobile e entry Expo. |
+| `package-lock.json` | Lockfile npm. |
+| `index.html` | Entrada do MVP web. |
+| `vite.config.js` | Configuracao Vite SPA. |
+| `vercel.json` | Build e rewrites do deploy web. |
+| `app.json` | Configuracao Expo, plugins e permissoes. |
+| `App.tsx` | Arquivo legado de navegacao React Navigation; entry atual e `expo-router/entry`. |
+| `tsconfig.json` | TypeScript estrito baseado em Expo. |
+| `.env.example` | Exemplo de variaveis publicas. |
+
+## Mobile Expo
+
+Local: `src/app/`
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `_layout.tsx` | Stack do Expo Router. |
+| `index.tsx` | Home mobile, contadores, login/logout e entrada para captura. |
+| `camera.tsx` | Camera, galeria no modo dono, permissoes e salvamento de captura bruta. |
+| `inventory.tsx` | Pendentes, transformacao, IA opcional, criacao, filtros, exclusao e revelacao. |
+| `battle.tsx` | Batalha local completa, setup, turnos, selecao, cartas, ataques e vencedor. |
+| `login.tsx` | Login/cadastro Supabase. |
+
+## Componentes mobile
+
+Local: `src/components/`
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `BottomNav.tsx` | Navegacao inferior mobile. |
+| `BattleLog.tsx` | Log visual de batalha. |
+| `CardItem.tsx` | Renderizacao de Carta. |
+| `FighterCard.tsx` | Renderizacao de Fighter. |
+| `LegendaryAura.tsx` | Efeito visual para raridade/revelacao. |
+| `NameInputModal.tsx` | Confirmacao de nome e acao de IA. |
+| `RevealModal.tsx` | Revelacao do item final criado. |
+
+## Hooks mobile
+
+Local: `src/hooks/`
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `useAuth.ts` | Sessao Supabase, login, cadastro e logout com limpeza de deck local. |
+| `useCapturedPhotos.ts` | Fila local de capturas brutas. |
+| `usePlayerDeck.ts` | Deck pessoal local, merge cloud, criacao e remocao de itens. |
+| `useCatalog.ts` | Catalogo cloud com fallback para seed local. |
+| `useInventory.ts` | Agrega deck pessoal + catalogo e calcula requisitos de batalha. |
+| `useBattle.ts` | Adapter React para o core de batalha. |
+| `useCloudSync.ts` | Sincronizacao cloud quando aplicavel. |
+
+## Services e libs mobile
+
+| Caminho | Responsabilidade |
+|---|---|
+| `src/services/cloudSync.ts` | Leitura/sync/delete de Fighters, Cartas e catalogo no Supabase. |
+| `src/services/geminiTransform.ts` | Transformacao por Gemini real ou mock offline. |
+| `src/lib/supabase.ts` | Cliente Supabase com storage de auth por plataforma. |
+| `src/lib/mobileStorage.ts` | Adapter localStorage web + SecureStore/AsyncStorage native. |
+| `src/lib/photoStorage.ts` | Compressao e persistencia permanente de fotos finais. |
+| `src/lib/ownerConfig.ts` | Identificacao de modo dono por email publico. |
+| `src/lib/rarityConfig.ts` | Calculo e metadata visual de raridade. |
 
 ## Core de jogo
 
 Local: `src/js/core/`
 
-Responsabilidade: regras puras de jogo, sem DOM, sem Supabase, sem Vercel.
+Regra: esta pasta deve continuar sem DOM, React, Expo, Supabase ou Vercel.
 
-Arquivos:
+| Arquivo | Responsabilidade |
+|---|---|
+| `balance.js` | Classes, categorias, atributos, golpes, misses e balanceamento. |
+| `fighters.js` | Factory e seed de Fighters. |
+| `cards.js` | Factory e seed de Cartas. |
+| `battle.js` | Estado e regras da batalha local. |
+| `utils.js` | Utilitarios puros. |
+| `*.d.ts` | Contratos TypeScript para consumo no mobile. |
 
-- `balance.js`: classes, categorias, atributos e balanceamento.
-- `fighters.js`: criacao e estrutura de lutadores.
-- `cards.js`: criacao e estrutura de cartas.
-- `battle.js`: fluxo de batalha.
-- `utils.js`: utilitarios puros.
+## MVP web
 
-Regra: o core deve ser reutilizavel no mobile. Evitar dependencias web.
+| Caminho | Responsabilidade |
+|---|---|
+| `src/js/app.js` | Orquestracao do MVP web. |
+| `src/js/ui/dom.js` | Renderizacao DOM. |
+| `src/js/ui/cloudAccount.js` | UI de conta/nuvem web. |
+| `src/js/ui/cloudAccountAuto.js` | Automacao de conta/nuvem web. |
+| `src/js/services/publicConfig.js` | Env publica no web. |
+| `src/js/services/localStore.js` | Persistencia local web. |
+| `src/js/services/supabaseClient.js` | Cliente Supabase web. |
+| `src/js/services/inventoryRepository.js` | Repositorio de inventario web. |
+| `src/js/services/cardSuggestionService.js` | Contrato de sugestao de carta por foto. |
 
-## Services web
-
-Local: `src/js/services/`
-
-Responsabilidade: integracoes e persistencia do MVP web.
-
-Arquivos:
-
-- `publicConfig.js`: le env publica do Vite.
-- `localStore.js`: persistencia local web via `localStorage`.
-- `supabaseClient.js`: cliente Supabase web.
-- `inventoryRepository.js`: sincronizacao de inventario.
-
-Regra: services web podem ser adaptados depois para Expo, mas sem contaminar `src/js/core/`.
-
-## UI web
-
-Local: `src/js/ui/`, `src/js/app.js`, `src/styles/app.css`
-
-Responsabilidade: telas, DOM, navegacao e estilo do MVP web.
-
-Status: valido para MVP web, mas nao e arquitetura final do app mobile.
-
-## UI mobile inicial
-
-Local: `src/app/`
-
-Responsabilidade: telas iniciais React Native + Expo Router.
-
-Arquivos:
-
-- `_layout.tsx`: Stack do Expo Router.
-- `index.tsx`: Home mobile esqueleto.
-- `camera.tsx`: tela de camera esqueleto.
-- `inventory.tsx`: tela de inventario esqueleto.
-- `battle.tsx`: tela de batalha esqueleto.
-
-Regra: nesta fase, estas telas sao esqueleto. Nao representam gameplay real nem integracao final com foto, Supabase, Gemini ou Storage.
-
-## Componentes mobile iniciais
-
-Local: `src/components/`
-
-Responsabilidade: componentes visuais reutilizaveis do bootstrap mobile.
-
-Arquivos:
-
-- `BattleLog.tsx`
-- `CardItem.tsx`
-- `FighterCard.tsx`
-
-## Hooks mobile iniciais
-
-Local: `src/hooks/`
-
-Responsabilidade: hooks esqueleto para evolucao posterior do mobile.
-
-Arquivos:
-
-- `useBattle.ts`
-- `useInventory.ts`
-
-## Supabase
+## Banco
 
 Local: `supabase/schema.sql`
 
-Responsabilidade: schema inicial, RLS e tabelas do SnapQuest.
+Responsabilidade:
 
-Regra: alteracoes de banco devem ser feitas em PR proprio, com documentacao de risco.
+- criar tabelas do MVP;
+- habilitar RLS;
+- criar policies por usuario;
+- criar trigger de `updated_at`.
+
+Atencao: o app atual usa `is_catalog` para catalogo, mas o schema versionado ainda nao tem essa coluna.
+
+## Scripts e CI
+
+| Caminho | Responsabilidade |
+|---|---|
+| `scripts/check.mjs` | Checks estaticos do projeto. |
+| `scripts/check-card-suggestion.mjs` | Check especifico de sugestao de carta. |
+| `.github/workflows/ci.yml` | CI principal com Expo check, TypeScript, static check e build. |
+| `.github/workflows/static-check.yml` | Workflow adicional de static check/build. |
 
 ## Documentacao
 
 Local: `docs/`
 
-Responsabilidade: memoria tecnica, roadmap, risco, divida e governanca.
+Fontes principais:
 
-Documentos centrais:
-
-- `PROJECT-SKILL.md`
+- `index.md`
+- `project-management-plan.md`
+- `requirements-traceability-matrix.md`
+- `quality-management-plan.md`
 - `current-state.md`
-- `project-map.md`
 - `roadmap.md`
-- `decision-log.md`
-- `documentation-policy.md`
 - `risk-register.md`
 - `technical-debt-register.md`
-- `rn-migration.md`
 
-## Regra do bootstrap mobile
+## Regras de dependencia
 
-O bootstrap mobile deve preservar o MVP web, manter `index.html`, `vite.config.js` e `vercel.json`, e nao alterar `src/js/core/` no mesmo PR.
+- `src/js/core/` nao importa UI, Supabase ou Expo.
+- Mobile pode importar core e services mobile.
+- Web pode importar core e services web.
+- Banco e deploy devem mudar em PRs separados quando possivel.
+- Documentacao deve mudar junto com comportamento ou contrato.

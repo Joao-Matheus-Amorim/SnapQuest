@@ -76,8 +76,28 @@ Consequencia: o bootstrap fica sem icone customizado nesta fase. Icones/app asse
 
 Data: 2026-06-09
 
-Decisao: rebaixar/alinha r o bootstrap mobile para Expo SDK 54 nesta fase, em vez de exigir SDK 56.
+Decisao: rebaixar/alinhar o bootstrap mobile para Expo SDK 54 nesta fase, em vez de exigir SDK 56.
 
 Motivo: o dispositivo fisico disponivel para validacao esta preso no Expo Go SDK 54 e nao permite atualizacao. Sem alinhar o projeto, a validacao manual do PR fica impossivel.
 
 Consequencia: Expo SDK 56 fica como upgrade futuro em issue/PR proprio. O PR de bootstrap deve priorizar validacao real no dispositivo disponivel, preservando MVP web e `src/js/core/`.
+
+## D-009 — Usar PMBOK adaptado como linha de base documental
+
+Data: 2026-06-10
+
+Decisao: consolidar plano de gerenciamento, matriz de rastreabilidade e plano de qualidade em `docs/project-management-plan.md`, `docs/requirements-traceability-matrix.md` e `docs/quality-management-plan.md`.
+
+Motivo: o projeto ja possui web, mobile, banco, IA, CI e documentacao historica. Sem linha de base, fica facil criar gap entre promessa, codigo e validacao.
+
+Consequencia: todo PR que muda comportamento, risco, divida, arquitetura ou qualidade deve avaliar esses documentos alem dos registros existentes.
+
+## D-010 — Tratar catalogo Supabase como gap critico ate alinhar schema
+
+Data: 2026-06-10
+
+Decisao: registrar explicitamente que o app atual usa `is_catalog` em `cloudSync.ts`, mas `supabase/schema.sql` ainda nao declara essa coluna.
+
+Motivo: um banco criado do zero pelo schema versionado pode nao sustentar o fluxo de catalogo do app.
+
+Consequencia: novas features de catalogo/nuvem devem primeiro resolver o contrato de banco ou trabalhar fora desse escopo.

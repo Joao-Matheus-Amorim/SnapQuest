@@ -1,125 +1,94 @@
-# SnapQuest — Guia de transformação com Gemini
+# SnapQuest - Fluxo de Transformacao com Gemini
 
-## Decisão de arquitetura
+Ultima atualizacao: 2026-06-10.
 
-A foto original não deve entrar direto no deck.
+## Decisao de arquitetura
 
-Ela entra primeiro em uma fila temporária chamada Capturas Brutas. Essa fila guarda apenas a matéria-prima que ainda não virou item jogável.
+A foto original nao entra direto no deck.
 
-O deck deve receber somente itens finais, isto é, Fighter ou Carta já transformados, com nome, tipo, atributos e descrição definidos.
+Ela entra primeiro em uma fila de Capturas Brutas. Depois o jogador escolhe se aquela foto vira Fighter ou Carta, confirma o nome e so entao o item final e salvo.
 
-## Por que não criar direto no deck?
-
-Criar direto no deck antes do Gemini mistura três estados diferentes no mesmo lugar:
-
-1. Foto bruta capturada.
-2. Transformação em andamento.
-3. Item final jogável.
-
-Isso deixa o jogo confuso e abre espaço para falso positivo: o jogador veria algo no deck que ainda não é Fighter nem Carta de verdade.
-
-A regra correta é:
+Fluxo correto:
 
 ```txt
-Câmera -> Capturas Brutas -> Gemini -> Deck
+Camera/Galeria -> Capturas Brutas -> Nome/IA -> Persistencia da foto -> Fighter ou Carta -> Deck -> Sync cloud opcional
 ```
+
+## Implementacao atual
+
+| Etapa | Arquivo | Status |
+|---|---|---|
+| Captura de foto | `src/app/camera.tsx` | Implementado |
+| Fila de capturas brutas | `src/hooks/useCapturedPhotos.ts` | Implementado |
+| Transformacao offline | `mockTransform` em `src/services/geminiTransform.ts` | Implementado |
+| Gemini real opcional | `transformCapturedPhoto` em `src/services/geminiTransform.ts` | Implementado |
+| Modal de nome | `src/components/NameInputModal.tsx` | Implementado |
+| Persistencia de foto final | `src/lib/photoStorage.ts` | Implementado |
+| Criacao do item | `src/hooks/usePlayerDeck.ts` e `src/app/inventory.tsx` | Implementado |
+| Revelacao visual | `src/components/RevealModal.tsx` | Implementado em MVP |
+| Cerimonia completa | A definir | Pendente |
 
 ## Estados do fluxo
 
 ### 1. Captura bruta
 
-Criada pela câmera.
-
-Campos mínimos:
+Contrato:
 
 ```ts
 CapturedPhoto = {
   id: string;
   uri: string;
+  assetId?: string;
+  filename?: string;
   createdAt: string;
-  source: "camera";
+  source: "camera" | "gallery";
   status: "raw";
 }
 ```
 
 A captura bruta:
 
-- aparece na área de pendentes;
-- não conta para batalha;
-- não aparece como Fighter ou Carta;
-- pode ser transformada.
+- aparece em Pendentes;
+- nao conta para batalha;
+- nao aparece como item jogavel;
+- so e removida depois que o item final foi salvo.
 
-### 2. Transformação em andamento
+### 2. Nome e IA opcional
 
-Quando o jogador aperta Virar Fighter ou Virar Carta, o app deve:
+Por padrao, o app gera uma sugestao offline deterministica.
 
-1. bloquear os botões daquele item;
-2. enviar a imagem para o serviço Gemini;
-3. aguardar o retorno estruturado;
-4. validar o retorno;
-5. criar o item final;
-6. remover a captura bruta.
+Se o usuario pedir IA:
 
-Enquanto isso, o item pode aparecer como:
+- a imagem e redimensionada para 512px;
+- o app tenta a cadeia de modelos configurada;
+- erro 429, 404 ou falha de JSON cai para fallback;
+- o resultado e normalizado antes de criar item.
 
-```txt
-Transformando...
-```
+### 3. Item final
 
-### 3. Item final no deck
+Para Fighter, o core usa `createFighter`.
 
-Depois que o Gemini responder com sucesso, o app cria um item final.
+Para Carta, o core usa `createEffectCard`.
 
-Para Fighter:
+Antes de salvar:
 
-```ts
-GeneratedFighter = {
-  type: "fighter";
-  nome: string;
-  classe: string;
-  class_key: string;
-  icon: string;
-  hp: number;
-  atk: number;
-  def: number;
-  lck: number;
-  spd: number;
-  foto: string;
-  criado_em: string;
-}
-```
+- a foto e persistida em arquivo permanente no dispositivo;
+- o nome e confirmado;
+- a captura bruta permanece ate o sucesso da criacao.
 
-Para Carta:
-
-```ts
-GeneratedEffectCard = {
-  type: "effect_card";
-  nome_efeito: string;
-  categoria: string;
-  categoria_key: string;
-  icon: string;
-  polaridade: "BÔNUS" | "DEBUFF";
-  atributo: "ATK" | "DEF" | "LCK" | "SPD";
-  intensidade: number;
-  raridade: string;
-  foto: string;
-  criado_em: string;
-}
-```
-
-## Contrato esperado do Gemini
-
-O Gemini não deve retornar texto livre para o app interpretar de forma frágil.
-
-Ele deve retornar JSON validável.
+## Contrato Gemini
 
 ### Fighter
+
+Campos esperados:
 
 ```json
 {
   "kind": "fighter",
-  "name": "Guardião da Caneca",
+  "name": "Guardiao da Caneca",
   "classKey": "guerreiro",
+  "attackName": "Corte da Porcelana",
+  "missName": "escorregou no cafe",
   "description": "Um defensor improvisado criado a partir da foto.",
   "confidence": 0.82
 }
@@ -133,11 +102,14 @@ guerreiro, arqueiro, mago, paladino
 
 ### Carta
 
+Campos esperados:
+
 ```json
 {
   "kind": "effect_card",
-  "name": "Poção de Mesa",
+  "name": "Pocao de Mesa",
   "categoryKey": "consumivel",
+  "attackName": "Mesa Revigorante",
   "description": "Uma carta de efeito inspirada no objeto fotografado.",
   "confidence": 0.79
 }
@@ -149,87 +121,29 @@ Categorias permitidas:
 natural, consumivel, ferramenta, criatura, vestimenta, fogo, liquido, conhecimento
 ```
 
-## Serviço a criar
-
-Criar:
-
-```txt
-src/services/geminiTransform.ts
-```
-
-Responsabilidades:
-
-- receber `CapturedPhoto` e o tipo desejado: `fighter` ou `effect_card`;
-- converter a imagem para formato aceito pela API;
-- chamar Gemini;
-- validar JSON de resposta;
-- normalizar campos inválidos com fallback seguro;
-- retornar um objeto limpo para o core criar Fighter ou Carta.
-
-Assinatura sugerida:
-
-```ts
-export async function transformCapturedPhoto(input: {
-  photoUri: string;
-  target: "fighter" | "effect_card";
-}): Promise<GeminiTransformResult>
-```
-
-## Variável de ambiente
-
-A chave não deve ficar hardcoded.
-
-Usar:
+## Variaveis de ambiente
 
 ```txt
 EXPO_PUBLIC_GEMINI_API_KEY=
+EXPO_PUBLIC_GEMINI_MODELS=
 ```
 
-Para MVP local, pode ficar no `.env`.
+`EXPO_PUBLIC_GEMINI_MODELS` aceita lista separada por virgula.
 
-Antes de produção, a chamada ao Gemini deve sair do app e ir para backend/edge function, porque app mobile expõe variáveis públicas no bundle.
+## Restricao de producao
 
-## Fluxo de implementação em PRs pequenos
+Chaves `EXPO_PUBLIC_` entram no bundle do app. Por isso, Gemini no app e aceitavel para prototipo, mas nao para producao.
 
-### PR 1 — Storage e fila de capturas
+Antes de producao:
 
-Objetivo:
-
-- câmera salva captura bruta;
-- inventário mostra pendentes;
-- pendentes não contam para batalha.
-
-Status nesta branch: parcialmente implementado.
-
-### PR 2 — Contrato Gemini mockado
-
-Objetivo:
-
-- criar `geminiTransform.ts` com implementação fake determinística;
-- botão Virar Fighter/Carta usa esse serviço;
-- item sai de pendentes e entra no deck.
-
-Sem API real ainda.
-
-### PR 3 — Gemini real
-
-Objetivo:
-
-- adicionar chamada real ao Gemini;
-- validar JSON;
-- tratar erro, loading e retry.
-
-### PR 4 — UX final da transformação
-
-Objetivo:
-
-- loading por item;
-- erro recuperável;
-- preview do resultado;
-- confirmação antes de remover a captura bruta.
+- criar backend/edge function;
+- mover a API key para ambiente privado;
+- rate limit por usuario;
+- registrar erro/cota;
+- manter fallback offline.
 
 ## Regra de ouro
 
-A captura bruta só pode ser removida depois que o item final for salvo com sucesso no deck.
+A captura bruta so pode ser removida depois que o item final for salvo com sucesso.
 
-Nunca remover a foto antes da criação do Fighter ou Carta terminar.
+Nunca remover a foto antes de concluir a criacao do Fighter ou Carta.

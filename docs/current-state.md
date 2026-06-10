@@ -1,62 +1,114 @@
 # Estado Atual do SnapQuest
 
-Ultima atualizacao: 2026-06-10
+Ultima atualizacao: 2026-06-10.
 
 ## Resumo executivo
 
-SnapQuest e um card game mobile-first em validacao, onde fotos viram lutadores e cartas de efeito para batalhas locais entre pai e filho.
+SnapQuest e um card game mobile-first em validacao. O produto transforma fotos reais em Fighters ou Cartas e usa esses itens em batalhas locais por turnos.
 
-O repositorio contem um MVP web em HTML/CSS/JavaScript puro com Vite, integracao inicial com Supabase, e base React Native + Expo com inventario e batalha mobile funcionando.
+O repositorio possui:
 
-## Estado real hoje
+- MVP web preservado com Vite.
+- App mobile Expo em MVP funcional.
+- Core de jogo reutilizavel em `src/js/core/`.
+- Supabase Auth/DB integrado em nivel inicial.
+- Gemini real opcional com fallback offline.
+- Documentacao PMBOK adaptada.
 
-### Implementado
+## Implementado
 
-- MVP web jogavel.
-- Criacao local de lutadores e cartas.
-- Inventario local.
-- Batalha local por turnos no mesmo dispositivo (web).
-- Core de jogo separado em `src/js/core/` (reutilizado no mobile).
-- Schema Supabase em `supabase/schema.sql`.
-- Configuracao Vite e Vercel.
-- Bloqueio de chave `sb_secret_` no frontend.
-- Bootstrap React Native + Expo.
-- Camera mobile captura foto e salva como captura bruta (`useCapturedPhotos`).
-- Inventario mobile renderiza fighters/cartas (seed + deck do jogador).
-- Conversao de foto bruta em Fighter ou Carta via Gemini real (fallback para mock sem chave).
-- Persistencia local do deck do jogador via SecureStore + AsyncStorage (`usePlayerDeck`, `mobileStorage.ts`).
-- Batalha mobile completa: setup, turno por turno, passar celular, vencedor.
-- `useBattle` encapsulando todo o core de batalha (`battle.js`).
-- Tipos TypeScript completos para o core (`battle.d.ts`, `fighters.d.ts`, `cards.d.ts`).
-- GitHub Actions CI.
+### Web
 
-### Parcial ou em validacao
+- MVP web jogavel em `index.html`.
+- UI web em `src/js/ui/` e `src/styles/app.css`.
+- Services web para config publica, storage local, Supabase e repositorio de inventario.
+- Vite e Vercel configurados.
 
-- Auth Supabase no MVP web.
-- Sincronizacao de inventario com Supabase.
-- UX de Conta/Nuvem ainda nao e produto final.
-- Gemini real integrado com fallback para mock; lore/atributos ainda nao sao gerados com base no conteudo real da foto.
+### Core de jogo
 
-### Nao implementado
+- Classes, categorias, atributos e balanceamento.
+- Criacao de Fighters e Cartas.
+- Batalha local por turnos.
+- Vantagem/desvantagem de classe.
+- Compra, uso de carta, ataque, fim de turno e vencedor.
+- Tipos `.d.ts` para consumo TypeScript.
 
-- Tela de transformacao com cerimonia (animacao, roleta de dados ao vivo).
-- LCK e SPD sem efeito real na batalha.
+### Mobile
+
+- Expo Router em `src/app/`.
+- Home com contadores reais.
+- Login/cadastro Supabase.
+- Logout limpando deck local.
+- Captura por camera.
+- Galeria no modo dono.
+- Resolucao de URI local em iOS/native.
+- Fila de capturas brutas.
+- Persistencia local de capturas.
+- Persistencia permanente/comprimida de fotos finais no dispositivo.
+- Criacao de Fighter ou Carta a partir de captura.
+- Nome sugerido offline antes da chamada de IA.
+- IA Gemini opcional sob demanda.
+- Fallback deterministico quando IA nao esta disponivel.
+- Modal de nome antes de criar item.
+- Modal de revelacao.
+- Inventario com deck pessoal + catalogo.
+- Filtros por tipo e raridade.
+- Exclusao de itens permitidos.
+- Batalha mobile local completa com dois jogadores passando o celular.
+
+### Supabase
+
+- Cliente mobile com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+- Auth com sessao persistente.
+- Schema inicial com tabelas de perfil, Fighters, Cartas e logs de batalha.
+- RLS habilitado nas tabelas.
+- Policies por `auth.uid()`.
+- Sync de Fighters e Cartas pessoais.
+
+### Qualidade e CI
+
+- GitHub Actions com Node 22.
+- `npx expo install --check`.
+- `npx tsc --noEmit`.
+- `npm run check`.
+- `npm run build`.
+- Checks estaticos para arquivos criticos, RLS basica, storage mobile e contrato Gemini/mock.
+
+## Parcial ou em validacao
+
+- Sync cloud/local precisa de validacao de fluxo completo com usuario real.
+- Catalogo cloud usa `is_catalog` no app, mas o schema versionado ainda nao tem essa coluna.
+- Auth existe, mas UX de conta ainda e MVP.
+- Gemini funciona como chamada publica no app; aceitavel para prototipo, nao para producao.
+- Fotos finais podem ser sincronizadas como `photo_data_url`; Storage remoto ainda nao foi implantado.
+- Cerimonia visual de transformacao ainda nao e a experiencia final desejada.
+
+## Nao implementado
+
 - Supabase Storage para fotos.
-- Auth nativo consolidado.
-- Testes automatizados robustos.
+- Backend/edge function para proteger chamada Gemini.
+- Testes automatizados robustos de batalha e RLS.
+- XP, conquistas, diario de aventuras e colecoes completas.
+- Multiplayer online.
+- Publicacao em loja.
+- Efeito completo de LCK e SPD na batalha.
 
-## Branches e PRs relevantes
+## Gaps tecnicos atuais
 
-- `main`: fonte atual do projeto.
-- PR #5: Vite/env Supabase mergeado.
-- PR #11: documentacao e governanca.
-- PR #19: bootstrap React Native + Expo mergeado.
-- PR #18: contrato inicial de sugestao de cartas por foto mergeado.
-- Issue #20 / branch `issue20-mobile-inventory`: inventario + batalha mobile — mergeado diretamente em main em 2026-06-10.
+| ID | Gap | Impacto | Proxima acao |
+|---|---|---|---|
+| GAP-001 | `cloudSync.ts` usa `is_catalog`, mas `supabase/schema.sql` nao declara essa coluna. | Catalogo cloud pode quebrar em banco novo. | Criar migration/schema para catalogo ou ajustar app. |
+| GAP-002 | Gemini roda no app com env publica. | Chave fica exposta em bundle mobile. | Mover para backend/edge antes de producao. |
+| GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
+| GAP-004 | Poucos testes automatizados de comportamento. | Regressao pode passar se typecheck/build passar. | Criar suite de core e smoke tests. |
+| GAP-005 | LCK/SPD nao tem efeito completo. | Atributos parecem mais ricos que a regra real. | Definir design e implementar em PR proprio. |
 
 ## Decisao atual
 
-O proximo passo e construir a tela de transformacao com cerimonia visual:
-foto -> animacao de analise -> revelacao da classe/categoria -> roleta de dados ao vivo para cada atributo -> card finalizado.
+A prioridade tecnica e fechar o gap entre app e banco para catalogo (`is_catalog`) antes de ampliar funcionalidades. Depois disso, a ordem recomendada e:
 
-Gemini real esta integrado com fallback para mock. O proximo passo e a cerimonia visual de transformacao antes de refinar o prompt Gemini para lore/atributos baseados no conteudo da foto.
+1. testes de core de batalha;
+2. Storage para fotos;
+3. Gemini via backend/edge;
+4. cerimonia visual final;
+5. regras completas de LCK/SPD.

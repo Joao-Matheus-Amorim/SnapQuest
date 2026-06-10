@@ -23,7 +23,11 @@ Se alguma resposta estiver incerta, o trabalho deve parar e registrar o gap em i
 
 A documentacao viva do projeto fica em:
 
+- `docs/index.md`: indice oficial.
 - `docs/PROJECT-SKILL.md`: regras da skill.
+- `docs/project-management-plan.md`: plano integrado PMBOK adaptado.
+- `docs/requirements-traceability-matrix.md`: requisitos, codigo, validacao e status.
+- `docs/quality-management-plan.md`: gates e criterios de qualidade.
 - `docs/current-state.md`: estado real atual.
 - `docs/project-map.md`: mapa de arquivos, responsabilidades e fronteiras.
 - `docs/roadmap.md`: direcao do produto e fases.

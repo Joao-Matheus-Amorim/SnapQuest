@@ -30,6 +30,14 @@ Este documento define o modo oficial de trabalho do SnapQuest para evitar gambia
 10. Atualizar documentação/status
 ```
 
+## Fontes de gestao obrigatorias
+
+- `docs/project-management-plan.md`: plano integrado.
+- `docs/requirements-traceability-matrix.md`: requisito, codigo, validacao e status.
+- `docs/quality-management-plan.md`: gates de qualidade.
+- `docs/risk-register.md`: riscos ativos.
+- `docs/technical-debt-register.md`: dividas aceitas.
+
 ## Critérios para aceitar PR
 
 Um PR só pode ser aceito se responder:

@@ -1,61 +1,197 @@
 # SnapQuest
 
-SnapQuest é um card game mobile-first que mistura fotografia real, RPG leve e batalha local pai & filho.
+SnapQuest e um card game mobile-first em validacao, onde fotos reais viram Fighters ou Cartas para batalhas locais entre dois jogadores no mesmo dispositivo.
 
-Este repositório começa com um MVP web estático para validar a jogabilidade antes de migrar para React Native + Expo.
+O repositorio mantem duas frentes:
 
-## Objetivo da fundação
+- MVP web com Vite, HTML/CSS/JavaScript e deploy Vercel.
+- App mobile com React Native, Expo Router, Supabase, persistencia local e fluxo de captura -> transformacao -> inventario -> batalha.
 
-- Validar o fluxo: foto -> fighter/carta -> inventário -> batalha.
-- Separar regra de jogo da interface.
-- Preparar inventário recorrente com Supabase.
-- Manter fallback local para continuar jogável sem backend.
-- Evitar HTML gigante preso a uma única implementação.
+## Estado atual
+
+Data de referencia: 2026-06-10.
+
+| Area | Status | Observacao |
+|---|---|---|
+| MVP web | Implementado | Valida o loop base e preserva a entrada `index.html`. |
+| Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile. |
+| Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
+| Supabase Auth | Implementado no mobile | Login/cadastro com anon key publica. UX ainda nao e final. |
+| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo usa `is_catalog` no app, mas schema precisa ser alinhado. |
+| Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
+| Gemini | Implementado com fallback | IA opcional sob demanda; fallback deterministico quando chave/cota/modelo falha. |
+| Fotos | Parcial | Mobile persiste arquivo local comprimido; banco ainda aceita `photo_data_url`. Storage remoto e pendente. |
+| Qualidade automatizada | Parcial | CI roda Expo check, TypeScript, checks estaticos e build web. Faltam testes de comportamento. |
+
+## Fluxos principais
+
+```txt
+Camera/Galeria
+  -> Capturas brutas
+  -> Nome sugerido offline
+  -> Opcional: Gemini melhora nome/golpe/vacilo
+  -> Fighter ou Carta final
+  -> Deck local
+  -> Sync Supabase quando usuario esta logado
+```
+
+```txt
+Inventario
+  -> Deck pessoal local/cloud
+  -> Catalogo cloud ou seed local
+  -> Filtros por tipo e raridade
+  -> Batalha local se houver minimo de Fighters e Cartas
+```
 
 ## Estrutura
 
 ```txt
-src/js/core/       Regras puras do jogo
-src/js/services/   Supabase, storage local e inventário
-src/js/ui/         Renderização e ações de tela
-src/styles/        CSS do app
-supabase/          SQL do banco
-docs/              Documentação de escopo, banco e roadmap
+src/app/          Telas mobile com Expo Router
+src/components/   Componentes visuais mobile
+src/hooks/        Estado mobile, auth, inventario, deck, capturas e batalha
+src/services/     Sync Supabase e transformacao Gemini
+src/lib/          Supabase, storage mobile, fotos, owner e raridade
+src/js/core/      Regras puras do jogo, sem DOM e sem Supabase
+src/js/services/  Services do MVP web
+src/js/ui/        UI web do MVP
+src/styles/       CSS do MVP web
+supabase/         Schema inicial do banco
+scripts/          Checks estaticos do projeto
+docs/             Documentacao PMBOK adaptada, arquitetura, riscos e roadmap
 ```
 
-## Rodar localmente
+## Requisitos
 
-Como o app usa módulos ES, abra com um servidor local:
+- Node.js 22 para alinhar com CI.
+- npm.
+- Expo Go compativel com Expo SDK 54 para validacao mobile.
+- Projeto Supabase com Auth e schema aplicado.
+- Chave Gemini opcional para melhoria por IA.
 
-```bash
-python -m http.server 5173
-```
+## Ambiente
 
-Depois acesse:
+Copie `.env.example` para `.env` e preencha somente chaves publicas:
 
 ```txt
-http://localhost:5173
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_ANON_KEY=
+EXPO_PUBLIC_OWNER_EMAIL=
+EXPO_PUBLIC_GEMINI_API_KEY=
+EXPO_PUBLIC_GEMINI_MODELS=
 ```
 
-## Configurar Supabase
+Nunca coloque `service_role`, chave admin, senha de banco ou segredo privado no frontend.
 
-1. Crie um projeto no Supabase.
-2. Rode `supabase/schema.sql` no SQL Editor.
-3. Abra o app.
-4. Informe `Project URL` e `anon public key`.
-5. Crie conta ou faça login.
-6. Sincronize o inventário.
+## Comandos
 
-Nunca coloque `service_role` no frontend.
+Instalar dependencias:
 
-## Próxima migração
+```bash
+npm ci
+```
 
-Quando a mecânica estiver validada, migrar para:
+Rodar MVP web:
 
-- React Native + Expo
-- Supabase Storage para fotos
-- Auth nativo
-- Câmera real obrigatória
-- Diário de batalhas
-- Conquistas
-- Gemini para lore
+```bash
+npm run dev
+```
+
+Build web:
+
+```bash
+npm run build
+```
+
+Rodar checks estaticos:
+
+```bash
+npm run check
+```
+
+Validar TypeScript:
+
+```bash
+npx tsc --noEmit
+```
+
+Validar dependencias Expo:
+
+```bash
+npx expo install --check
+```
+
+Rodar mobile:
+
+```bash
+npm run mobile
+```
+
+Rodar mobile web:
+
+```bash
+npm run mobile:web
+```
+
+## Banco de dados
+
+Execute `supabase/schema.sql` no SQL Editor do Supabase.
+
+O schema cria:
+
+- `snapquest_profiles`
+- `snapquest_fighters`
+- `snapquest_effect_cards`
+- `snapquest_battle_logs`
+- RLS em todas as tabelas
+- policies por `auth.uid()`
+- trigger de `updated_at`
+
+Ponto de atencao atual: o app usa `is_catalog` em `src/services/cloudSync.ts`, mas o schema versionado ainda nao possui essa coluna. Isso esta registrado como gap critico de banco em `docs/technical-debt-register.md` e `docs/risk-register.md`.
+
+## Documentacao principal
+
+- [Indice de documentacao](docs/index.md)
+- [Plano de gerenciamento do projeto](docs/project-management-plan.md)
+- [Matriz de rastreabilidade](docs/requirements-traceability-matrix.md)
+- [Plano de qualidade](docs/quality-management-plan.md)
+- [Estado atual](docs/current-state.md)
+- [Mapa do projeto](docs/project-map.md)
+- [Roadmap](docs/roadmap.md)
+- [Banco de dados](docs/database.md)
+- [Registro de riscos](docs/risk-register.md)
+- [Registro de divida tecnica](docs/technical-debt-register.md)
+- [Governanca](docs/project-governance.md)
+
+## Governanca
+
+O projeto segue PMBOK adaptado para produto pequeno:
+
+1. Identificar necessidade, risco ou gap.
+2. Registrar escopo e fora de escopo.
+3. Trabalhar em PR pequeno.
+4. Validar com evidencias.
+5. Atualizar documentacao, riscos e dividas.
+6. Nao declarar pronto aquilo que nao foi validado.
+
+## Definicao de pronto
+
+Uma entrega so pode ser tratada como pronta quando:
+
+- o codigo esta no escopo aprovado;
+- `npm run check` passa;
+- `npx tsc --noEmit` passa;
+- `npm run build` passa quando a mudanca afeta web/build;
+- `npx expo install --check` passa quando a mudanca afeta mobile;
+- riscos e dividas foram atualizados;
+- README/docs refletem o estado real;
+- nenhum segredo sensivel foi introduzido.
+
+## Proximas prioridades tecnicas
+
+1. Alinhar `supabase/schema.sql` com o contrato atual de catalogo (`is_catalog`) ou remover esse uso do app.
+2. Criar testes automatizados do core de batalha.
+3. Migrar fotos para Supabase Storage.
+4. Mover chamada Gemini para backend/edge function antes de producao.
+5. Implementar efeito real de LCK e SPD na batalha.

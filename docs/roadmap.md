@@ -1,124 +1,140 @@
 # Roadmap do SnapQuest
 
-Este roadmap registra para onde o projeto vai. Ele deve refletir o estado real e ser atualizado quando uma fase mudar.
+Ultima atualizacao: 2026-06-10.
 
-## Fase 0 — Fundacao e governanca
+Este roadmap registra fases, status e proximas entregas. Ele deve refletir codigo real, nao intencao.
 
-Status: concluido
+## Fase 0 - Fundacao e governanca
 
-Objetivo:
-- Manter MVP web rastreavel.
-- Consolidar documentacao viva.
-- Evitar gaps, falso verde e divida tecnica invisivel.
+Status: concluido.
 
 Entregas:
+
 - Governanca PMBOK adaptada.
+- Documentacao viva.
 - Registro de riscos.
 - Registro de divida tecnica.
-- Skill de documentacao do projeto.
+- Checks estaticos.
+- CI base.
 
-## Fase 1 — MVP web validado
+## Fase 1 - MVP web validado
 
-Status: parcialmente concluido
+Status: parcialmente concluido.
 
-Objetivo:
-- Validar se o loop foto -> carta/lutador -> inventario -> batalha e divertido.
+Entregas:
 
-Entregas existentes:
-- Criacao local de lutadores.
-- Criacao local de cartas.
-- Inventario local.
-- Batalha local.
+- MVP web jogavel.
+- Criacao local de Fighters e Cartas.
+- Inventario e batalha local.
 - Supabase inicial.
+- Deploy web preparado.
 
 Pendencias:
-- UX de conta ainda nao e final.
-- Sincronizacao precisa de testes e melhorias.
-- Fotos ainda nao usam Storage.
 
-## Fase 2 — Bootstrap React Native + Expo
+- UX web de conta/nuvem nao e experiencia final.
+- Sync web precisa de validacao mais forte.
+- Fotos web/prototipo ainda nao usam Storage.
 
-Status: concluido
+## Fase 2 - Bootstrap React Native + Expo
 
-Objetivo:
-- Criar base mobile sem quebrar o MVP web.
-- Reutilizar `src/js/core/`.
-- Preparar camera real e navegacao nativa.
+Status: concluido.
 
-Entregas realizadas:
+Entregas:
+
 - Estrutura Expo.
-- Navegacao mobile com Expo Router.
-- Tela inicial mobile.
-- Camera real com expo-image-picker.
-- Telas Inventory e Battle.
-- Documentacao `docs/rn-migration.md`.
+- Expo Router.
+- Telas mobile principais.
+- Configuracao SDK 54.
+- Preservacao do MVP web.
 
-## Fase 3 — Inventario mobile e persistencia
+## Fase 3 - Inventario mobile e persistencia
 
-Status: concluido
+Status: concluido em MVP.
 
-Objetivo:
-- Criar inventario mobile real.
-- Adaptar persistencia local para React Native.
+Entregas:
 
-Entregas realizadas:
-- `useInventory` com seed do core web.
-- Home mobile com contadores reais.
-- Inventory mobile renderizando fighters/cartas (seed + deck do jogador).
-- Camera captura foto bruta e persiste localmente (`useCapturedPhotos`).
-- Conversao de foto bruta em Fighter/carta via mock Gemini.
-- Deck do jogador persistido via SecureStore (`usePlayerDeck`).
-- Adapter de storage mobile (`mobileStorage.ts`).
+- Capturas brutas.
+- Deck pessoal local.
+- Adapter de storage mobile.
+- Persistencia de foto final em arquivo permanente.
+- Inventario com filtros.
+- Catalogo cloud com fallback seed.
+- Modo dono para catalogo via galeria.
 
-Pendente (proxima fase):
-- Sync com Supabase.
+Pendencia critica:
 
-## Fase 4 — Batalha mobile
+- Alinhar schema Supabase com `is_catalog`.
 
-Status: concluido
+## Fase 4 - Batalha mobile
 
-Objetivo:
-- Reutilizar o core de batalha em interface React Native.
+Status: concluido em MVP.
 
-Entregas realizadas:
-- `useBattle` encapsulando `src/js/core/battle.js`.
-- Tela de batalha mobile completa.
-- Passar celular entre dois jogadores.
-- Log de batalha nativo.
-- Tela de vencedor.
-- Tipos TypeScript completos para o core de batalha.
+Entregas:
 
-Divida tecnica:
-- LCK e SPD nao tem efeito real no combate ainda.
+- `useBattle` encapsulando o core.
+- Setup de dois jogadores.
+- Passar celular entre turnos.
+- Compra, carta, ataque e vencedor.
+- UI com HP, selecao e log.
 
-## Fase 5 — Cerimonia de criacao e IA
+Divida:
 
-Status: em andamento
+- LCK e SPD ainda nao tem efeito completo.
+- Faltam testes automatizados de regra.
 
-Objetivo:
-- Foto real vira lutador/carta com experiencia visual completa.
-- Roleta de dados ao vivo para atributos e raridade.
+## Fase 5 - Cerimonia de criacao e IA
 
-Entregas em andamento:
-- Tela de transformacao com cerimonia: analise da foto, revelacao de classe/categoria, roleta de dados para cada atributo.
+Status: em andamento.
 
-Entregas futuras:
-- Prompt Gemini refinado para lore e atributos baseados no conteudo real da foto (integracao base ja feita).
-- Upload para Supabase Storage.
-- Revisao humana antes de salvar.
-- LCK e SPD com efeito real no combate.
+Entregas atuais:
 
-## Fase 6 — Produto familiar completo
+- Transformacao Fighter/Carta.
+- Fallback offline.
+- IA Gemini opcional sob demanda.
+- Modal de nome.
+- Modal de revelacao.
 
-Status: futuro
+Entregas pendentes:
+
+- Cerimonia visual completa de analise.
+- Roleta de atributos/raridade.
+- Revisao humana mais rica antes de salvar.
+- Backend/edge para proteger Gemini.
+
+## Fase 6 - Nuvem pronta para producao
+
+Status: futuro proximo.
 
 Objetivo:
-- Transformar o MVP em produto familiar recorrente.
+
+- Fechar contratos Supabase para uso confiavel.
+
+Entregas:
+
+- Migration para catalogo (`is_catalog`) ou redesign do catalogo.
+- Politicas RLS para catalogo compartilhado, se mantido.
+- Supabase Storage para fotos.
+- Testes de RLS ou fixtures de banco.
+- Sync local/cloud validado.
+
+## Fase 7 - Produto familiar completo
+
+Status: futuro.
 
 Possiveis entregas:
+
 - XP e progressao.
 - Conquistas.
 - Diario de aventuras.
 - Colecoes.
 - Eventos semanais.
-- Multiplayer futuro.
+- Multiplayer online.
+- Publicacao mobile.
+
+## Prioridade imediata recomendada
+
+1. Resolver GAP-001: schema/catalogo.
+2. Criar testes de core de batalha.
+3. Criar Storage para fotos.
+4. Mover Gemini para backend/edge.
+5. Refinar cerimonia visual.
