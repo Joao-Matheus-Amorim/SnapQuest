@@ -49,62 +49,64 @@ Entregas realizadas:
 - Estrutura Expo.
 - Navegacao mobile com Expo Router.
 - Tela inicial mobile.
-- Tela camera esqueleto validada no Expo Go.
-- Telas Inventory e Battle esqueleto.
+- Camera real com expo-image-picker.
+- Telas Inventory e Battle.
 - Documentacao `docs/rn-migration.md`.
 
 ## Fase 3 — Inventario mobile e persistencia
 
-Status: em andamento
+Status: concluido
 
 Objetivo:
 - Criar inventario mobile real.
 - Adaptar persistencia local para React Native.
-- Integrar Supabase de forma segura.
 
 Entregas realizadas:
-- `useInventory` usando seed do core web.
+- `useInventory` com seed do core web.
 - Home mobile com contadores reais.
-- Inventory mobile renderizando fighters/cartas seeded.
-- Battle mobile alinhada ao requisito do core: 6 fighters + 6 cartas.
+- Inventory mobile renderizando fighters/cartas (seed + deck do jogador).
+- Camera captura foto bruta e persiste localmente (`useCapturedPhotos`).
+- Conversao de foto bruta em Fighter/carta via mock Gemini.
+- Deck do jogador persistido via SecureStore (`usePlayerDeck`).
+- Adapter de storage mobile (`mobileStorage.ts`).
 
-Entregas em andamento:
-- Persistencia local de fotos brutas capturadas.
-- Secao separada de fotos brutas no inventario mobile.
-
-Entregas futuras:
-- Persistencia local real de fighters/cartas criados pelo usuario.
+Pendente (proxima fase):
 - Sync com Supabase.
 
 ## Fase 4 — Batalha mobile
 
-Status: planejado
+Status: concluido
 
 Objetivo:
 - Reutilizar o core de batalha em interface React Native.
 
-Entregas esperadas:
-- `useBattle` wrapping `src/js/core/battle.js`.
-- Tela de batalha mobile.
+Entregas realizadas:
+- `useBattle` encapsulando `src/js/core/battle.js`.
+- Tela de batalha mobile completa.
 - Passar celular entre dois jogadores.
 - Log de batalha nativo.
+- Tela de vencedor.
+- Tipos TypeScript completos para o core de batalha.
 
-## Fase 5 — Foto real, Storage e IA
+Divida tecnica:
+- LCK e SPD nao tem efeito real no combate ainda.
 
-Status: planejado
+## Fase 5 — Cerimonia de criacao e IA
+
+Status: em andamento
 
 Objetivo:
-- Foto real vira lutador/carta com lore e atributos.
+- Foto real vira lutador/carta com experiencia visual completa.
+- Roleta de dados ao vivo para atributos e raridade.
 
-Entregas existentes:
-- Contrato inicial de sugestao de carta por foto em `src/js/services/cardSuggestionService.js`.
-- Documentacao em `docs/gemini-card-suggestions.md`.
+Entregas em andamento:
+- Tela de transformacao com cerimonia: analise da foto, revelacao de classe/categoria, roleta de dados para cada atributo.
 
-Entregas esperadas:
-- Conversao de foto bruta em Fighter/carta.
+Entregas futuras:
+- IA real (Gemini) para lore e atributos baseados na foto.
 - Upload para Supabase Storage.
-- IA para lore/atributos.
 - Revisao humana antes de salvar.
+- LCK e SPD com efeito real no combate.
 
 ## Fase 6 — Produto familiar completo
 
@@ -114,7 +116,7 @@ Objetivo:
 - Transformar o MVP em produto familiar recorrente.
 
 Possiveis entregas:
-- XP.
+- XP e progressao.
 - Conquistas.
 - Diario de aventuras.
 - Colecoes.

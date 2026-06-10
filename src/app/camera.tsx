@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, View, Text, Pressable, StyleSheet, Image } from "react-native";
+import { Link } from "expo-router";
+import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
@@ -13,48 +14,41 @@ export default function CameraScreen() {
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!cameraPermission.granted) {
-      Alert.alert(
-        "Permissão necessária",
-        "Autorize o acesso à câmera para capturar uma foto real."
-      );
-      return;
-    }
-
-    const mediaPermission = await MediaLibrary.requestPermissionsAsync();
-
-    if (!mediaPermission.granted) {
-      Alert.alert(
-        "Permissão necessária",
-        "Autorize o acesso às fotos para manter a imagem capturada disponível localmente."
-      );
+      Alert.alert("Permissão necessária", "Autorize o acesso à câmera para capturar uma foto real.");
       return;
     }
 
     try {
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 0.8,
-      });
+      const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
 
       if (result.canceled) return;
 
       setIsSaving(true);
 
       const capturedUri = result.assets[0].uri;
-      const asset = await MediaLibrary.createAssetAsync(capturedUri);
-      const savedUri = asset.uri || capturedUri;
+      let savedUri = capturedUri;
+      let assetId = result.assets[0].assetId ?? undefined;
+      let filename = result.assets[0].fileName ?? undefined;
 
-      await addCapturedPhoto({
-        uri: savedUri,
-        assetId: asset.id,
-        filename: asset.filename,
-      });
+      if (Platform.OS !== "web") {
+        const mediaPermission = await MediaLibrary.requestPermissionsAsync();
 
+        if (!mediaPermission.granted) {
+          Alert.alert("Permissão necessária", "Autorize o acesso às fotos para salvar a captura.");
+          return;
+        }
+
+        const asset = await MediaLibrary.createAssetAsync(capturedUri);
+        const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+        savedUri = assetInfo.localUri || capturedUri;
+        assetId = asset.id;
+        filename = asset.filename;
+      }
+
+      await addCapturedPhoto({ uri: savedUri, assetId, filename });
       setImageUri(savedUri);
     } catch {
-      Alert.alert(
-        "Não foi possível salvar a foto",
-        "Verifique as permissões do Expo Go nos ajustes do celular e tente novamente."
-      );
+      Alert.alert("Não foi possível salvar a captura", "Verifique as permissões do Expo Go e tente novamente.");
     } finally {
       setIsSaving(false);
     }
@@ -62,9 +56,9 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nova foto</Text>
+      <Text style={styles.title}>📸 Nova Captura</Text>
       <Text style={styles.subtitle}>
-        Capture uma foto real. Ela fica salva como foto bruta e ainda não vira Fighter nem carta.
+        A foto original fica nas Capturas Brutas. Para jogar, transforme em Fighter ou Carta no Inventário.
       </Text>
 
       <Pressable style={styles.button} onPress={pickImage} disabled={isSaving}>
@@ -74,7 +68,12 @@ export default function CameraScreen() {
       {imageUri ? (
         <>
           <Image source={{ uri: imageUri }} style={styles.preview} />
-          <Text style={styles.success}>Foto bruta salva localmente.</Text>
+          <Text style={styles.success}>Foto salva nas Capturas Brutas.</Text>
+          <Link href="/inventory" asChild>
+            <Pressable style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Transformar no Inventário</Text>
+            </Pressable>
+          </Link>
         </>
       ) : null}
     </View>
@@ -94,6 +93,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "800",
     marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     color: "#ffffff",
@@ -110,6 +110,19 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
     fontSize: 18,
+  },
+  secondaryButton: {
+    borderColor: "#f5a623",
+    borderWidth: 1,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 16,
+    marginTop: 16,
+  },
+  secondaryButtonText: {
+    color: "#f5a623",
+    fontWeight: "800",
+    fontSize: 15,
   },
   preview: {
     width: 220,

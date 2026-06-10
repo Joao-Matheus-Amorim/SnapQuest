@@ -14,4 +14,11 @@ export type EffectCard = {
   criado_em: string;
 };
 
+export type CreateEffectCardInput = {
+  categoryKey: string;
+  name: string;
+  photo?: string | null;
+};
+
+export function createEffectCard(input: CreateEffectCardInput): EffectCard;
 export function seedCards(): EffectCard[];

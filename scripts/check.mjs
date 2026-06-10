@@ -18,7 +18,12 @@ const required = [
   'src/js/services/localStore.js',
   'src/js/services/supabaseClient.js',
   'src/js/services/cardSuggestionService.js',
+  'src/lib/mobileStorage.ts',
+  'src/hooks/useCapturedPhotos.ts',
+  'src/hooks/usePlayerDeck.ts',
+  'src/services/geminiTransform.ts',
   'docs/gemini-card-suggestions.md',
+  'docs/gemini-transform-flow.md',
   'supabase/schema.sql',
 ];
 
@@ -47,6 +52,51 @@ if (!schema.includes('alter table public.snapquest_fighters enable row level sec
 
 if (!schema.includes('auth.uid()')) {
   fail('schema.sql must scope policies by auth.uid().');
+}
+
+const mobileStorage = fs.readFileSync('src/lib/mobileStorage.ts', 'utf8');
+if (!mobileStorage.includes('Platform.OS === "web"')) {
+  fail('mobileStorage must fallback to localStorage on web.');
+}
+
+if (!mobileStorage.includes('SecureStore.getItemAsync')) {
+  fail('mobileStorage must use SecureStore on native.');
+}
+
+const capturedPhotosHook = fs.readFileSync('src/hooks/useCapturedPhotos.ts', 'utf8');
+if (capturedPhotosHook.includes('expo-secure-store')) {
+  fail('useCapturedPhotos must use mobileStorage instead of SecureStore directly.');
+}
+
+if (!capturedPhotosHook.includes('removeCapturedPhoto')) {
+  fail('useCapturedPhotos must expose removeCapturedPhoto for post-transform cleanup.');
+}
+
+const cameraScreen = fs.readFileSync('src/app/camera.tsx', 'utf8');
+if (!cameraScreen.includes('getAssetInfoAsync')) {
+  fail('camera screen must resolve native media assets to a renderable localUri.');
+}
+
+if (cameraScreen.includes('savedUri = asset.uri || capturedUri')) {
+  fail('camera screen must not persist ph:// asset.uri directly on iOS.');
+}
+
+const transformService = fs.readFileSync('src/services/geminiTransform.ts', 'utf8');
+if (!transformService.includes('provider: "mock-gemini"')) {
+  fail('geminiTransform must identify the mock provider until real Gemini is wired.');
+}
+
+if (!transformService.includes('target: "fighter"') || !transformService.includes('target: "effect_card"')) {
+  fail('geminiTransform must support fighter and effect_card targets.');
+}
+
+const inventoryScreen = fs.readFileSync('src/app/inventory.tsx', 'utf8');
+if (!inventoryScreen.includes('transformCapturedPhoto')) {
+  fail('inventory conversion must route through transformCapturedPhoto.');
+}
+
+if (!inventoryScreen.includes('removeCapturedPhoto')) {
+  fail('inventory conversion must remove raw captures after deck save.');
 }
 
 const categoryKeys = new Set(EFFECT_CATEGORIES.map(category => category[0]));
@@ -117,3 +167,4 @@ if (!ok) process.exit(1);
 
 console.log('SnapQuest static checks passed.');
 console.log('SnapQuest card suggestion checks passed.');
+console.log('SnapQuest mobile transform guard checks passed.');
