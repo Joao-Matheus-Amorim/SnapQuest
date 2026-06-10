@@ -5,12 +5,17 @@ import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 
-async function resolveLocalUri(asset: MediaLibrary.Asset, fallback: string): Promise<string> {
+function isRenderableUri(uri: string) {
+  return uri.startsWith("file://") || uri.startsWith("http");
+}
+
+async function resolveLocalUri(asset: MediaLibrary.Asset, fallback: string): Promise<string | null> {
   const info = await Promise.race([
     MediaLibrary.getAssetInfoAsync(asset),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 10000)),
   ]);
-  return info?.localUri || fallback;
+  const uri = info?.localUri || fallback;
+  return isRenderableUri(uri) ? uri : null;
 }
 
 export default function CameraScreen() {
@@ -46,14 +51,18 @@ export default function CameraScreen() {
               if (!perm.granted) return null;
               const asset = await MediaLibrary.createAssetAsync(capturedUri);
               const localUri = await resolveLocalUri(asset, capturedUri);
+              if (!localUri) return null;
               return { assetId: asset.id, filename: asset.filename, savedUri: localUri };
             })(),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000)),
           ]);
           if (mediaResult) {
             assetId = mediaResult.assetId;
             filename = mediaResult.filename;
             savedUri = mediaResult.savedUri;
+          } else if (!isRenderableUri(savedUri)) {
+            Alert.alert("Não foi possível salvar", "O iOS não liberou o arquivo da foto. Tente novamente.");
+            return;
           }
         } catch {
           // fallback: usa capturedUri
