@@ -75,6 +75,10 @@ function makeNameFromPhoto(prefix: string, photo: CapturedPhoto) {
   return `${prefix} ${suffix}`;
 }
 
+export async function clearPlayerDeck() {
+  await writePlayerDeck(emptyDeck);
+}
+
 export async function mergeDeckFromCloud(cloudFighters: Fighter[], cloudCards: EffectCard[]) {
   const local = await readPlayerDeck();
   const cloudFighterIds = new Set(cloudFighters.map((f) => f.id));
@@ -106,12 +110,14 @@ export function usePlayerDeck() {
     };
   }, [reload]);
 
-  const addFighterFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult) => {
+  const addFighterFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult, nameOverride?: string) => {
     const currentDeck = await readPlayerDeck();
     const fighter = createFighter({
       classKey: transform?.target === "fighter" ? transform.key : "guerreiro",
-      name: transform?.target === "fighter" ? transform.name : makeNameFromPhoto("Fighter", photo),
+      name: nameOverride?.trim() || (transform?.target === "fighter" ? transform.name : makeNameFromPhoto("Fighter", photo)),
       photo: photo.uri,
+      attackName: transform?.target === "fighter" ? transform.attackName : undefined,
+      missName: transform?.target === "fighter" ? transform.missName : undefined,
     });
     const nextDeck = {
       ...currentDeck,
@@ -123,11 +129,11 @@ export function usePlayerDeck() {
     return fighter;
   }, []);
 
-  const addCardFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult) => {
+  const addCardFromPhoto = useCallback(async (photo: CapturedPhoto, transform?: GeminiTransformResult, nameOverride?: string) => {
     const currentDeck = await readPlayerDeck();
     const card = createEffectCard({
       categoryKey: transform?.target === "effect_card" ? transform.key : "criatura",
-      name: transform?.target === "effect_card" ? transform.name : makeNameFromPhoto("Carta", photo),
+      name: nameOverride?.trim() || (transform?.target === "effect_card" ? transform.name : makeNameFromPhoto("Carta", photo)),
       photo: photo.uri,
     });
     const nextDeck = {
@@ -140,11 +146,23 @@ export function usePlayerDeck() {
     return card;
   }, []);
 
+  const removeFighter = useCallback(async (id: string) => {
+    const current = await readPlayerDeck();
+    await writePlayerDeck({ ...current, fighters: current.fighters.filter((f) => f.id !== id) });
+  }, []);
+
+  const removeCard = useCallback(async (id: string) => {
+    const current = await readPlayerDeck();
+    await writePlayerDeck({ ...current, cards: current.cards.filter((c) => c.id !== id) });
+  }, []);
+
   return {
     ...deck,
     isLoading,
     addFighterFromPhoto,
     addCardFromPhoto,
+    removeFighter,
+    removeCard,
     reload,
   };
 }

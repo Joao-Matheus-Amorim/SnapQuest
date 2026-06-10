@@ -4,6 +4,7 @@ import {
   fighterRarity, rarityGlow,
   RARITY_COLORS, RARITY_BORDER, RARITY_LABELS,
 } from "../lib/rarityConfig";
+import { LegendaryAura } from "./LegendaryAura";
 
 export const CARD_WIDTH = 160;
 export const CARD_HEIGHT = 256;
@@ -33,12 +34,13 @@ export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter;
   const color = classColor(fighter.class_key ?? "");
   const hasPhoto = Boolean(fighter.foto);
   const photoHeight = Math.round(width * 0.8);
+  const isLegendary = rarity === "lendário";
 
-  return (
+  const card = (
     <View style={[
       s.card,
       { width, borderColor: rarityColor, borderWidth: RARITY_BORDER[rarity] },
-      rarityGlow(rarity),
+      !isLegendary && rarityGlow(rarity),
     ]}>
       <View style={[s.photoArea, { width, height: photoHeight }, !hasPhoto && { backgroundColor: color + "22" }]}>
         {hasPhoto ? (
@@ -53,6 +55,8 @@ export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter;
 
       <View style={s.info}>
         <Text style={s.name} numberOfLines={1}>{fighter.icon} {fighter.nome}</Text>
+        {fighter.golpe ? <Text style={s.golpe} numberOfLines={1}>🎯 {fighter.golpe}</Text> : null}
+        {fighter.erro ? <Text style={s.miss} numberOfLines={1}>💫 {fighter.erro}</Text> : null}
         <View style={s.hpRow}>
           <Text style={s.hpLabel}>HP {fighter.hp}</Text>
           <View style={s.hpTrack}>
@@ -71,6 +75,11 @@ export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter;
       </View>
     </View>
   );
+
+  if (isLegendary) {
+    return <LegendaryAura width={width} height={CARD_HEIGHT}>{card}</LegendaryAura>;
+  }
+  return card;
 }
 
 const s = StyleSheet.create({
@@ -96,6 +105,8 @@ const s = StyleSheet.create({
   },
   info: { flex: 1, padding: 8, justifyContent: "space-between" },
   name: { color: "#f5a623", fontSize: 12, fontWeight: "800" },
+  golpe: { color: "#7ed957", fontSize: 9, fontWeight: "700", marginTop: 1 },
+  miss: { color: "rgba(233,69,96,.85)", fontSize: 8, fontStyle: "italic" },
   hpRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   hpLabel: { color: "#fff", fontSize: 9, fontWeight: "700", width: 36 },
   hpTrack: { flex: 1, height: 4, backgroundColor: "#0d1117", borderRadius: 2 },

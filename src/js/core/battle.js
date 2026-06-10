@@ -1,5 +1,26 @@
 import { clone, rand } from './utils.js';
 
+// Triângulo de vantagem entre classes (cada um vence o próximo, em ciclo).
+// guerreiro → arqueiro → mago → paladino → guerreiro
+const CLASS_ADVANTAGE = {
+  guerreiro: 'arqueiro',
+  arqueiro: 'mago',
+  mago: 'paladino',
+  paladino: 'guerreiro',
+};
+
+// Retorna o efeito da matchup do atacante contra o defensor.
+function classMatchup(attacker, defender) {
+  if (CLASS_ADVANTAGE[attacker.class_key] === defender.class_key) return { mult: 1.3, label: 'vantagem' };
+  if (CLASS_ADVANTAGE[defender.class_key] === attacker.class_key) return { mult: 0.75, label: 'desvantagem' };
+  return { mult: 1, label: null };
+}
+
+// LCK amplia a faixa de crítico. Sorte 0-2: crítico só no 20. Sorte alta: até 17-20.
+function critThreshold(lck) {
+  return 20 - Math.min(3, Math.floor((lck || 0) / 3));
+}
+
 export function canStartBattle(fighters, cards) {
   return fighters.length >= 6 && cards.length >= 6;
 }
@@ -32,13 +53,17 @@ export function createBattle({ fighters, cards, playerName, player2Name }) {
     };
   });
 
+  // Iniciativa: o time mais rápido (maior SPD total) começa. Empate → Jogador 1.
+  const teamSpd = (p) => p.fighters.reduce((total, f) => total + (f.spd || 0), 0);
+  const turn = teamSpd(players[1]) > teamSpd(players[0]) ? 1 : 0;
+
   return {
     players,
-    turn: 0,
+    turn,
     selectedOwnId: null,
     selectedEnemyId: null,
     selectedCardId: null,
-    log: [`📱 ${players[0].name} começa.`],
+    log: [`⚡ ${players[turn].name} é mais rápido e começa!`],
   };
 }
 
@@ -111,6 +136,14 @@ export function getTurnGuidance(battle) {
     hint: 'Tudo pronto. Toque em ATACAR para rolar o d20.',
     nextAction: 'attack',
   };
+}
+
+// Mostra ao jogador se o atacante selecionado tem vantagem/desvantagem contra o alvo.
+export function getMatchupHint(battle) {
+  const own = currentPlayer(battle).fighters.find(f => f.id === battle.selectedOwnId && f.alive);
+  const foe = enemyPlayer(battle).fighters.find(f => f.id === battle.selectedEnemyId && f.alive);
+  if (!own || !foe) return null;
+  return classMatchup(own, foe).label; // 'vantagem' | 'desvantagem' | null
 }
 
 export function canUseSelectedCard(battle) {
@@ -186,20 +219,34 @@ export function attackSelectedTarget(battle) {
   const d20 = rand(1, 20);
   const atk = attacker.atk + (attacker.buffs.atk || 0);
   const def = defender.def + (defender.buffs.def || 0);
+  const lck = attacker.lck + (attacker.buffs.lck || 0);
+  const matchup = classMatchup(attacker, defender);
+
+  // Texto da matchup pro log.
+  const advText = matchup.label === 'vantagem'
+    ? ' 🔥 vantagem de classe!'
+    : matchup.label === 'desvantagem'
+      ? ' 🛡️ resistido (desvantagem)'
+      : '';
 
   let damage = Math.max(1, atk + d20 - def);
-  let label = '';
 
-  if (d20 === 20) {
-    damage *= 2;
-    label = ' CRÍTICO!';
-  } else if (d20 === 1) {
+  if (d20 === 1) {
+    // Falha crítica — usa o "vacilo" do fighter (ignora vantagem).
     damage = 1;
-    label = ' FALHA!';
+    const erro = attacker.erro || 'errou feio';
+    battle.log.push(`🎲 d20=1. 💫 FALHA! ${attacker.nome} ${erro} e causou só ${damage}.`);
+  } else {
+    const isCrit = d20 >= critThreshold(lck);
+    if (isCrit) damage *= 2;
+    // Vantagem/desvantagem de classe ajusta o dano final.
+    damage = Math.max(1, Math.round(damage * matchup.mult));
+    const golpe = attacker.golpe || 'um golpe';
+    const critText = isCrit ? '💥 CRÍTICO! ' : '';
+    battle.log.push(`🎲 d20=${d20}. ${critText}${attacker.nome} usou ${golpe}${advText} e causou ${damage} em ${defender.nome}.`);
   }
 
   defender.current_hp = Math.max(0, defender.current_hp - damage);
-  battle.log.push(`🎲 d20=${d20}.${label} ${attacker.nome} causou ${damage} em ${defender.nome}.`);
 
   if (defender.current_hp <= 0) {
     defender.alive = false;

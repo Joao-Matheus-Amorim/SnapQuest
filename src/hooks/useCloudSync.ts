@@ -8,7 +8,12 @@ export function useCloudSync() {
   const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!user || user.id === lastUserId.current) return;
+    if (!user) {
+      // Deslogou: reseta pra que um novo login (mesmo a mesma conta) re-sincronize.
+      lastUserId.current = null;
+      return;
+    }
+    if (user.id === lastUserId.current) return;
     lastUserId.current = user.id;
 
     loadCloudDeck(user.id)

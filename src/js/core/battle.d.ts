@@ -54,6 +54,7 @@ export function currentPlayer(battle: Battle): BattlePlayer;
 export function enemyPlayer(battle: Battle): BattlePlayer;
 export function totalHp(player: BattlePlayer): number;
 export function getTurnGuidance(battle: Battle): TurnGuidance;
+export function getMatchupHint(battle: Battle): "vantagem" | "desvantagem" | null;
 export function canUseSelectedCard(battle: Battle): boolean;
 export function canAttackSelectedTarget(battle: Battle): boolean;
 export function drawCard(battle: Battle): ActionResult;

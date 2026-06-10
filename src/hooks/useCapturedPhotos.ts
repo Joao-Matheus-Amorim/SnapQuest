@@ -32,7 +32,7 @@ function createPhoto(input: CapturedPhotoInput): CapturedPhoto {
   const createdAt = new Date().toISOString();
 
   return {
-    id: `photo-${Date.now()}`,
+    id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     uri: input.uri,
     assetId: input.assetId,
     filename: input.filename,
@@ -55,7 +55,7 @@ async function readCapturedPhotos(): Promise<CapturedPhoto[]> {
       return (
         typeof photo?.id === "string" &&
         typeof photo?.uri === "string" &&
-        photo.source === "camera" &&
+        (photo.source === "camera" || photo.source === "gallery") &&
         photo.status === "raw"
       );
     });

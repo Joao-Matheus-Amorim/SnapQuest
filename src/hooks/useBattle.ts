@@ -8,6 +8,7 @@ import {
   currentPlayer,
   enemyPlayer,
   getTurnGuidance,
+  getMatchupHint,
   canUseSelectedCard,
   canAttackSelectedTarget,
   type Battle,
@@ -96,6 +97,7 @@ export function useBattle() {
   const curPlayer = battle ? currentPlayer(battle) : null;
   const foePlayer = battle ? enemyPlayer(battle) : null;
   const guidance = battle && !waitingPass ? getTurnGuidance(battle) : null;
+  const matchup = battle && !waitingPass ? getMatchupHint(battle) : null;
   const canUseCard = battle ? canUseSelectedCard(battle) : false;
   const canAttack = battle ? canAttackSelectedTarget(battle) : false;
 
@@ -104,6 +106,7 @@ export function useBattle() {
     winner,
     waitingPass,
     guidance,
+    matchup,
     canUseCard,
     canAttack,
     curPlayer,

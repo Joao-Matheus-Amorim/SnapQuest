@@ -19,6 +19,9 @@ export function useInventory() {
     playerCards: playerDeck.cards,
     isLoading: playerDeck.isLoading,
     reload: playerDeck.reload,
+    reloadCatalog: catalog.reload,
+    removeFighter: playerDeck.removeFighter,
+    removeCard: playerDeck.removeCard,
     battleRequirements: {
       minFighters: MIN_FIGHTERS_TO_BATTLE,
       minCards: MIN_CARDS_TO_BATTLE,

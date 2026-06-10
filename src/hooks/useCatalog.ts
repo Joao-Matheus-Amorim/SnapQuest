@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { seedFighters } from "../js/core/fighters.js";
 import { seedCards } from "../js/core/cards.js";
 import { loadCatalog } from "../services/cloudSync";
@@ -8,6 +8,7 @@ import type { EffectCard } from "../js/core/cards.js";
 export function useCatalog() {
   const [fighters, setFighters] = useState<Fighter[]>([]);
   const [cards, setCards] = useState<EffectCard[]>([]);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     loadCatalog()
@@ -19,7 +20,9 @@ export function useCatalog() {
         setFighters(seedFighters());
         setCards(seedCards());
       });
-  }, []);
+  }, [tick]);
 
-  return { fighters, cards };
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+
+  return { fighters, cards, reload };
 }

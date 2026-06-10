@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 import { useAuth } from "../hooks/useAuth";
 import { isOwner } from "../lib/ownerConfig";
+import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 
 function isRenderableUri(uri: string) {
   return uri.startsWith("file://") || uri.startsWith("http");
@@ -26,6 +27,7 @@ export default function CameraScreen() {
   const { addCapturedPhoto } = useCapturedPhotos();
   const { user } = useAuth();
   const ownerMode = isOwner(user?.email);
+  const router = useRouter();
 
   async function pickFromCamera() {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
@@ -44,7 +46,7 @@ export default function CameraScreen() {
       Alert.alert("Permissão necessária", "Autorize o acesso à galeria.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.9, mediaTypes: ImagePicker.MediaTypeOptions.Images });
+    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.9, mediaTypes: ["images"] });
     if (result.canceled) return;
     const asset = result.assets[0];
     const uri = isRenderableUri(asset.uri) ? asset.uri : null;
@@ -88,6 +90,7 @@ export default function CameraScreen() {
 
       await addCapturedPhoto({ uri: savedUri, assetId, filename, source });
       setImageUri(savedUri);
+      setTimeout(() => router.replace("/inventory"), 800);
     } catch {
       Alert.alert("Erro ao salvar", "Verifique as permissões e tente novamente.");
     } finally {
@@ -100,8 +103,8 @@ export default function CameraScreen() {
       <Text style={styles.title}>📸 Nova Captura</Text>
       <Text style={styles.subtitle}>
         {ownerMode
-          ? "Modo dono: câmera para deck pessoal, galeria para catálogo base."
-          : "A foto fica nas Capturas Brutas. Transforme em Fighter ou Carta no Inventário."}
+          ? "Modo dono: câmera → deck pessoal · galeria → catálogo base."
+          : "Tire a foto e transforme em Fighter ou Carta no Inventário."}
       </Text>
 
       <Pressable style={styles.button} onPress={pickFromCamera} disabled={isSaving}>
@@ -114,17 +117,14 @@ export default function CameraScreen() {
         </Pressable>
       )}
 
-      {imageUri ? (
-        <>
+      {imageUri && (
+        <View style={styles.successBox}>
           <Image source={{ uri: imageUri }} style={styles.preview} />
-          <Text style={styles.success}>Foto salva nas Capturas Brutas.</Text>
-          <Link href="/inventory" asChild>
-            <Pressable style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Transformar no Inventário</Text>
-            </Pressable>
-          </Link>
-        </>
-      ) : null}
+          <Text style={styles.success}>✓ Foto capturada! Redirecionando...</Text>
+        </View>
+      )}
+
+      <BottomNav />
     </View>
   );
 }
@@ -136,10 +136,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
+    paddingBottom: BOTTOM_NAV_HEIGHT + 16,
     gap: 14,
   },
   title: { color: "#f5a623", fontSize: 28, fontWeight: "800", textAlign: "center" },
-  subtitle: { color: "#ffffff", textAlign: "center" },
+  subtitle: { color: "rgba(255,255,255,.65)", textAlign: "center", fontSize: 14 },
   button: {
     backgroundColor: "#e94560",
     paddingHorizontal: 28,
@@ -150,15 +151,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   galleryButton: { backgroundColor: "#8e44ad" },
-  buttonText: { color: "#ffffff", fontWeight: "700", fontSize: 18 },
-  secondaryButton: {
-    borderColor: "#f5a623",
-    borderWidth: 1,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
-    borderRadius: 16,
-  },
-  secondaryButtonText: { color: "#f5a623", fontWeight: "800", fontSize: 15 },
-  preview: { width: 220, height: 220, borderRadius: 24 },
-  success: { color: "#ffffff", textAlign: "center" },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 18 },
+  successBox: { alignItems: "center", gap: 10 },
+  preview: { width: 180, height: 180, borderRadius: 20, borderWidth: 2, borderColor: "#4caf50" },
+  success: { color: "#4caf50", fontWeight: "700", fontSize: 14 },
 });

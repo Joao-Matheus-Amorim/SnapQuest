@@ -23,7 +23,7 @@ export const RARITY_BORDER: Record<Rarity, number> = {
   incomum: 2,
   raro: 2,
   épico: 2.5,
-  lendário: 3,
+  lendário: 4,
 };
 
 export function rarityGlow(rarity: Rarity) {

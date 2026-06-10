@@ -14,6 +14,8 @@ export type Fighter = {
   bonus_atributo: string;
   bonus_intensidade: number;
   nome: string;
+  golpe: string;
+  erro: string;
   criado_em: string;
 };
 
@@ -21,6 +23,8 @@ export type CreateFighterInput = {
   classKey: string;
   name: string;
   photo?: string | null;
+  attackName?: string;
+  missName?: string;
 };
 
 export function createFighter(input: CreateFighterInput): Fighter;

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-import { ScrollView, View, Text, Pressable, TextInput, StyleSheet } from "react-native";
+import { ScrollView, View, Text, Pressable, TextInput, Image, StyleSheet } from "react-native";
 import { useInventory } from "../hooks/useInventory";
 import { useBattle } from "../hooks/useBattle";
 import type { BattleFighter, BattleCard, BattlePlayer } from "../js/core/battle.js";
+import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
+import { fighterRarity, RARITY_COLORS } from "../lib/rarityConfig";
 
 function HpBar({ current, max }: { current: number; max: number }) {
   const pct = Math.max(0, Math.min(1, current / max));
@@ -30,17 +32,28 @@ function FighterBtn({
   onPress: () => void;
 }) {
   const dead = !fighter.alive;
+  const rarity = fighterRarity((fighter as any).bonus_intensidade ?? 1);
+  const rarityColor = RARITY_COLORS[rarity];
   return (
     <Pressable
       onPress={dead ? undefined : onPress}
       style={[fStyles.card, selected && fStyles.selected, dead && fStyles.dead]}
     >
-      <Text style={fStyles.name}>{fighter.icon} {fighter.nome}</Text>
-      <Text style={fStyles.detail}>
-        {fighter.classe} · HP {fighter.current_hp}/{fighter.max_hp}
-      </Text>
-      {!dead && <HpBar current={fighter.current_hp!} max={fighter.max_hp!} />}
-      {dead && <Text style={fStyles.deadLabel}>💀 Derrotado</Text>}
+      <View style={fStyles.row}>
+        <View style={[fStyles.avatar, { borderColor: rarityColor }]}>
+          {(fighter as any).foto ? (
+            <Image source={{ uri: (fighter as any).foto }} style={fStyles.avatarImg} />
+          ) : (
+            <Text style={fStyles.avatarIcon}>{fighter.icon}</Text>
+          )}
+        </View>
+        <View style={fStyles.info}>
+          <Text style={fStyles.name}>{fighter.nome}</Text>
+          <Text style={fStyles.detail}>{fighter.classe} · HP {fighter.current_hp}/{fighter.max_hp}</Text>
+          {!dead && <HpBar current={fighter.current_hp!} max={fighter.max_hp!} />}
+          {dead && <Text style={fStyles.deadLabel}>💀 Derrotado</Text>}
+        </View>
+      </View>
     </Pressable>
   );
 }
@@ -51,14 +64,19 @@ const fStyles = StyleSheet.create({
     borderColor: "rgba(245,166,35,.35)",
     borderWidth: 1,
     borderRadius: 14,
-    padding: 12,
+    padding: 10,
     marginBottom: 8,
   },
   selected: { borderColor: "#f5a623", borderWidth: 2, backgroundColor: "#1e2e5a" },
   dead: { opacity: 0.3 },
-  name: { color: "#f5a623", fontWeight: "800", fontSize: 15 },
-  detail: { color: "#fff", fontSize: 12, marginTop: 2 },
-  deadLabel: { color: "#e94560", fontSize: 12, marginTop: 4 },
+  row: { flexDirection: "row", alignItems: "center", gap: 10 },
+  avatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: "#0d1117" },
+  avatarImg: { width: 44, height: 44 },
+  avatarIcon: { fontSize: 22 },
+  info: { flex: 1 },
+  name: { color: "#f5a623", fontWeight: "800", fontSize: 14 },
+  detail: { color: "rgba(255,255,255,.7)", fontSize: 11, marginTop: 1 },
+  deadLabel: { color: "#e94560", fontSize: 11, marginTop: 2 },
 });
 
 function CardBtn({
@@ -125,6 +143,7 @@ export default function BattleScreen() {
         <Link href="/inventory" asChild>
           <Pressable style={s.secondary}><Text style={s.secondaryText}>Ver Inventário</Text></Pressable>
         </Link>
+        <BottomNav />
       </View>
     );
   }
@@ -142,6 +161,7 @@ export default function BattleScreen() {
         <Link href="/" asChild>
           <Pressable style={s.secondary}><Text style={s.secondaryText}>Voltar ao Menu</Text></Pressable>
         </Link>
+        <BottomNav />
       </View>
     );
   }
@@ -176,6 +196,7 @@ export default function BattleScreen() {
         >
           <Text style={s.primaryText}>⚔️ Iniciar Batalha</Text>
         </Pressable>
+        <BottomNav />
       </View>
     );
   }
@@ -191,6 +212,7 @@ export default function BattleScreen() {
         <Pressable style={s.primary} onPress={b.confirmPass}>
           <Text style={s.primaryText}>Estou pronto — Revelar</Text>
         </Pressable>
+        <BottomNav />
       </View>
     );
   }
@@ -250,6 +272,18 @@ export default function BattleScreen() {
         ))
       )}
 
+      {/* Aviso de vantagem/desvantagem de classe */}
+      {b.matchup === "vantagem" && (
+        <View style={[s.matchupBox, s.matchupGood]}>
+          <Text style={s.matchupText}>🔥 Vantagem de classe! +30% de dano neste alvo.</Text>
+        </View>
+      )}
+      {b.matchup === "desvantagem" && (
+        <View style={[s.matchupBox, s.matchupBad]}>
+          <Text style={s.matchupText}>🛡️ Desvantagem: este alvo resiste (-25% de dano).</Text>
+        </View>
+      )}
+
       {/* Ações */}
       <View style={s.actionsRow}>
         <Pressable
@@ -286,6 +320,8 @@ export default function BattleScreen() {
       {b.battle.log.slice(-5).reverse().map((line, i) => (
         <Text key={i} style={[s.logLine, i === 0 && s.logLatest]}>{line}</Text>
       ))}
+
+      <BottomNav />
     </ScrollView>
   );
 }
@@ -297,8 +333,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
+    paddingBottom: BOTTOM_NAV_HEIGHT + 16,
   },
-  scroll: { backgroundColor: "#1a1a2e", padding: 20, paddingBottom: 52 },
+  scroll: { backgroundColor: "#1a1a2e", padding: 20, paddingBottom: BOTTOM_NAV_HEIGHT + 16 },
   bigEmoji: { fontSize: 64, marginBottom: 12 },
   title: {
     color: "#f5a623",
@@ -387,6 +424,10 @@ const s = StyleSheet.create({
     marginTop: 14,
   },
   empty: { color: "rgba(255,255,255,.6)", fontSize: 13, marginBottom: 8 },
+  matchupBox: { borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, marginTop: 14, borderWidth: 1 },
+  matchupGood: { backgroundColor: "rgba(76,175,80,.15)", borderColor: "#4caf50" },
+  matchupBad: { backgroundColor: "rgba(233,69,96,.15)", borderColor: "#e94560" },
+  matchupText: { color: "#fff", fontSize: 13, fontWeight: "700", textAlign: "center" },
   actionsRow: {
     flexDirection: "row",
     gap: 8,

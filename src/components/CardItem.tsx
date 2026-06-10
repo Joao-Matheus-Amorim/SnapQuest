@@ -4,6 +4,7 @@ import {
   cardRarity, rarityGlow,
   RARITY_COLORS, RARITY_BORDER, RARITY_LABELS,
 } from "../lib/rarityConfig";
+import { LegendaryAura } from "./LegendaryAura";
 
 export const CARD_WIDTH = 160;
 export const CARD_HEIGHT = 256;
@@ -26,12 +27,13 @@ export function CardItem({ card, width = CARD_WIDTH }: { card: EffectCard; width
   const polarityColor = isDebuff ? "#e94560" : "#4caf50";
   const hasPhoto = Boolean(card.foto);
   const photoHeight = Math.round(width * 0.8);
+  const isLegendary = rarity === "lendário";
 
-  return (
+  const cardEl = (
     <View style={[
       s.card,
       { width, borderColor: rarityColor, borderWidth: RARITY_BORDER[rarity] },
-      rarityGlow(rarity),
+      !isLegendary && rarityGlow(rarity),
     ]}>
       <View style={[s.photoArea, { width, height: photoHeight }, !hasPhoto && { backgroundColor: color + "22" }]}>
         {hasPhoto ? (
@@ -63,6 +65,11 @@ export function CardItem({ card, width = CARD_WIDTH }: { card: EffectCard; width
       </View>
     </View>
   );
+
+  if (isLegendary) {
+    return <LegendaryAura width={width} height={CARD_HEIGHT}>{cardEl}</LegendaryAura>;
+  }
+  return cardEl;
 }
 
 const s = StyleSheet.create({

@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { generateGolpe, generateMiss } from "../js/core/balance.js";
 import type { Fighter } from "../js/core/fighters.js";
 import type { EffectCard } from "../js/core/cards.js";
 
@@ -43,6 +44,8 @@ export function fromDbFighter(row: Record<string, unknown>): Fighter {
     spd: row.spd,
     bonus_atributo: row.bonus_attribute,
     bonus_intensidade: row.bonus_intensity,
+    golpe: (row.signature_move as string) || generateGolpe((row.name as string) ?? ""),
+    erro: (row.signature_miss as string) || generateMiss((row.name as string) ?? ""),
     criado_em: row.created_at,
   } as Fighter;
 }
@@ -97,6 +100,16 @@ export async function syncCatalogFighter(fighter: Fighter, userId: string): Prom
       is_catalog: true },
     { onConflict: "id" }
   );
+  if (error) throw error;
+}
+
+export async function deleteFighterFromCloud(id: string): Promise<void> {
+  const { error } = await supabase.from("snapquest_fighters").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteCardFromCloud(id: string): Promise<void> {
+  const { error } = await supabase.from("snapquest_effect_cards").delete().eq("id", id);
   if (error) throw error;
 }
 
