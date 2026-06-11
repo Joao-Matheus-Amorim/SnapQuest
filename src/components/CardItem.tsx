@@ -5,6 +5,7 @@ import {
   RARITY_COLORS, RARITY_BORDER, RARITY_LABELS,
 } from "../lib/rarityConfig";
 import { LegendaryAura } from "./LegendaryAura";
+import { HoloCard } from "./motion/HoloCard";
 
 export const CARD_WIDTH = 160;
 export const CARD_HEIGHT = 256;
@@ -19,7 +20,7 @@ function categoryColor(key: string) {
   return CATEGORY_COLORS[key] ?? "#f5a623";
 }
 
-export function CardItem({ card, width = CARD_WIDTH }: { card: EffectCard; width?: number }) {
+export function CardItem({ card, width = CARD_WIDTH, interactive = false }: { card: EffectCard; width?: number; interactive?: boolean }) {
   const rarity = cardRarity(card.raridade ?? "");
   const rarityColor = RARITY_COLORS[rarity];
   const color = categoryColor(card.categoria_key ?? "");
@@ -66,10 +67,16 @@ export function CardItem({ card, width = CARD_WIDTH }: { card: EffectCard; width
     </View>
   );
 
+  const holo = (
+    <HoloCard width={width} height={CARD_HEIGHT} rarity={rarity} interactive={interactive}>
+      {cardEl}
+    </HoloCard>
+  );
+
   if (isLegendary) {
-    return <LegendaryAura width={width} height={CARD_HEIGHT}>{cardEl}</LegendaryAura>;
+    return <LegendaryAura width={width} height={CARD_HEIGHT}>{holo}</LegendaryAura>;
   }
-  return cardEl;
+  return holo;
 }
 
 const s = StyleSheet.create({

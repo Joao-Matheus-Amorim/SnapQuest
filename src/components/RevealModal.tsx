@@ -111,9 +111,9 @@ export function RevealModal({ reveal, onClose }: { reveal: RevealTarget; onClose
         {/* Reveal */}
         <Animated.View style={[s.cardWrap, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
           {reveal.kind === "fighter" ? (
-            <FighterCard fighter={reveal.data} width={CARD_WIDTH} />
+            <FighterCard fighter={reveal.data} width={CARD_WIDTH} interactive />
           ) : (
-            <CardItem card={reveal.data} width={CARD_WIDTH} />
+            <CardItem card={reveal.data} width={CARD_WIDTH} interactive />
           )}
         </Animated.View>
 

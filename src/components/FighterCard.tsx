@@ -5,6 +5,7 @@ import {
   RARITY_COLORS, RARITY_BORDER, RARITY_LABELS,
 } from "../lib/rarityConfig";
 import { LegendaryAura } from "./LegendaryAura";
+import { HoloCard } from "./motion/HoloCard";
 
 export const CARD_WIDTH = 160;
 export const CARD_HEIGHT = 256;
@@ -28,7 +29,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter; width?: number }) {
+export function FighterCard({ fighter, width = CARD_WIDTH, interactive = false }: { fighter: Fighter; width?: number; interactive?: boolean }) {
   const rarity = fighterRarity(fighter.bonus_intensidade ?? 1);
   const rarityColor = RARITY_COLORS[rarity];
   const color = classColor(fighter.class_key ?? "");
@@ -76,10 +77,16 @@ export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter;
     </View>
   );
 
+  const holo = (
+    <HoloCard width={width} height={CARD_HEIGHT} rarity={rarity} interactive={interactive}>
+      {card}
+    </HoloCard>
+  );
+
   if (isLegendary) {
-    return <LegendaryAura width={width} height={CARD_HEIGHT}>{card}</LegendaryAura>;
+    return <LegendaryAura width={width} height={CARD_HEIGHT}>{holo}</LegendaryAura>;
   }
-  return card;
+  return holo;
 }
 
 const s = StyleSheet.create({

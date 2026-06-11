@@ -1,300 +1,198 @@
-import { Link } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArenaBackground } from "../components/game/ArenaBackground";
+import { GameButton } from "../components/game/GameButton";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 import { useAuth } from "../hooks/useAuth";
 import { useCloudSync } from "../hooks/useCloudSync";
 import { useInventory } from "../hooks/useInventory";
+import { COLORS } from "../theme/tokens";
 
-type RouteHref = "/" | "/camera" | "/inventory" | "/battle" | "/login";
-
-function BattleCounter({ value, target, label }: { value: number; target: number; label: string }) {
-  const pct = Math.max(0, Math.min(1, value / target));
+function GemCounter({ icon, value, target, label, color }: {
+  icon: string; value: number; target: number; label: string; color: string;
+}) {
+  const pct = Math.max(0, Math.min(1, target ? value / target : 0));
+  const full = value >= target;
   return (
-    <View style={styles.counter}>
-      <View style={styles.counterTop}>
-        <Text style={styles.counterValue}>{value}</Text>
-        <Text style={styles.counterTarget}>/{target}</Text>
+    <View style={[styles.gem, { borderColor: color + "66", shadowColor: color }]}>
+      <LinearGradient colors={[COLORS.panelHero, COLORS.bgDeep]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      <View style={[styles.orb, { shadowColor: color, borderColor: color + "aa" }]}>
+        <LinearGradient colors={[color, color + "33"]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
+        <Text style={styles.orbIcon}>{icon}</Text>
       </View>
-      <View style={styles.counterTrack}>
-        <View style={[styles.counterFill, { width: `${Math.round(pct * 100)}%` as any }]} />
+      <View style={styles.gemBody}>
+        <View style={styles.gemTop}>
+          <Text style={styles.gemValue}>{value}</Text>
+          <Text style={[styles.gemTarget, full && { color }]}>/{target}</Text>
+        </View>
+        <View style={styles.gemTrack}>
+          <View style={[styles.gemFill, { width: `${Math.round(pct * 100)}%`, backgroundColor: color, shadowColor: color }]} />
+        </View>
+        <Text style={styles.gemLabel}>{label}</Text>
       </View>
-      <Text style={styles.counterLabel}>{label}</Text>
     </View>
   );
 }
 
-function QuestCard({ href, code, title, detail, tone = "dark" }: {
-  href: RouteHref;
-  code: string;
-  title: string;
-  detail: string;
-  tone?: "dark" | "red" | "gold";
-}) {
+function HudChip({ icon, value, color }: { icon: string; value: string; color: string }) {
   return (
-    <Link href={href} asChild>
-      <Pressable style={[styles.questCard, tone === "red" && styles.questRed, tone === "gold" && styles.questGold]}>
-        <View style={styles.questCodeBox}>
-          <Text style={styles.questCode}>{code}</Text>
-        </View>
-        <View style={styles.questCopy}>
-          <Text style={styles.questTitle}>{title}</Text>
-          <Text style={styles.questDetail}>{detail}</Text>
-        </View>
-      </Pressable>
-    </Link>
-  );
-}
-
-function MiniStat({ label, value }: { label: string; value: number }) {
-  return (
-    <View style={styles.miniStat}>
-      <Text style={styles.miniStatValue}>{value}</Text>
-      <Text style={styles.miniStatLabel}>{label}</Text>
+    <View style={[styles.hudChip, { borderColor: color + "88" }]}>
+      <Text style={[styles.hudChipIcon, { color }]}>{icon}</Text>
+      <Text style={styles.hudChipText}>{value}</Text>
     </View>
   );
 }
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { battleRequirements, catalogStatus, catalogErrorMessage } = useInventory();
-  const { user, loading, profile, profileLoading, profileError, signOut } = useAuth();
+  const { user, loading, profile, profileLoading } = useAuth();
   const cloudSync = useCloudSync();
-  const accountLabel = profile?.displayName || user?.email || "Visitante";
-  const busy = loading || profileLoading;
+
   const canBattle = battleRequirements.canBattle;
+  const busy = loading || profileLoading;
+  const collection =
+    battleRequirements.playerFighterCount + battleRequirements.playerCardCount +
+    battleRequirements.catalogFighterCount + battleRequirements.catalogCardCount;
+  const accountLabel = profile?.displayName || user?.email || "Visitante";
   const catalogNeedsAttention = catalogStatus === "error" || catalogStatus === "fallback";
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.heroFrame}>
-        <View style={styles.heroTopLine}>
-          <Text style={styles.realm}>SNAPQUEST</Text>
+    <View style={styles.root}>
+      <ArenaBackground />
+
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 10 }]} showsVerticalScrollIndicator={false}>
+        {/* HUD topo */}
+        <Animated.View entering={FadeIn.duration(400)} style={styles.hudRow}>
+          <View style={styles.hudLeft}>
+            <HudChip icon="★" value={`Nv ${profile?.level ?? 1}`} color={COLORS.gold} />
+            <HudChip icon="◆" value={`${collection}`} color={COLORS.accent} />
+          </View>
+          <GameButton
+            title={user ? (profile?.displayName || user.email || "Conta").split("@")[0].split(" ")[0] : "Entrar"}
+            subtitle={user ? "Conectado" : undefined}
+            variant={user ? "accent" : "dark"}
+            size="md"
+            haptic="tap"
+            onPress={() => router.push("/login")}
+            style={styles.hudAccount}
+          />
+        </Animated.View>
+
+        {/* Heroi */}
+        <Animated.View entering={FadeInDown.delay(80).duration(500).springify().damping(16)} style={styles.hero}>
+          <Text style={styles.wordmark}>SNAPQUEST</Text>
           <View style={[styles.stateChip, canBattle && styles.stateChipReady]}>
-            <Text style={styles.stateChipText}>{canBattle ? "ARENA ABERTA" : "MONTANDO DECK"}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.title}>Mesa de Batalha</Text>
-        <Text style={styles.subtitle}>Fotos viram criaturas, cartas viram truques, e o duelo acontece no mesmo celular.</Text>
-
-        <View style={styles.deckGate}>
-          <BattleCounter value={battleRequirements.fighterCount} target={battleRequirements.minFighters} label="Fighters" />
-          <BattleCounter value={battleRequirements.cardCount} target={battleRequirements.minCards} label="Cartas" />
-        </View>
-      </View>
-
-      <View style={styles.questGrid}>
-        <QuestCard href="/camera" code="01" title="Portal de captura" detail="Fotografe e transforme" tone="red" />
-        <QuestCard href="/inventory" code="02" title="Grimorio do deck" detail="Deck pessoal e catalogo" tone="gold" />
-        <QuestCard href="/battle" code="03" title="Entrar no duelo" detail={canBattle ? "Comecar batalha" : "Faltam cartas"} />
-        <QuestCard href={user ? "/" : "/login"} code="04" title={user ? "Conta vinculada" : "Salvar progresso"} detail={user ? "Sync ativo" : "Entrar na nuvem"} />
-      </View>
-
-      <View style={styles.collectionPanel}>
-        <Text style={styles.sectionLabel}>Colecao</Text>
-        <View style={styles.statsRow}>
-          <MiniStat label="Meu deck" value={battleRequirements.playerFighterCount + battleRequirements.playerCardCount} />
-          <MiniStat label="Catalogo" value={battleRequirements.catalogFighterCount + battleRequirements.catalogCardCount} />
-          <MiniStat label="Prontos" value={battleRequirements.fighterCount + battleRequirements.cardCount} />
-        </View>
-      </View>
-
-      <View style={styles.accountPanel}>
-        <View style={styles.accountHeader}>
-          <View style={styles.accountSigil}>
-            <Text style={styles.accountSigilText}>{user ? "P" : "V"}</Text>
-          </View>
-          <View style={styles.accountCopy}>
-            <Text style={styles.sectionLabel}>Perfil</Text>
-            <Text style={styles.accountName} numberOfLines={1}>{accountLabel}</Text>
-          </View>
-          {busy ? <ActivityIndicator size="small" color="#f7c948" /> : null}
-        </View>
-
-        {user ? (
-          <>
-            <Text style={styles.accountMeta}>
-              Nivel {profile?.level ?? 1} / XP {profile?.xp ?? 0}
-              {profile?.canManageCatalog ? " / Mestre do catalogo" : ""}
+            <Text style={[styles.stateChipText, { color: canBattle ? COLORS.greenSoft : COLORS.primary }]}>
+              {canBattle ? "⚔  ARENA ABERTA" : "◔  MONTANDO DECK"}
             </Text>
-            <Text
-              style={[
-                styles.syncText,
-                cloudSync.status === "error" && styles.errorText,
-                cloudSync.status === "synced" && styles.successText,
-              ]}
-            >
-              {cloudSync.message}
-            </Text>
-            {profileError ? <Text style={styles.errorText}>{profileError}</Text> : null}
-            <Pressable style={styles.outlineButton} onPress={signOut}>
-              <Text style={styles.outlineButtonText}>Sair da conta</Text>
-            </Pressable>
-          </>
-        ) : (
-          <>
-            <Text style={styles.accountMeta}>Batalha rapida liberada. Progresso em nuvem fica desligado.</Text>
-            <Link href="/login" asChild>
-              <Pressable style={styles.outlineButton}>
-                <Text style={styles.outlineButtonText}>Vincular conta</Text>
-              </Pressable>
-            </Link>
-          </>
-        )}
-      </View>
+          </View>
+          <Text style={styles.tagline}>Fotos viram criaturas. O duelo acontece no mesmo celular.</Text>
+        </Animated.View>
 
-      {catalogNeedsAttention && catalogErrorMessage ? (
-        <View style={styles.notice}>
-          <Text style={styles.noticeText}>{catalogErrorMessage}</Text>
-        </View>
-      ) : null}
+        {/* Orbes */}
+        <Animated.View entering={FadeInDown.delay(160).duration(500).springify().damping(16)} style={styles.gemRow}>
+          <GemCounter icon="⚔" value={battleRequirements.fighterCount} target={battleRequirements.minFighters} label="FIGHTERS" color={COLORS.primary} />
+          <GemCounter icon="✦" value={battleRequirements.cardCount} target={battleRequirements.minCards} label="CARTAS" color={COLORS.accent} />
+        </Animated.View>
+
+        {/* Acoes */}
+        <Animated.View entering={FadeInDown.delay(240).duration(500).springify().damping(16)} style={styles.actions}>
+          <GameButton
+            title="DUELAR"
+            subtitle={canBattle ? "Entrar na arena" : "Faltam cartas para o duelo"}
+            icon="⚔"
+            variant="primary"
+            size="lg"
+            disabled={!canBattle}
+            haptic="success"
+            onPress={() => router.push("/battle")}
+          />
+          <View style={styles.tileRow}>
+            <GameButton title="Capturar" subtitle="Portal" icon="📸" variant="accent" size="md" onPress={() => router.push("/camera")} style={styles.tile} />
+            <GameButton title="Grimorio" subtitle="Deck" icon="📕" variant="gold" size="md" onPress={() => router.push("/inventory")} style={styles.tile} />
+          </View>
+        </Animated.View>
+
+        {/* status */}
+        <Animated.View entering={FadeIn.delay(360).duration(500)} style={styles.statusBar}>
+          {busy ? <ActivityIndicator size="small" color={COLORS.accent} /> : null}
+          <Text style={styles.statusText} numberOfLines={1}>
+            {user ? `${accountLabel} · ${cloudSync.message}` : "Jogo livre · progresso sem nuvem"}
+          </Text>
+        </Animated.View>
+
+        {catalogNeedsAttention && catalogErrorMessage ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>{catalogErrorMessage}</Text>
+          </View>
+        ) : null}
+      </ScrollView>
 
       <BottomNav />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    minHeight: "100%",
-    backgroundColor: "#120916",
-    padding: 18,
-    paddingTop: 24,
-    paddingBottom: BOTTOM_NAV_HEIGHT + 24,
+  root: { flex: 1, backgroundColor: COLORS.bgNav },
+  content: { paddingHorizontal: 18, paddingBottom: BOTTOM_NAV_HEIGHT + 24, minHeight: "100%" },
+
+  hudRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  hudLeft: { flexDirection: "row", gap: 8 },
+  hudChip: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "rgba(6,12,26,.7)", borderWidth: 1.5, borderRadius: 999,
+    paddingHorizontal: 12, paddingVertical: 7,
   },
-  heroFrame: {
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "rgba(247,201,72,.78)",
-    backgroundColor: "#25112f",
-    padding: 16,
-    marginBottom: 14,
-    shadowColor: "#f43f5e",
-    shadowOpacity: 0.45,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
+  hudChipIcon: { fontSize: 13, fontWeight: "900" },
+  hudChipText: { color: COLORS.cream, fontSize: 13, fontWeight: "900" },
+  hudAccount: { width: 128 },
+
+  hero: { alignItems: "center", marginTop: 20, marginBottom: 4 },
+  wordmark: {
+    color: COLORS.gold, fontSize: 32, fontWeight: "900", letterSpacing: 5,
+    textShadowColor: "rgba(255,61,180,.7)", textShadowRadius: 16, textShadowOffset: { width: 0, height: 0 },
   },
-  heroTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  realm: { color: "#f7c948", fontSize: 12, fontWeight: "900", letterSpacing: 2 },
   stateChip: {
-    borderWidth: 1,
-    borderColor: "rgba(244,63,94,.55)",
-    backgroundColor: "rgba(244,63,94,.16)",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    marginTop: 14, borderWidth: 1.5, borderColor: "rgba(255,61,180,.55)",
+    backgroundColor: "rgba(255,61,180,.12)", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7,
   },
-  stateChipReady: {
-    borderColor: "rgba(34,197,94,.6)",
-    backgroundColor: "rgba(34,197,94,.14)",
+  stateChipReady: { borderColor: "rgba(34,197,94,.65)", backgroundColor: "rgba(34,197,94,.14)" },
+  stateChipText: { fontSize: 12, fontWeight: "900", letterSpacing: 1 },
+  tagline: { color: "rgba(234,242,255,.72)", fontSize: 13, textAlign: "center", marginTop: 14, lineHeight: 19, paddingHorizontal: 16 },
+
+  gemRow: { flexDirection: "row", gap: 12, marginTop: 24 },
+  gem: {
+    flex: 1, flexDirection: "row", alignItems: "center", gap: 12,
+    borderWidth: 1.5, borderRadius: 18, padding: 12, overflow: "hidden",
+    shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 0 }, elevation: 6,
   },
-  stateChipText: { color: "#fff7d6", fontSize: 10, fontWeight: "900" },
-  title: { color: "#fff7d6", fontSize: 36, lineHeight: 40, fontWeight: "900", marginTop: 18 },
-  subtitle: { color: "rgba(255,247,214,.72)", fontSize: 14, lineHeight: 20, marginTop: 8 },
-  deckGate: { flexDirection: "row", gap: 10, marginTop: 18 },
-  counter: {
-    flex: 1,
-    borderRadius: 8,
-    backgroundColor: "rgba(18,9,22,.62)",
-    borderWidth: 1,
-    borderColor: "rgba(247,201,72,.26)",
-    padding: 10,
+  orb: {
+    width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center",
+    overflow: "hidden", borderWidth: 1.5,
+    shadowOpacity: 0.8, shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: 6,
   },
-  counterTop: { flexDirection: "row", alignItems: "flex-end" },
-  counterValue: { color: "#ffffff", fontSize: 26, fontWeight: "900" },
-  counterTarget: { color: "rgba(255,247,214,.58)", fontSize: 13, fontWeight: "900", marginBottom: 4 },
-  counterTrack: { height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,.12)", marginTop: 8, overflow: "hidden" },
-  counterFill: { height: 6, borderRadius: 3, backgroundColor: "#f7c948" },
-  counterLabel: { color: "rgba(255,247,214,.72)", fontSize: 11, fontWeight: "900", marginTop: 7, textTransform: "uppercase" },
-  questGrid: { gap: 10, marginBottom: 14 },
-  questCard: {
-    minHeight: 76,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,247,214,.18)",
-    backgroundColor: "#1b1023",
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  questRed: { borderColor: "rgba(244,63,94,.55)", backgroundColor: "#32101e" },
-  questGold: { borderColor: "rgba(247,201,72,.58)", backgroundColor: "#2d2110" },
-  questCodeBox: {
-    width: 44,
-    height: 52,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,247,214,.28)",
-    backgroundColor: "rgba(0,0,0,.22)",
-  },
-  questCode: { color: "#f7c948", fontSize: 18, fontWeight: "900" },
-  questCopy: { flex: 1 },
-  questTitle: { color: "#fff7d6", fontSize: 16, fontWeight: "900" },
-  questDetail: { color: "rgba(255,247,214,.62)", fontSize: 12, fontWeight: "800", marginTop: 4 },
-  collectionPanel: {
-    borderRadius: 8,
-    backgroundColor: "#1b1023",
-    borderWidth: 1,
-    borderColor: "rgba(255,247,214,.14)",
-    padding: 12,
-    marginBottom: 14,
-  },
-  sectionLabel: { color: "#f7c948", fontSize: 11, fontWeight: "900", textTransform: "uppercase", letterSpacing: 1.5 },
-  statsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-  miniStat: {
-    flex: 1,
-    minHeight: 64,
-    borderRadius: 8,
-    backgroundColor: "rgba(18,9,22,.7)",
-    borderWidth: 1,
-    borderColor: "rgba(255,247,214,.1)",
-    padding: 10,
-    justifyContent: "center",
-  },
-  miniStatValue: { color: "#ffffff", fontSize: 22, fontWeight: "900" },
-  miniStatLabel: { color: "rgba(255,247,214,.6)", fontSize: 10, fontWeight: "900", marginTop: 3 },
-  accountPanel: {
-    borderRadius: 8,
-    backgroundColor: "#1b1023",
-    borderWidth: 1,
-    borderColor: "rgba(255,247,214,.14)",
-    padding: 12,
-    marginBottom: 14,
-  },
-  accountHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  accountSigil: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f7c948",
-  },
-  accountSigilText: { color: "#1b1023", fontSize: 18, fontWeight: "900" },
-  accountCopy: { flex: 1 },
-  accountName: { color: "#fff7d6", fontSize: 16, fontWeight: "900", marginTop: 2 },
-  accountMeta: { color: "rgba(255,247,214,.66)", fontSize: 12, lineHeight: 18, marginTop: 10 },
-  syncText: { color: "rgba(255,247,214,.7)", fontSize: 12, marginTop: 10 },
-  successText: { color: "#86efac" },
-  errorText: { color: "#fb7185", fontSize: 12, marginTop: 8 },
-  outlineButton: {
-    marginTop: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(247,201,72,.45)",
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  outlineButtonText: { color: "#f7c948", fontSize: 13, fontWeight: "900" },
-  notice: {
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: "rgba(244,63,94,.14)",
-    borderWidth: 1,
-    borderColor: "rgba(244,63,94,.38)",
-  },
-  noticeText: { color: "#fecdd3", fontSize: 12, lineHeight: 17, fontWeight: "800" },
+  orbIcon: { fontSize: 22, color: "#fff", textShadowColor: "rgba(0,0,0,.4)", textShadowRadius: 3 },
+  gemBody: { flex: 1 },
+  gemTop: { flexDirection: "row", alignItems: "flex-end" },
+  gemValue: { color: "#fff", fontSize: 26, fontWeight: "900" },
+  gemTarget: { color: "rgba(234,242,255,.5)", fontSize: 13, fontWeight: "900", marginBottom: 3 },
+  gemTrack: { height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,.1)", marginTop: 5, overflow: "hidden" },
+  gemFill: { height: 5, borderRadius: 3, shadowOpacity: 0.9, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } },
+  gemLabel: { color: "rgba(234,242,255,.6)", fontSize: 10, fontWeight: "900", marginTop: 6, letterSpacing: 1.2 },
+
+  actions: { marginTop: 28, gap: 14 },
+  tileRow: { flexDirection: "row", gap: 12 },
+  tile: { flex: 1 },
+
+  statusBar: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24 },
+  statusText: { color: "rgba(234,242,255,.7)", fontSize: 12, fontWeight: "700" },
+
+  notice: { marginTop: 14, borderRadius: 12, padding: 12, backgroundColor: "rgba(255,77,109,.14)", borderWidth: 1, borderColor: "rgba(255,77,109,.4)" },
+  noticeText: { color: "#ffd3dc", fontSize: 12, lineHeight: 17, fontWeight: "700" },
 });
