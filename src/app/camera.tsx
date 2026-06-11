@@ -162,23 +162,39 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.kicker}>Camera</Text>
-      <Text style={styles.title}>Nova captura</Text>
-      <Text style={styles.subtitle}>
-        {ownerMode
-          ? "Camera para deck pessoal. Galeria para catalogo base."
-          : "Capture uma foto para criar Fighter ou Carta."}
-      </Text>
+      <View style={styles.portal}>
+        <Text style={styles.realm}>PORTAL DE CAPTURA</Text>
+        <Text style={styles.title}>Transforme uma foto em poder de batalha.</Text>
+        <Text style={styles.subtitle}>
+          {ownerMode
+            ? "Camera cria seu deck. Galeria alimenta o catalogo base."
+            : "Capture uma foto e escolha Fighter ou Carta no grimorio."}
+        </Text>
 
-      <Pressable style={styles.button} onPress={pickFromCamera} disabled={isSaving}>
-        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "Tirar foto"}</Text>
-      </Pressable>
+        <View style={styles.captureFrame}>
+          <View style={styles.frameTop}>
+            <Text style={styles.frameCode}>SNAP</Text>
+            <Text style={styles.frameCode}>QUEST</Text>
+          </View>
+          <Text style={styles.frameTitle}>FOTO</Text>
+          <Text style={styles.frameArrow}>FIGHTER / CARTA</Text>
+          <View style={styles.frameBottom}>
+            <Text style={styles.frameHint}>analise</Text>
+            <Text style={styles.frameHint}>raridade</Text>
+            <Text style={styles.frameHint}>duelo</Text>
+          </View>
+        </View>
 
-      {ownerMode && (
-        <Pressable style={[styles.button, styles.galleryButton]} onPress={pickFromGallery} disabled={isSaving}>
-          <Text style={styles.buttonText}>Galeria para catalogo</Text>
+        <Pressable style={styles.button} onPress={pickFromCamera} disabled={isSaving}>
+          <Text style={styles.buttonText}>{isSaving ? "Canalizando..." : "Abrir camera"}</Text>
         </Pressable>
-      )}
+
+        {ownerMode && (
+          <Pressable style={[styles.button, styles.galleryButton]} onPress={pickFromGallery} disabled={isSaving}>
+            <Text style={styles.buttonText}>Importar para catalogo</Text>
+          </Pressable>
+        )}
+      </View>
 
       {imageUri && (
         <View style={styles.successBox}>
@@ -195,28 +211,68 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#101623",
+    backgroundColor: "#120916",
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: 18,
     paddingBottom: BOTTOM_NAV_HEIGHT + 16,
-    gap: 14,
   },
-  kicker: { color: "#14b8a6", fontSize: 13, fontWeight: "900", textTransform: "uppercase" },
-  title: { color: "#f8fafc", fontSize: 30, fontWeight: "900", textAlign: "center" },
-  subtitle: { color: "rgba(248,250,252,.68)", textAlign: "center", fontSize: 14, lineHeight: 20, maxWidth: 320 },
+  portal: {
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "rgba(247,201,72,.72)",
+    backgroundColor: "#25112f",
+    padding: 16,
+    shadowColor: "#f43f5e",
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  realm: { color: "#f7c948", fontSize: 12, fontWeight: "900", letterSpacing: 1.5, textAlign: "center" },
+  title: { color: "#fff7d6", fontSize: 27, lineHeight: 32, fontWeight: "900", textAlign: "center", marginTop: 12 },
+  subtitle: { color: "rgba(255,247,214,.7)", textAlign: "center", fontSize: 14, lineHeight: 20, marginTop: 8 },
+  captureFrame: {
+    minHeight: 230,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,247,214,.24)",
+    backgroundColor: "#120916",
+    marginTop: 18,
+    marginBottom: 14,
+    padding: 14,
+    justifyContent: "space-between",
+  },
+  frameTop: { flexDirection: "row", justifyContent: "space-between" },
+  frameCode: { color: "rgba(247,201,72,.78)", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 },
+  frameTitle: { color: "#ffffff", fontSize: 48, fontWeight: "900", textAlign: "center", letterSpacing: 3 },
+  frameArrow: { color: "#f43f5e", fontSize: 13, fontWeight: "900", textAlign: "center", letterSpacing: 1.2 },
+  frameBottom: { flexDirection: "row", justifyContent: "center", gap: 8 },
+  frameHint: {
+    color: "rgba(255,247,214,.7)",
+    fontSize: 10,
+    fontWeight: "900",
+    borderWidth: 1,
+    borderColor: "rgba(255,247,214,.16)",
+    borderRadius: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+  },
   button: {
-    backgroundColor: "#e11d48",
+    backgroundColor: "#f43f5e",
     paddingHorizontal: 28,
     paddingVertical: 16,
     borderRadius: 8,
     width: "100%",
     maxWidth: 320,
     alignItems: "center",
+    marginTop: 10,
   },
-  galleryButton: { backgroundColor: "#14b8a6" },
-  buttonText: { color: "#fff", fontWeight: "900", fontSize: 16 },
-  successBox: { alignItems: "center", gap: 10 },
-  preview: { width: 180, height: 180, borderRadius: 8, borderWidth: 2, borderColor: "#22c55e" },
-  success: { color: "#22c55e", fontWeight: "800", fontSize: 14 },
+  galleryButton: { backgroundColor: "#2d2110", borderWidth: 1, borderColor: "rgba(247,201,72,.55)" },
+  buttonText: { color: "#fff7d6", fontWeight: "900", fontSize: 16 },
+  successBox: { alignItems: "center", gap: 10, marginTop: 14 },
+  preview: { width: 160, height: 160, borderRadius: 8, borderWidth: 2, borderColor: "#f7c948" },
+  success: { color: "#f7c948", fontWeight: "900", fontSize: 14 },
 });

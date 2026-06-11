@@ -40,7 +40,7 @@ O repositorio possui:
 
 - Expo Router em `src/app/`.
 - Home com contadores reais.
-- Home refinada como painel mobile com status, metricas, acoes principais e conta.
+- Home refinada com linguagem gamificada: mesa de batalha, portal, progresso de deck e atalhos de duelo.
 - Login/cadastro Supabase com mensagens de sessao e confirmacao.
 - `AuthProvider` unico no layout para hidratar sessao/perfil sem duplicar listeners por tela.
 - Logout limpando deck local.
@@ -60,7 +60,7 @@ O repositorio possui:
 - Inventario com deck pessoal + catalogo.
 - Catalogo expõe origem/estado: cloud, seed por vazio/incompleto remoto ou seed por erro remoto.
 - Filtros por tipo e raridade.
-- Navegacao inferior e cartoes mobile com tratamento visual mais consistente e sem dependencia de emoji em labels operacionais.
+- Navegacao inferior e cartoes mobile com tratamento visual mais consistente, em estilo HUD/deck, sem dependencia de emoji em labels operacionais.
 - Exclusao de itens permitidos.
 - Batalha mobile local completa com dois jogadores passando o celular.
 

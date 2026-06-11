@@ -95,7 +95,7 @@ Status: em andamento.
 
 Entregas atuais:
 
-- Primeiro refinamento de UI shell mobile: Home, navegacao inferior, captura, modal de nome e cards.
+- Primeiro refinamento gamificado mobile: Home como mesa de batalha, navegacao em estilo HUD, portal de captura, modal de nome e cards.
 - Transformacao Fighter/Carta.
 - Fallback offline.
 - IA Gemini opcional sob demanda.
