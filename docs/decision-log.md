@@ -131,3 +131,13 @@ Decisao: montar `AuthProvider` uma unica vez no layout mobile e expor estado/ori
 Motivo: varias telas liam `useAuth()` diretamente, o que podia duplicar hidratacao de sessao/perfil. Alem disso, erro real de catalogo podia virar seed local sem sinal claro para a UI.
 
 Consequencia: telas continuam usando `useAuth()`, mas agora por contexto global. O sync cloud roda por uma ponte no layout e o inventario pode mostrar aviso discreto quando o catalogo remoto nao esta sendo usado.
+
+## D-014 - Direcao visual mobile gamificada
+
+Data: 2026-06-10
+
+Decisao: orientar a UI mobile para linguagem de card game familiar, com Home como Mesa de Batalha, camera como Portal de Captura e navegacao inferior como HUD de jogo.
+
+Motivo: a primeira abordagem visual ficou parecida com dashboard generico e nao comunicava fantasia, colecao, duelo nem transformacao por foto.
+
+Consequencia: telas de entrada devem priorizar sensacao de jogo, progresso de deck e acoes de aventura. Interfaces operacionais continuam densas quando necessario, mas nao devem parecer landing page ou painel SaaS.

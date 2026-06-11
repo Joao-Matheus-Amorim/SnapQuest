@@ -15,7 +15,7 @@ Data de referencia: 2026-06-10.
 |---|---|---|
 | MVP web | Implementado | Valida o loop base e preserva a entrada `index.html`. |
 | Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; LCK e SPD tem efeito completo na batalha local. |
-| Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
+| Mobile Expo | Implementado em MVP | Home gamificada, login, portal de captura, inventario, filtros, exclusao, revelacao e batalha local. |
 | Supabase Auth | Implementado no mobile | Login/cadastro com perfil garantido, provider unico de sessao, guest mode e status de sync/confirmacao. |
 | Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog`, controle por `can_manage_catalog`, leitura publica anonima e validacao real via `test:rls:catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
@@ -27,6 +27,7 @@ Data de referencia: 2026-06-10.
 
 ```txt
 Camera/Galeria
+  -> Portal de captura
   -> Capturas brutas
   -> Nome sugerido offline
   -> Opcional: Gemini melhora nome/golpe/vacilo
@@ -41,6 +42,14 @@ Inventario
   -> Catalogo cloud ou seed local com estado explicito de fallback/erro
   -> Filtros por tipo e raridade
   -> Batalha local se houver minimo de Fighters e Cartas
+```
+
+```txt
+Home mobile
+  -> Mesa de Batalha
+  -> Progresso minimo de Fighters/Cartas
+  -> Quests para captura, deck, duelo e conta
+  -> HUD inferior: Base, Captura, Deck, Duelo
 ```
 
 ```txt

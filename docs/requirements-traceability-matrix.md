@@ -32,6 +32,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-024 | Deploy web na Vercel. | `vercel.json`, `vite.config.js` | `npm run build` | Implementado |
 | REQ-025 | CI minima. | `.github/workflows/ci.yml` | GitHub Actions com Expo check, test:core, typecheck, static check e build | Implementado |
 | REQ-026 | Documentacao de governanca e estado. | `docs/` | Revisao documental | Implementado |
+| REQ-027 | Apresentar a experiencia mobile com linguagem visual de jogo, nao dashboard generico. | `src/app/index.tsx`, `src/app/camera.tsx`, `src/components/BottomNav.tsx`, `src/components/FighterCard.tsx`, `src/components/CardItem.tsx`, `src/components/NameInputModal.tsx` | `npx tsc --noEmit`, `npm run check`, validacao visual manual em dispositivo | Implementado em primeira passada |
 
 ## Gaps por requisito
 
@@ -40,6 +41,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-018 | Sync ainda precisa de smoke mais formal em cenarios de erro offline e merge repetido. | Manter validacao manual em dispositivo ate existir smoke test automatizado; provider unico ja reduz duplicidade de sessao/sync. |
 | REQ-019 | Catalogo precisa de validacao de leitura no fluxo app completo. | Validar leitura/cloud, seed por vazio/incompleto e seed por erro no app, alem do teste RLS direto. |
 | REQ-025 | CI ainda nao cobre RLS real. | Manter `test:rls:catalog` como gate manual/local porque depende de usuarios reais. |
+| REQ-027 | UI/UX gamificada ainda precisa de validacao visual em celular e refinamento de inventario/batalha. | Testar no dispositivo e continuar por telas, sem misturar banco/regra. |
 
 ## Regra de manutencao
 

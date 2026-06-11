@@ -25,8 +25,8 @@ Local: `src/app/`
 | Arquivo | Responsabilidade |
 |---|---|
 | `_layout.tsx` | Stack do Expo Router, `AuthProvider` global e ponte de sync cloud. |
-| `index.tsx` | Home mobile, contadores, status de conta/sync e entrada para captura. |
-| `camera.tsx` | Camera, galeria no modo admin de catalogo, permissoes e salvamento de captura bruta. |
+| `index.tsx` | Home mobile gamificada: Mesa de Batalha, progresso de deck, quests, colecao e status de conta/sync. |
+| `camera.tsx` | Portal de captura, camera, galeria no modo admin de catalogo, permissoes e salvamento de captura bruta. |
 | `inventory.tsx` | Pendentes, transformacao, IA opcional, criacao, filtros, exclusao e revelacao. |
 | `battle.tsx` | Batalha local completa, setup, turnos, selecao, cartas, ataques e vencedor. |
 | `login.tsx` | Login/cadastro Supabase com guest mode e mensagens de confirmacao. |
@@ -37,7 +37,7 @@ Local: `src/components/`
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `BottomNav.tsx` | Navegacao inferior mobile. |
+| `BottomNav.tsx` | HUD inferior mobile com Base, Captura, Deck e Duelo. |
 | `BattleLog.tsx` | Log visual de batalha. |
 | `CardItem.tsx` | Renderizacao de Carta. |
 | `FighterCard.tsx` | Renderizacao de Fighter. |
