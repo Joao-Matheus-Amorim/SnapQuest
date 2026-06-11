@@ -141,3 +141,13 @@ Decisao: orientar a UI mobile para linguagem de card game familiar, com Home com
 Motivo: a primeira abordagem visual ficou parecida com dashboard generico e nao comunicava fantasia, colecao, duelo nem transformacao por foto.
 
 Consequencia: telas de entrada devem priorizar sensacao de jogo, progresso de deck e acoes de aventura. Interfaces operacionais continuam densas quando necessario, mas nao devem parecer landing page ou painel SaaS.
+
+## D-015 - Travar mundo Arena + paleta Arcano Petroleo & Magenta como norte de design
+
+Data: 2026-06-11
+
+Decisao: adotar formalmente duas ideias validadas em dispositivo como contrato de design (`docs/design-language.md`): (1) mundo visual Arena estilo Clash Royale (game-feel, profundidade, cena viva, botoes 3D, HUD), e (2) paleta Arcano Petroleo & Magenta (base petroleo, magenta acao, ciano acento, ouro pontual, branco-frio, azul ambiente). Stack de UI: Reanimated 4 (worklets), expo-linear-gradient, react-native-svg, expo-haptics, gesture-handler; Skia instalado mas reservado para futuro dev build por nao existir no Expo Go.
+
+Motivo: a UI mobile passou por refinamentos ate validar um padrao premium coeso; sem travar paleta e linguagem, cada tela divergia e o resultado parecia dashboard. As duas direcoes anteriores haviam sido recusadas por ficarem amadoras ou administrativas.
+
+Consequencia: `src/theme/tokens.ts` e a fonte unica de cores/molas. Toda tela nova ou refino segue `docs/design-language.md`. Home e Conta/Login ja estao no padrao; Camera, Grimorio, Reveal, Batalha e BottomNav devem ser migrados sem misturar com banco/RLS/Storage/Gemini/regra de batalha.

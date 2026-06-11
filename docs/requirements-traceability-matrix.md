@@ -1,6 +1,6 @@
 # Matriz de Rastreabilidade de Requisitos
 
-Data de referencia: 2026-06-10.
+Data de referencia: 2026-06-11.
 
 Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atualizada quando o produto ganhar ou perder comportamento.
 
@@ -33,6 +33,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-025 | CI minima. | `.github/workflows/ci.yml` | GitHub Actions com Expo check, test:core, typecheck, static check e build | Implementado |
 | REQ-026 | Documentacao de governanca e estado. | `docs/` | Revisao documental | Implementado |
 | REQ-027 | Apresentar a experiencia mobile com linguagem visual de jogo, nao dashboard generico. | `src/app/index.tsx`, `src/app/camera.tsx`, `src/components/BottomNav.tsx`, `src/components/FighterCard.tsx`, `src/components/CardItem.tsx`, `src/components/NameInputModal.tsx` | `npx tsc --noEmit`, `npm run check`, validacao visual manual em dispositivo | Implementado em primeira passada |
+| REQ-028 | Aplicar sistema de design premium "Arena + Arcano Petroleo & Magenta" com profundidade, movimento e haptics, respeitando acessibilidade. | `docs/design-language.md`, `src/theme/tokens.ts`, `src/lib/haptics.ts`, `src/lib/useReducedMotion.ts`, `src/components/game/*`, `src/components/motion/*`, `src/app/index.tsx`, `src/app/login.tsx`, `babel.config.cjs` | `npx tsc --noEmit`, `npm run check`, `npm run build`, validacao visual em dispositivo (Home e Login) | Implementado em Home/Login; demais telas pendentes |
 
 ## Gaps por requisito
 
@@ -42,6 +43,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-019 | Catalogo precisa de validacao de leitura no fluxo app completo. | Validar leitura/cloud, seed por vazio/incompleto e seed por erro no app, alem do teste RLS direto. |
 | REQ-025 | CI ainda nao cobre RLS real. | Manter `test:rls:catalog` como gate manual/local porque depende de usuarios reais. |
 | REQ-027 | UI/UX gamificada ainda precisa de validacao visual em celular e refinamento de inventario/batalha. | Testar no dispositivo e continuar por telas, sem misturar banco/regra. |
+| REQ-028 | Sistema premium aplicado so em Home/Login; Camera, Grimorio, Reveal, Batalha e BottomNav ainda nao migrados. Skia reservado para futuro dev build. | Propagar `docs/design-language.md` por tela; avaliar dev build quando quiser efeitos Skia. |
 
 ## Regra de manutencao
 
