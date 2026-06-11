@@ -55,8 +55,8 @@ export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter;
 
       <View style={s.info}>
         <Text style={s.name} numberOfLines={1}>{fighter.icon} {fighter.nome}</Text>
-        {fighter.golpe ? <Text style={s.golpe} numberOfLines={1}>🎯 {fighter.golpe}</Text> : null}
-        {fighter.erro ? <Text style={s.miss} numberOfLines={1}>💫 {fighter.erro}</Text> : null}
+        {fighter.golpe ? <Text style={s.golpe} numberOfLines={1}>Golpe: {fighter.golpe}</Text> : null}
+        {fighter.erro ? <Text style={s.miss} numberOfLines={1}>Vacilo: {fighter.erro}</Text> : null}
         <View style={s.hpRow}>
           <Text style={s.hpLabel}>HP {fighter.hp}</Text>
           <View style={s.hpTrack}>
@@ -85,39 +85,39 @@ export function FighterCard({ fighter, width = CARD_WIDTH }: { fighter: Fighter;
 const s = StyleSheet.create({
   card: {
     height: CARD_HEIGHT,
-    backgroundColor: "#16213e",
-    borderRadius: 16,
+    backgroundColor: "#162033",
+    borderRadius: 8,
     overflow: "hidden",
   },
   photoArea: {
-    backgroundColor: "#0d1117",
+    backgroundColor: "#101623",
     alignItems: "center",
     justifyContent: "center",
   },
   placeholderIcon: { fontSize: 52 },
   classBadge: {
     position: "absolute", bottom: 6, left: 6,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5,
   },
   badgeText: {
     color: "#fff", fontSize: 9, fontWeight: "800",
     textTransform: "uppercase", letterSpacing: 0.5,
   },
   info: { flex: 1, padding: 8, justifyContent: "space-between" },
-  name: { color: "#f5a623", fontSize: 12, fontWeight: "800" },
-  golpe: { color: "#7ed957", fontSize: 9, fontWeight: "700", marginTop: 1 },
-  miss: { color: "rgba(233,69,96,.85)", fontSize: 8, fontStyle: "italic" },
+  name: { color: "#f8fafc", fontSize: 12, fontWeight: "900" },
+  golpe: { color: "#86efac", fontSize: 9, fontWeight: "800", marginTop: 1 },
+  miss: { color: "rgba(251,113,133,.9)", fontSize: 8, fontStyle: "italic" },
   hpRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   hpLabel: { color: "#fff", fontSize: 9, fontWeight: "700", width: 36 },
-  hpTrack: { flex: 1, height: 4, backgroundColor: "#0d1117", borderRadius: 2 },
+  hpTrack: { flex: 1, height: 4, backgroundColor: "#101623", borderRadius: 2 },
   hpFill: { width: "100%", height: 4, borderRadius: 2 },
   statsRow: { flexDirection: "row", gap: 3, marginTop: 4 },
   statPill: {
-    flex: 1, backgroundColor: "#0d1117", borderRadius: 6,
+    flex: 1, backgroundColor: "#101623", borderRadius: 6,
     alignItems: "center", paddingVertical: 3,
   },
   statLabel: { color: "rgba(255,255,255,.5)", fontSize: 8, fontWeight: "700" },
-  statValue: { color: "#f5a623", fontSize: 11, fontWeight: "800" },
+  statValue: { color: "#8ff5e6", fontSize: 11, fontWeight: "900" },
   rarityBar: {
     borderRadius: 6, alignItems: "center", paddingVertical: 3, marginTop: 4,
   },

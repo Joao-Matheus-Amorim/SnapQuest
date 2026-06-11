@@ -70,7 +70,7 @@ export default function CameraScreen() {
   async function pickFromCamera() {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert("Permissão necessária", "Autorize o acesso à câmera.");
+      Alert.alert("Permissao necessaria", "Autorize o acesso a camera.");
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
@@ -81,7 +81,7 @@ export default function CameraScreen() {
   async function pickFromGallery() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert("Permissão necessária", "Autorize o acesso à galeria.");
+      Alert.alert("Permissao necessaria", "Autorize o acesso a galeria.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -93,7 +93,7 @@ export default function CameraScreen() {
     const asset = result.assets[0];
     const uri = isRenderableUri(asset.uri) ? asset.uri : null;
     if (!uri) {
-      Alert.alert("Foto inválida", "Selecione uma foto da galeria.");
+      Alert.alert("Foto invalida", "Selecione uma foto da galeria.");
       return;
     }
     await saveCapture(uri, asset.assetId ?? undefined, asset.fileName ?? undefined, "gallery", asset.base64 ?? undefined);
@@ -128,7 +128,7 @@ export default function CameraScreen() {
             filename = mediaResult.filename;
             savedUri = mediaResult.savedUri;
           } else if (!isRenderableUri(savedUri)) {
-            Alert.alert("Não foi possível salvar", "O iOS não liberou o arquivo. Tente novamente.");
+            Alert.alert("Nao foi possivel salvar", "O iOS nao liberou o arquivo. Tente novamente.");
             return;
           }
         } catch {
@@ -154,7 +154,7 @@ export default function CameraScreen() {
       setImageUri(savedUri);
       setTimeout(() => router.replace("/inventory"), 800);
     } catch {
-      Alert.alert("Erro ao salvar", "Verifique as permissões e tente novamente.");
+      Alert.alert("Erro ao salvar", "Verifique as permissoes e tente novamente.");
     } finally {
       setIsSaving(false);
     }
@@ -162,27 +162,28 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📸 Nova Captura</Text>
+      <Text style={styles.kicker}>Camera</Text>
+      <Text style={styles.title}>Nova captura</Text>
       <Text style={styles.subtitle}>
         {ownerMode
-          ? "Modo dono: câmera → deck pessoal · galeria → catálogo base."
-          : "Tire a foto e transforme em Fighter ou Carta no Inventário."}
+          ? "Camera para deck pessoal. Galeria para catalogo base."
+          : "Capture uma foto para criar Fighter ou Carta."}
       </Text>
 
       <Pressable style={styles.button} onPress={pickFromCamera} disabled={isSaving}>
-        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "📷 Tirar Foto"}</Text>
+        <Text style={styles.buttonText}>{isSaving ? "Salvando..." : "Tirar foto"}</Text>
       </Pressable>
 
       {ownerMode && (
         <Pressable style={[styles.button, styles.galleryButton]} onPress={pickFromGallery} disabled={isSaving}>
-          <Text style={styles.buttonText}>🖼️ Galeria (Catálogo)</Text>
+          <Text style={styles.buttonText}>Galeria para catalogo</Text>
         </Pressable>
       )}
 
       {imageUri && (
         <View style={styles.successBox}>
           <Image source={{ uri: imageUri }} style={styles.preview} />
-          <Text style={styles.success}>✓ Foto capturada! Redirecionando...</Text>
+          <Text style={styles.success}>Foto capturada. Abrindo inventario...</Text>
         </View>
       )}
 
@@ -194,27 +195,28 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#101623",
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
     paddingBottom: BOTTOM_NAV_HEIGHT + 16,
     gap: 14,
   },
-  title: { color: "#f5a623", fontSize: 28, fontWeight: "800", textAlign: "center" },
-  subtitle: { color: "rgba(255,255,255,.65)", textAlign: "center", fontSize: 14 },
+  kicker: { color: "#14b8a6", fontSize: 13, fontWeight: "900", textTransform: "uppercase" },
+  title: { color: "#f8fafc", fontSize: 30, fontWeight: "900", textAlign: "center" },
+  subtitle: { color: "rgba(248,250,252,.68)", textAlign: "center", fontSize: 14, lineHeight: 20, maxWidth: 320 },
   button: {
-    backgroundColor: "#e94560",
+    backgroundColor: "#e11d48",
     paddingHorizontal: 28,
     paddingVertical: 16,
-    borderRadius: 18,
+    borderRadius: 8,
     width: "100%",
     maxWidth: 320,
     alignItems: "center",
   },
-  galleryButton: { backgroundColor: "#8e44ad" },
-  buttonText: { color: "#fff", fontWeight: "700", fontSize: 18 },
+  galleryButton: { backgroundColor: "#14b8a6" },
+  buttonText: { color: "#fff", fontWeight: "900", fontSize: 16 },
   successBox: { alignItems: "center", gap: 10 },
-  preview: { width: 180, height: 180, borderRadius: 20, borderWidth: 2, borderColor: "#4caf50" },
-  success: { color: "#4caf50", fontWeight: "700", fontSize: 14 },
+  preview: { width: 180, height: 180, borderRadius: 8, borderWidth: 2, borderColor: "#22c55e" },
+  success: { color: "#22c55e", fontWeight: "800", fontSize: 14 },
 });

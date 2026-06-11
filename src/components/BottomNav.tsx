@@ -2,13 +2,13 @@ import { Pressable, View, Text, StyleSheet } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 
 const TABS = [
-  { href: "/", label: "Início", icon: "🏠" },
-  { href: "/camera", label: "Câmera", icon: "📷" },
-  { href: "/inventory", label: "Inventário", icon: "🎴" },
-  { href: "/battle", label: "Batalha", icon: "⚔️" },
+  { href: "/", label: "Inicio", mark: "IN" },
+  { href: "/camera", label: "Camera", mark: "CA" },
+  { href: "/inventory", label: "Deck", mark: "DK" },
+  { href: "/battle", label: "Batalha", mark: "BT" },
 ] as const;
 
-export const BOTTOM_NAV_HEIGHT = 64;
+export const BOTTOM_NAV_HEIGHT = 72;
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -19,8 +19,10 @@ export function BottomNav() {
       {TABS.map((tab) => {
         const active = pathname === tab.href || (tab.href !== "/" && pathname.startsWith(tab.href));
         return (
-          <Pressable key={tab.href} style={s.tab} onPress={() => router.replace(tab.href)}>
-            <Text style={[s.icon, active && s.activeIcon]}>{tab.icon}</Text>
+          <Pressable key={tab.href} style={[s.tab, active && s.activeTab]} onPress={() => router.replace(tab.href)}>
+            <View style={[s.mark, active && s.activeMark]}>
+              <Text style={[s.markText, active && s.activeMarkText]}>{tab.mark}</Text>
+            </View>
             <Text style={[s.label, active && s.activeLabel]}>{tab.label}</Text>
           </Pressable>
         );
@@ -36,20 +38,40 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     height: BOTTOM_NAV_HEIGHT,
-    backgroundColor: "#0d1117",
+    backgroundColor: "#111827",
     borderTopWidth: 1,
-    borderTopColor: "rgba(245,166,35,.2)",
+    borderTopColor: "rgba(255,255,255,.08)",
     flexDirection: "row",
-    paddingBottom: 4,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   tab: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
+    gap: 4,
+    borderRadius: 8,
   },
-  icon: { fontSize: 20, opacity: 0.45 },
-  activeIcon: { opacity: 1 },
-  label: { fontSize: 10, color: "rgba(245,166,35,.45)", fontWeight: "700" },
-  activeLabel: { color: "#f5a623" },
+  activeTab: {
+    backgroundColor: "rgba(20,184,166,.12)",
+  },
+  mark: {
+    width: 28,
+    height: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,.08)",
+  },
+  activeMark: {
+    backgroundColor: "#14b8a6",
+    borderColor: "#14b8a6",
+  },
+  markText: { color: "rgba(255,255,255,.5)", fontSize: 10, fontWeight: "900" },
+  activeMarkText: { color: "#06131f" },
+  label: { fontSize: 10, color: "rgba(255,255,255,.52)", fontWeight: "800" },
+  activeLabel: { color: "#dffcf6" },
 });

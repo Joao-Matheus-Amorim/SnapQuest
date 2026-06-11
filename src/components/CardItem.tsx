@@ -51,7 +51,7 @@ export function CardItem({ card, width = CARD_WIDTH }: { card: EffectCard; width
 
         <View style={[s.polarityRow, { backgroundColor: polarityColor + "22" }]}>
           <Text style={[s.polarityText, { color: polarityColor }]}>
-            {isDebuff ? "▼" : "▲"} {card.atributo} +{card.intensidade}
+            {isDebuff ? "-" : "+"} {card.atributo} {card.intensidade}
           </Text>
         </View>
 
@@ -75,26 +75,26 @@ export function CardItem({ card, width = CARD_WIDTH }: { card: EffectCard; width
 const s = StyleSheet.create({
   card: {
     height: CARD_HEIGHT,
-    backgroundColor: "#16213e",
-    borderRadius: 16,
+    backgroundColor: "#162033",
+    borderRadius: 8,
     overflow: "hidden",
   },
   photoArea: {
-    backgroundColor: "#0d1117",
+    backgroundColor: "#101623",
     alignItems: "center",
     justifyContent: "center",
   },
   placeholderIcon: { fontSize: 52 },
   catBadge: {
     position: "absolute", bottom: 6, left: 6,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5,
   },
   badgeText: {
     color: "#fff", fontSize: 9, fontWeight: "800",
     textTransform: "uppercase", letterSpacing: 0.5,
   },
   info: { flex: 1, padding: 8, justifyContent: "space-between" },
-  name: { color: "#f5a623", fontSize: 12, fontWeight: "800" },
+  name: { color: "#f8fafc", fontSize: 12, fontWeight: "900" },
   polarityRow: {
     borderRadius: 6, paddingHorizontal: 6, paddingVertical: 4,
     marginTop: 4, alignItems: "center",

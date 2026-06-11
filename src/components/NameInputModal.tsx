@@ -37,7 +37,7 @@ export function NameInputModal({
           <Text style={s.hint}>
             {kind === "fighter"
               ? "O nome inspira o golpe e o vacilo na batalha."
-              : "Dê um nome ao efeito."}
+              : "De um nome ao efeito."}
           </Text>
 
           <TextInput
@@ -53,15 +53,14 @@ export function NameInputModal({
             onSubmitEditing={() => canCreate && onConfirm(name.trim())}
           />
 
-          {/* IA sob demanda — gasta 1 chamada só quando o usuário pede */}
           <Pressable style={[s.aiBtn, aiLoading && s.disabled]} disabled={aiLoading} onPress={onRequestAI}>
             {aiLoading ? (
               <View style={s.aiLoadingRow}>
-                <ActivityIndicator size="small" color="#8e44ad" />
+                <ActivityIndicator size="small" color="#14b8a6" />
                 <Text style={s.aiBtnText}>Consultando IA...</Text>
               </View>
             ) : (
-              <Text style={s.aiBtnText}>✨ Sugerir nome com IA</Text>
+              <Text style={s.aiBtnText}>Sugerir nome com IA</Text>
             )}
           </Pressable>
           {aiNote ? <Text style={s.aiNote}>{aiNote}</Text> : null}
@@ -87,7 +86,7 @@ export function NameInputModal({
 const s = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(10,12,22,.88)",
+    backgroundColor: "rgba(8,13,24,.9)",
     alignItems: "center",
     justifyContent: "center",
     padding: 28,
@@ -95,20 +94,20 @@ const s = StyleSheet.create({
   box: {
     width: "100%",
     maxWidth: 340,
-    backgroundColor: "#16213e",
-    borderRadius: 20,
+    backgroundColor: "#162033",
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(245,166,35,.4)",
+    borderColor: "rgba(255,255,255,.1)",
     padding: 22,
   },
-  title: { color: "#f5a623", fontSize: 20, fontWeight: "800", textAlign: "center" },
-  hint: { color: "rgba(255,255,255,.6)", fontSize: 13, textAlign: "center", marginTop: 6, marginBottom: 16 },
+  title: { color: "#f8fafc", fontSize: 20, fontWeight: "900", textAlign: "center" },
+  hint: { color: "rgba(248,250,252,.62)", fontSize: 13, textAlign: "center", marginTop: 6, marginBottom: 16 },
   input: {
-    backgroundColor: "#0d1117",
-    color: "#fff",
-    borderColor: "rgba(245,166,35,.5)",
+    backgroundColor: "#101623",
+    color: "#f8fafc",
+    borderColor: "rgba(20,184,166,.45)",
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
@@ -116,32 +115,32 @@ const s = StyleSheet.create({
   },
   aiBtn: {
     marginTop: 12,
-    borderColor: "#8e44ad",
+    borderColor: "rgba(20,184,166,.55)",
     borderWidth: 1.5,
-    borderRadius: 12,
+    borderRadius: 8,
     paddingVertical: 11,
     alignItems: "center",
   },
   aiLoadingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  aiBtnText: { color: "#b06fd6", fontSize: 14, fontWeight: "800" },
-  aiNote: { color: "rgba(255,255,255,.7)", fontSize: 12, textAlign: "center", marginTop: 8 },
+  aiBtnText: { color: "#8ff5e6", fontSize: 14, fontWeight: "900" },
+  aiNote: { color: "rgba(248,250,252,.7)", fontSize: 12, textAlign: "center", marginTop: 8 },
   row: { flexDirection: "row", gap: 10, marginTop: 18 },
   cancelBtn: {
     flex: 1,
-    borderColor: "rgba(255,255,255,.25)",
+    borderColor: "rgba(255,255,255,.16)",
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     paddingVertical: 13,
     alignItems: "center",
   },
-  cancelText: { color: "rgba(255,255,255,.7)", fontSize: 15, fontWeight: "700" },
+  cancelText: { color: "rgba(248,250,252,.72)", fontSize: 15, fontWeight: "800" },
   createBtn: {
     flex: 1.4,
-    backgroundColor: "#e94560",
-    borderRadius: 14,
+    backgroundColor: "#e11d48",
+    borderRadius: 8,
     paddingVertical: 13,
     alignItems: "center",
   },
   disabled: { opacity: 0.4 },
-  createText: { color: "#fff", fontSize: 15, fontWeight: "800" },
+  createText: { color: "#fff", fontSize: 15, fontWeight: "900" },
 });
