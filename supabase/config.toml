@@ -1,0 +1,7 @@
+project_id = "aqwnpjxhkckpcmovdace"
+
+# A transformacao por IA roda para qualquer jogador, inclusive anonimo/offline.
+# A funcao nao usa dados do usuario (so chama o Gemini com a chave do servidor),
+# entao nao exigimos JWT. Payload e validado dentro da funcao.
+[functions.gemini-transform]
+verify_jwt = false

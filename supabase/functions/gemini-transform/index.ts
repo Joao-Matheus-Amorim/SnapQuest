@@ -6,19 +6,25 @@ const corsHeaders = {
 
 type TransformTarget = "fighter" | "effect_card";
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+// Aceita o segredo em qualquer um dos dois nomes para evitar quebra por nomenclatura.
+const GEMINI_API_KEY =
+  Deno.env.get("GEMINI_API_KEY") ||
+  Deno.env.get("EXPO_PUBLIC_GEMINI_API_KEY") ||
+  "";
+
+// Modelos validos e disponiveis (fallback garantido).
 const DEFAULT_MODELS = [
-  "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-3-flash",
-  "gemini-3.5-flash",
+  "gemini-2.0-flash",
 ];
+// Modelos extras opcionais via secret (tentados primeiro), seguidos SEMPRE
+// pelos defaults validos — assim um nome inexistente no secret nao derruba tudo.
 const MODEL_CHAIN = (Deno.env.get("GEMINI_MODELS") ?? "")
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean);
-const ACTIVE_MODELS = MODEL_CHAIN.length ? MODEL_CHAIN : DEFAULT_MODELS;
+const ACTIVE_MODELS = [...new Set([...MODEL_CHAIN, ...DEFAULT_MODELS])];
 
 const fighterClasses = ["guerreiro", "arqueiro", "mago", "paladino"] as const;
 const cardCategories = [
