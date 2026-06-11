@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View, Text, Image, StyleSheet, useWindowDimensions } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 import { PressableScale } from "../components/motion/PressableScale";
 import { useCapturedPhotos, type CapturedPhoto } from "../hooks/useCapturedPhotos";
@@ -29,9 +28,16 @@ function PendingCapture({ item, onFighter, onCard }: {
   item: CapturedPhoto; onFighter: () => void; onCard: () => void;
 }) {
   const isCatalog = item.source === "gallery";
+  const renderable = !!item.uri && (item.uri.startsWith("file://") || item.uri.startsWith("http") || item.uri.startsWith("data:") || item.uri.startsWith("content://"));
   return (
     <View style={s.pendingRow}>
-      <Image source={{ uri: item.uri }} style={s.pendingPhoto} resizeMode="cover" />
+      {renderable ? (
+        <Image source={{ uri: item.uri }} style={s.pendingPhoto} resizeMode="cover" />
+      ) : (
+        <View style={[s.pendingPhoto, { alignItems: "center", justifyContent: "center", backgroundColor: COLORS.cardSurfaceDeep }]}>
+          <Text style={{ fontSize: 28 }}>📷</Text>
+        </View>
+      )}
       <View style={s.pendingInfo}>
         <View style={s.pendingLabelRow}>
           <Text style={s.pendingLabel}>Captura aguardando ritual</Text>
@@ -154,9 +160,11 @@ export default function InventoryScreen() {
     if (!pendingCreate) return;
     const { item, transform, kind } = pendingCreate;
     setPendingCreate(null);
+    console.log("[create] start kind=", kind, "source=", item.source, "owner=", ownerMode);
 
     try {
       const photoUri = await persistPhoto(item.uri, item.id);
+      console.log("[create] persisted:", String(photoUri).slice(0, 60));
       const persistedItem = { ...item, uri: photoUri };
 
       if (kind === "fighter") {
@@ -173,12 +181,17 @@ export default function InventoryScreen() {
           await inv.reloadCatalog();
           setReveal({ kind: "fighter", data: fighter });
         } else {
+          console.log("[create] saving fighter to deck");
           const fighter = await deck.addFighterFromPhoto(persistedItem, transform, name);
+          console.log("[create] saved; removing captured");
           await raw.removeCapturedPhoto(item.id);
+          console.log("[create] reloading inventory/deck");
           await inv.reload();
           await deck.reload();
+          console.log("[create] reloaded; opening reveal");
           if (user && fighter) syncFighterToCloud(fighter, user.id).catch(() => {});
           if (fighter) setReveal({ kind: "fighter", data: fighter });
+          console.log("[create] reveal set");
         }
       } else {
         if (ownerMode && item.source === "gallery" && user) {
@@ -192,12 +205,17 @@ export default function InventoryScreen() {
           await inv.reloadCatalog();
           setReveal({ kind: "card", data: card });
         } else {
+          console.log("[create] saving card to deck");
           const card = await deck.addCardFromPhoto(persistedItem, transform, name);
+          console.log("[create] saved; removing captured");
           await raw.removeCapturedPhoto(item.id);
+          console.log("[create] reloading inventory/deck");
           await inv.reload();
           await deck.reload();
+          console.log("[create] reloaded; opening reveal");
           if (user && card) syncCardToCloud(card, user.id).catch(() => {});
           if (card) setReveal({ kind: "card", data: card });
+          console.log("[create] reveal set");
         }
       }
     } catch (e) {
@@ -221,7 +239,8 @@ export default function InventoryScreen() {
   const isCatalogView = inventoryView === "catalog";
 
   return (
-    <ScrollView contentContainerStyle={s.container}>
+    <View style={{ flex: 1, backgroundColor: COLORS.bgDeep }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={s.container}>
       <View style={s.titleRow}>
         <View style={s.titleBlock}>
           <Text style={s.realm}>GRIMORIO</Text>
@@ -307,50 +326,53 @@ export default function InventoryScreen() {
         <Text style={s.emptyText}>Nenhuma carta neste recorte. Capture uma foto no Portal para forjar.</Text>
       ) : (
         <View style={s.grid}>
-          {visibleFighters.map((f, i) => (
-            <Animated.View key={f.id} style={s.cardSlot} entering={FadeInDown.delay(i * 40).springify().damping(14)}>
+          {visibleFighters.map((f) => (
+            <View key={f.id} style={s.cardSlot}>
               <FighterCard fighter={f} width={cardWidth} />
               {editMode && isDeletable(f.id, "fighter") && (
                 <Pressable style={s.deleteBtn} onPress={() => confirmDelete(f.id, "fighter", f.nome)}>
                   <Text style={s.deleteBtnText}>X</Text>
                 </Pressable>
               )}
-            </Animated.View>
+            </View>
           ))}
-          {visibleCards.map((c, i) => (
-            <Animated.View key={c.id} style={s.cardSlot} entering={FadeInDown.delay((visibleFighters.length + i) * 40).springify().damping(14)}>
+          {visibleCards.map((c) => (
+            <View key={c.id} style={s.cardSlot}>
               <CardItem card={c} width={cardWidth} />
               {editMode && isDeletable(c.id, "card") && (
                 <Pressable style={s.deleteBtn} onPress={() => confirmDelete(c.id, "card", c.nome_efeito)}>
                   <Text style={s.deleteBtnText}>X</Text>
                 </Pressable>
               )}
-            </Animated.View>
+            </View>
           ))}
         </View>
       )}
 
       <BottomNav />
-      <NameInputModal
-        visible={pendingCreate !== null}
-        kind={pendingCreate?.kind ?? "fighter"}
-        suggestedName={pendingCreate?.transform.name ?? ""}
-        aiLoading={aiLoading}
-        aiNote={
-          aiLoading
-            ? ""
-            : aiTried && pendingCreate?.transform.provider === "gemini-backend"
-              ? "Nome e golpe gerados pela IA."
-              : aiTried
-                ? "IA indisponivel agora. Usando nome offline."
-                : ""
-        }
-        onRequestAI={requestAI}
-        onConfirm={finalizeCreate}
-        onCancel={() => setPendingCreate(null)}
-      />
-      <RevealModal reveal={reveal} onClose={() => setReveal(null)} />
-    </ScrollView>
+      </ScrollView>
+      {pendingCreate !== null ? (
+        <NameInputModal
+          visible
+          kind={pendingCreate.kind}
+          suggestedName={pendingCreate.transform.name ?? ""}
+          aiLoading={aiLoading}
+          aiNote={
+            aiLoading
+              ? ""
+              : aiTried && pendingCreate.transform.provider === "gemini-backend"
+                ? "Nome e golpe gerados pela IA."
+                : aiTried
+                  ? "IA indisponivel agora. Usando nome offline."
+                  : ""
+          }
+          onRequestAI={requestAI}
+          onConfirm={finalizeCreate}
+          onCancel={() => setPendingCreate(null)}
+        />
+      ) : null}
+      {reveal ? <RevealModal reveal={reveal} onClose={() => setReveal(null)} /> : null}
+    </View>
   );
 }
 

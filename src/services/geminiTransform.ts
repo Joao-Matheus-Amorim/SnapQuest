@@ -86,7 +86,13 @@ function mockFallback(photo: CapturedPhoto, target: TransformTarget): GeminiTran
   };
 }
 
+function isRenderableUri(uri: string) {
+  return uri.startsWith("file://") || uri.startsWith("http") || uri.startsWith("data:") || uri.startsWith("content://");
+}
+
 async function callGeminiBackend(photo: CapturedPhoto, target: TransformTarget): Promise<GeminiTransformResult> {
+  // URIs ph:// (galeria iOS sem acesso total) podem TRAVAR o ImageManipulator. Aborta cedo.
+  if (!isRenderableUri(photo.uri)) throw new Error("photo uri not renderable for AI");
   const photoBase64 = await toBase64Payload(photo.uri);
   const { data, error } = await supabase.functions.invoke("gemini-transform", {
     body: { photoBase64, target },
@@ -149,7 +155,13 @@ export async function transformCapturedPhoto(input: {
   target: TransformTarget;
 }): Promise<GeminiTransformResult> {
   try {
-    return await callGeminiBackend(input.photo, input.target);
+    // Nunca trava: corre contra um timeout. Se demorar/pendurar, cai no offline.
+    return await Promise.race([
+      callGeminiBackend(input.photo, input.target),
+      new Promise<GeminiTransformResult>((_, reject) =>
+        setTimeout(() => reject(new Error("AI timeout (15s)")), 15000)
+      ),
+    ]);
   } catch (err) {
     console.warn("[transform] Edge Gemini failed, using mock fallback:", String(err));
     return mockFallback(input.photo, input.target);

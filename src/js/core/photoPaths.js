@@ -1,5 +1,5 @@
 export const PHOTO_STORAGE_BUCKET = 'snapquest-photos';
-export const PHOTO_SIGNED_URL_TTL_SECONDS = 60 * 60;
+export const PHOTO_SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 const LOCAL_URI_SCHEMES = ['file:', 'content:', 'blob:', 'data:', 'ph:', 'assets-library:', 'asset:'];
 const MIME_EXTENSION_MAP = {

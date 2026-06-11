@@ -16,8 +16,13 @@ function setWebValue(key: string, value: string) {
 
 export async function getStorageItem(key: string) {
   if (Platform.OS === "web") return getWebValue(key);
-  const secure = await SecureStore.getItemAsync(key);
-  if (secure !== null) return secure;
+  try {
+    const secure = await SecureStore.getItemAsync(key);
+    if (secure !== null) return secure;
+  } catch {
+    // Expo Go/iOS can reject SecureStore reads while user interaction is blocked.
+    // AsyncStorage is the compatibility fallback for local game state.
+  }
   return AsyncStorage.getItem(key);
 }
 
@@ -27,10 +32,14 @@ export async function setStorageItem(key: string, value: string) {
     return;
   }
   if (value.length <= SECURE_STORE_MAX) {
-    await SecureStore.setItemAsync(key, value);
-    await AsyncStorage.removeItem(key);
-  } else {
-    await AsyncStorage.setItem(key, value);
-    await SecureStore.deleteItemAsync(key).catch(() => {});
+    try {
+      await SecureStore.setItemAsync(key, value);
+      await AsyncStorage.removeItem(key);
+      return;
+    } catch {
+      // Fall through to AsyncStorage when SecureStore is unavailable.
+    }
   }
+  await AsyncStorage.setItem(key, value);
+  await SecureStore.deleteItemAsync(key).catch(() => {});
 }

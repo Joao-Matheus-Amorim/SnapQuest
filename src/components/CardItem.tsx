@@ -20,13 +20,18 @@ function categoryColor(key: string) {
   return CATEGORY_COLORS[key] ?? "#f5a623";
 }
 
+// URIs ph:// (galeria iOS sem acesso total no Expo Go) podem crashar nativo.
+function isRenderablePhoto(uri?: string | null) {
+  return !!uri && (uri.startsWith("file://") || uri.startsWith("http") || uri.startsWith("data:") || uri.startsWith("content://"));
+}
+
 export function CardItem({ card, width = CARD_WIDTH, interactive = false }: { card: EffectCard; width?: number; interactive?: boolean }) {
   const rarity = cardRarity(card.raridade ?? "");
   const rarityColor = RARITY_COLORS[rarity];
   const color = categoryColor(card.categoria_key ?? "");
   const isDebuff = card.polaridade === "DEBUFF";
   const polarityColor = isDebuff ? "#e94560" : "#4caf50";
-  const hasPhoto = Boolean(card.foto);
+  const hasPhoto = isRenderablePhoto(card.foto);
   const photoHeight = Math.round(width * 0.8);
   const isLegendary = rarity === "lendário";
 
@@ -67,16 +72,16 @@ export function CardItem({ card, width = CARD_WIDTH, interactive = false }: { ca
     </View>
   );
 
-  const holo = (
-    <HoloCard width={width} height={CARD_HEIGHT} rarity={rarity} interactive={interactive}>
+  // No grid (interactive=false) a carta renderiza limpa.
+  if (!interactive) return cardEl;
+
+  // No Reveal: foil sim, mas SEM gesto e SEM LegendaryAura (instaveis na New Arch
+  // dentro de <Modal>). O balanco 3D vem do proprio Reveal.
+  return (
+    <HoloCard width={width} height={CARD_HEIGHT} rarity={rarity} interactive={false}>
       {cardEl}
     </HoloCard>
   );
-
-  if (isLegendary) {
-    return <LegendaryAura width={width} height={CARD_HEIGHT}>{holo}</LegendaryAura>;
-  }
-  return holo;
 }
 
 const s = StyleSheet.create({

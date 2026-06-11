@@ -85,8 +85,8 @@ export type RarityEffect = {
 
 export const RARITY_EFFECT: Record<Rarity, RarityEffect> = {
   comum: { foil: false, tiltMax: 4, glow: false, particles: 0, sweepMs: 0 },
-  incomum: { foil: true, tiltMax: 6, glow: true, particles: 0, sweepMs: 3200 },
-  raro: { foil: true, tiltMax: 8, glow: true, particles: 6, sweepMs: 2600 },
+  incomum: { foil: false, tiltMax: 6, glow: true, particles: 0, sweepMs: 0 },
+  raro: { foil: false, tiltMax: 8, glow: true, particles: 6, sweepMs: 0 },
   épico: { foil: true, tiltMax: 10, glow: true, particles: 12, sweepMs: 2000 },
   lendário: { foil: true, tiltMax: 12, glow: true, particles: 20, sweepMs: 1500 },
 };

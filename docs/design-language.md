@@ -155,7 +155,7 @@ No-op em web e quando desligado. Nunca lanca.
 | Conta/Login (`login.tsx`) | **Premium validado** (estado logado + form) |
 | Camera (`camera.tsx`) | Parcial — paleta antiga gamificada; falta migrar p/ Arena |
 | Grimorio (`inventory.tsx`) | Recolorido p/ tokens novos; falta refino premium |
-| Reveal (`RevealModal.tsx`) | Foil/tilt ok; falta cerimonia premium + paleta |
+| Reveal (`RevealModal.tsx`) | **Premium cinematografico** (cerimonia full-screen, sigilo, feixes, shockwave, carta 3D, haptics, CTA 3D) |
 | Batalha (`battle.tsx`) | Pendente — arena/HUD de turno premium |
 | BottomNav (`BottomNav.tsx`) | Pendente — repaginar p/ HUD da paleta nova |
 

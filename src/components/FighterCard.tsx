@@ -20,6 +20,12 @@ function classColor(key: string) {
   return CLASS_COLORS[key] ?? "#e94560";
 }
 
+// So renderiza fotos que o RN consegue exibir. URIs ph:// (galeria iOS sem
+// acesso total no Expo Go) podem crashar nativo — caem no placeholder.
+function isRenderablePhoto(uri?: string | null) {
+  return !!uri && (uri.startsWith("file://") || uri.startsWith("http") || uri.startsWith("data:") || uri.startsWith("content://"));
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <View style={s.statPill}>
@@ -33,7 +39,7 @@ export function FighterCard({ fighter, width = CARD_WIDTH, interactive = false }
   const rarity = fighterRarity(fighter.bonus_intensidade ?? 1);
   const rarityColor = RARITY_COLORS[rarity];
   const color = classColor(fighter.class_key ?? "");
-  const hasPhoto = Boolean(fighter.foto);
+  const hasPhoto = isRenderablePhoto(fighter.foto);
   const photoHeight = Math.round(width * 0.8);
   const isLegendary = rarity === "lendário";
 
@@ -77,16 +83,17 @@ export function FighterCard({ fighter, width = CARD_WIDTH, interactive = false }
     </View>
   );
 
-  const holo = (
-    <HoloCard width={width} height={CARD_HEIGHT} rarity={rarity} interactive={interactive}>
+  // No grid (interactive=false) a carta renderiza limpa.
+  if (!interactive) return card;
+
+  // No Reveal: foil sim, mas SEM gesto (GestureDetector dentro de <Modal> crasha
+  // na New Arch) e SEM LegendaryAura (Animated legado instavel). O balanco 3D
+  // vem do proprio Reveal.
+  return (
+    <HoloCard width={width} height={CARD_HEIGHT} rarity={rarity} interactive={false}>
       {card}
     </HoloCard>
   );
-
-  if (isLegendary) {
-    return <LegendaryAura width={width} height={CARD_HEIGHT}>{holo}</LegendaryAura>;
-  }
-  return holo;
 }
 
 const s = StyleSheet.create({
