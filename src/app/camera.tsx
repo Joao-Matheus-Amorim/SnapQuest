@@ -3,8 +3,6 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Platform, View, Text, StyleSheet, Image, ScrollView } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
-import * as FileSystemLegacy from "expo-file-system/legacy";
-import { Paths } from "expo-file-system";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Path, Polygon } from "react-native-svg";
@@ -21,60 +19,12 @@ import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 import { useAuth } from "../hooks/useAuth";
 import { ArenaBackground } from "../components/game/ArenaBackground";
 import { GameButton } from "../components/game/GameButton";
+import { PortalStageVideo } from "../components/game/PortalStageVideo";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 import { PressableScale } from "../components/motion/PressableScale";
+import { isRenderableCaptureUri, tryResolveGalleryAssetUri, writeReadableGalleryCopy } from "../lib/capturePhotoSource";
 import { useReducedMotion } from "../lib/useReducedMotion";
 import { COLORS, RADIUS } from "../theme/tokens";
-
-function isRenderableUri(uri: string) {
-  return uri.startsWith("file://") || uri.startsWith("http");
-}
-
-async function resolveLocalUri(asset: MediaLibrary.Asset, fallback: string): Promise<string | null> {
-  const info = await Promise.race([
-    MediaLibrary.getAssetInfoAsync(asset),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), 10000)),
-  ]);
-  const uri = info?.localUri || fallback;
-  return isRenderableUri(uri) ? uri : null;
-}
-
-async function tryResolveAssetUri(assetId: string | undefined, fallback: string): Promise<{
-  assetId?: string;
-  filename?: string;
-  savedUri: string;
-} | null> {
-  if (!assetId || Platform.OS === "web") return null;
-
-  try {
-    const perm = await MediaLibrary.requestPermissionsAsync();
-    if (!perm.granted) return null;
-
-    const asset = await MediaLibrary.getAssetInfoAsync(assetId);
-    const localUri = asset?.localUri && isRenderableUri(asset.localUri) ? asset.localUri : null;
-    if (!localUri) return null;
-
-    return {
-      assetId,
-      filename: asset.filename,
-      savedUri: localUri,
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function writeReadableGalleryCopy(base64: string | undefined, assetId: string | undefined, filename: string | undefined) {
-  if (!base64 || Platform.OS === "web") return null;
-
-  const safeName = filename?.replace(/[^\w.-]+/g, "_") || `${assetId ?? Date.now()}.jpg`;
-  const finalName = safeName.endsWith(".jpg") || safeName.endsWith(".jpeg") ? safeName : `${safeName}.jpg`;
-  const destination = `${Paths.cache.uri}snapquest-picker-${finalName}`;
-  await FileSystemLegacy.writeAsStringAsync(destination, base64, {
-    encoding: FileSystemLegacy.EncodingType.Base64,
-  });
-  return destination;
-}
 
 function PortalCore({ active, disabled, onPress }: { active: boolean; disabled: boolean; onPress: () => void }) {
   const reduced = useReducedMotion();
@@ -202,7 +152,7 @@ export default function CameraScreen() {
     });
     if (result.canceled) return;
     const asset = result.assets[0];
-    const uri = isRenderableUri(asset.uri) ? asset.uri : null;
+    const uri = isRenderableCaptureUri(asset.uri) ? asset.uri : null;
     if (!uri) {
       Alert.alert("Foto invalida", "Selecione uma foto da galeria.");
       return;
@@ -228,17 +178,18 @@ export default function CameraScreen() {
               const perm = await MediaLibrary.requestPermissionsAsync();
               if (!perm.granted) return null;
               const asset = await MediaLibrary.createAssetAsync(capturedUri);
-              const localUri = await resolveLocalUri(asset, capturedUri);
-              if (!localUri) return null;
-              return { assetId: asset.id, filename: asset.filename, savedUri: localUri };
+              // Não usamos asset.localUri — é o caminho /DCIM/ que o Expo Go
+              // não tem permissão de ler. O capturedUri (temp do container) é
+              // acessível e será copiado pro Documents em persistPhoto.
+              return { assetId: asset.id, filename: asset.filename };
             })(),
             new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000)),
           ]);
           if (mediaResult) {
             assetId = mediaResult.assetId;
             filename = mediaResult.filename;
-            savedUri = mediaResult.savedUri;
-          } else if (!isRenderableUri(savedUri)) {
+            // savedUri continua como capturedUri
+          } else if (!isRenderableCaptureUri(savedUri)) {
             Alert.alert("Nao foi possivel salvar", "O iOS nao liberou o arquivo. Tente novamente.");
             return;
           }
@@ -252,7 +203,7 @@ export default function CameraScreen() {
         if (readableCopy) {
           savedUri = readableCopy;
         } else {
-          const resolvedGalleryAsset = await tryResolveAssetUri(assetId, capturedUri);
+          const resolvedGalleryAsset = await tryResolveGalleryAssetUri(assetId, capturedUri);
           if (resolvedGalleryAsset) {
             assetId = resolvedGalleryAsset.assetId;
             filename = resolvedGalleryAsset.filename;
@@ -290,6 +241,8 @@ export default function CameraScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(120).duration(520).springify().damping(15)} style={styles.portalStage}>
+          <PortalStageVideo />
+
           <View style={styles.stageCrown}>
             <View style={styles.crownChip}><Text style={styles.crownText}>RITUAL</Text></View>
             <View style={styles.crownLine} />

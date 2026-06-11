@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../hooks/useAuth";
 import { useCloudSync } from "../hooks/useCloudSync";
-import { ArenaBackground } from "../components/game/ArenaBackground";
 import { GameButton } from "../components/game/GameButton";
+import { VideoBackground } from "../components/game/VideoBackground";
 import { COLORS } from "../theme/tokens";
 
 export default function LoginScreen() {
@@ -60,7 +60,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <ArenaBackground />
+      <VideoBackground />
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 30 }]} showsVerticalScrollIndicator={false}>
         <Text style={styles.realm}>SNAPQUEST</Text>
         <Text style={styles.title}>{user ? "Sua conta" : "Entrar na arena"}</Text>

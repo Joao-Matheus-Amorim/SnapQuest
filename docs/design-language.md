@@ -113,7 +113,8 @@ No-op em web e quando desligado. Nunca lanca.
 | `HudChip` | `src/app/index.tsx` | Chip de recurso no HUD (nivel, colecao) |
 | `HoloCard` | `src/components/motion/HoloCard.tsx` | Foil + tilt das cartas |
 | `PressableScale` | `src/components/motion/PressableScale.tsx` | Toque com mola + haptic |
-| `FighterCard` / `CardItem` | `src/components/` | Carta colecionavel com raridade + foil |
+| `CardTemplate` | `src/components/card/CardTemplate.tsx` | Base visual unica das cartas colecionaveis: frame por raridade, foto real, HP, habilidade, stats e raridade |
+| `FighterCard` / `CardItem` | `src/components/` | Adaptadores de dados para o `CardTemplate`, sem duplicar layout ou moldura |
 
 ---
 
@@ -153,11 +154,11 @@ No-op em web e quando desligado. Nunca lanca.
 |---|---|
 | Home (`index.tsx`) | **Premium validado** (cena, orbes, botoes 3D, entradas) |
 | Conta/Login (`login.tsx`) | **Premium validado** (estado logado + form) |
-| Camera (`camera.tsx`) | Parcial — paleta antiga gamificada; falta migrar p/ Arena |
-| Grimorio (`inventory.tsx`) | Recolorido p/ tokens novos; falta refino premium |
+| Camera/Portal (`camera.tsx`) | **Premium aplicado**: portal com video de cena, runa/sigilo, raios por camada, haptics e fluxo de captura limpo |
+| Grimorio/Deck (`inventory.tsx`) | **Premium aplicado em primeira passada**: Camara do Grimorio, HUD de prontidao, filtros magicos e cards com `CardTemplate` unico por raridade |
 | Reveal (`RevealModal.tsx`) | **Premium cinematografico** (cerimonia full-screen, sigilo, feixes, shockwave, carta 3D, haptics, CTA 3D) |
 | Batalha (`battle.tsx`) | Pendente — arena/HUD de turno premium |
-| BottomNav (`BottomNav.tsx`) | Pendente — repaginar p/ HUD da paleta nova |
+| BottomNav (`BottomNav.tsx`) | **Premium aplicado**: HUD inferior com runas, gemas, pedestal, halos e estados ativos |
 
 ---
 

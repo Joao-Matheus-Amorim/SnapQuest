@@ -25,14 +25,12 @@ function inferContentType(uri: string) {
 }
 
 async function readPhotoArrayBuffer(uri: string): Promise<ArrayBuffer> {
-  if (Platform.OS === "web") {
-    const response = await fetch(uri);
-    if (!response.ok) throw new Error(`Could not read browser photo source: ${response.status}`);
-    return response.arrayBuffer();
-  }
-
-  const file = new File(uri);
-  return file.arrayBuffer();
+  // fetch() handles file:// URIs in RN and throws catchable JS errors on permission
+  // failures — more stable than expo-file-system File.arrayBuffer() which can
+  // trigger unrecoverable native crashes when reading inaccessible DCIM paths.
+  const response = await fetch(uri);
+  if (!response.ok) throw new Error(`Could not read photo: ${uri} status=${response.status}`);
+  return response.arrayBuffer();
 }
 
 export async function uploadPhotoToCloud(input: {

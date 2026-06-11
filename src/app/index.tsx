@@ -3,8 +3,8 @@ import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from "react-nat
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArenaBackground } from "../components/game/ArenaBackground";
 import { GameButton } from "../components/game/GameButton";
+import { VideoBackground } from "../components/game/VideoBackground";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 import { useAuth } from "../hooks/useAuth";
 import { useCloudSync } from "../hooks/useCloudSync";
@@ -63,7 +63,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
-      <ArenaBackground />
+      <VideoBackground />
 
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 10 }]} showsVerticalScrollIndicator={false}>
         {/* HUD topo */}

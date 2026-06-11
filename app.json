@@ -21,7 +21,8 @@
           "photosPermission": "O SnapQuest acessa fotos para exibir a imagem capturada no inventário."
         }
       ],
-      "expo-router"
+      "expo-router",
+      "expo-video"
     ]
   }
 }

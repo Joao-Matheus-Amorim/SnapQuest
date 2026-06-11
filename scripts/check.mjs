@@ -22,11 +22,20 @@ const required = [
   'src/js/services/supabaseClient.js',
   'src/js/services/cardSuggestionService.js',
   'src/lib/mobileStorage.ts',
+  'src/lib/capturePhotoSource.ts',
   'src/hooks/useCapturedPhotos.ts',
   'src/hooks/usePlayerDeck.ts',
   'src/services/accountProfile.ts',
   'src/services/geminiTransform.ts',
   'src/services/photoCloudStorage.ts',
+  'src/components/game/PortalStageVideo.tsx',
+  'src/components/card/CardTemplate.tsx',
+  'src/components/card/cardFrameConfig.ts',
+  'assets/card-frames/common.png',
+  'assets/card-frames/uncommon.png',
+  'assets/card-frames/rare.png',
+  'assets/card-frames/epic.png',
+  'assets/card-frames/legendary.png',
   'scripts/validate-catalog-rls.mjs',
   'test/core-balance.test.mjs',
   'test/core-battle.test.mjs',
@@ -172,8 +181,13 @@ if (!capturedPhotosHook.includes('removeCapturedPhoto')) {
 }
 
 const cameraScreen = fs.readFileSync('src/app/camera.tsx', 'utf8');
-if (!cameraScreen.includes('getAssetInfoAsync')) {
-  fail('camera screen must resolve native media assets to a renderable localUri.');
+const capturePhotoSource = fs.readFileSync('src/lib/capturePhotoSource.ts', 'utf8');
+if (!cameraScreen.includes('tryResolveGalleryAssetUri') || !cameraScreen.includes('writeReadableGalleryCopy')) {
+  fail('camera screen must route native media URI handling through capturePhotoSource helpers.');
+}
+
+if (!capturePhotoSource.includes('getAssetInfoAsync') || !capturePhotoSource.includes('localUri')) {
+  fail('capturePhotoSource must resolve native media assets to a renderable localUri.');
 }
 
 if (cameraScreen.includes('savedUri = asset.uri || capturedUri')) {
@@ -209,6 +223,25 @@ if (!inventoryScreen.includes('transformCapturedPhoto')) {
 
 if (!inventoryScreen.includes('removeCapturedPhoto')) {
   fail('inventory conversion must remove raw captures after deck save.');
+}
+
+const fighterCard = fs.readFileSync('src/components/FighterCard.tsx', 'utf8');
+const effectCard = fs.readFileSync('src/components/CardItem.tsx', 'utf8');
+const cardTemplate = fs.readFileSync('src/components/card/CardTemplate.tsx', 'utf8');
+const cardFrameConfig = fs.readFileSync('src/components/card/cardFrameConfig.ts', 'utf8');
+
+if (!fighterCard.includes('CardTemplate') || !effectCard.includes('CardTemplate')) {
+  fail('FighterCard and CardItem must stay as thin adapters over the shared CardTemplate.');
+}
+
+if (!cardTemplate.includes('imageUri') || !cardTemplate.includes('isRenderableCardPhoto')) {
+  fail('CardTemplate must render real card photos through the shared photo safety guard.');
+}
+
+for (const frameName of ['common.png', 'uncommon.png', 'rare.png', 'epic.png', 'legendary.png']) {
+  if (!cardFrameConfig.includes(frameName)) {
+    fail(`cardFrameConfig must register the ${frameName} rarity frame template.`);
+  }
 }
 
 const authHook = fs.readFileSync('src/hooks/useAuth.ts', 'utf8');

@@ -26,8 +26,8 @@ Local: `src/app/`
 |---|---|
 | `_layout.tsx` | Stack do Expo Router, `AuthProvider` global e ponte de sync cloud. |
 | `index.tsx` | Home mobile gamificada: Mesa de Batalha, progresso de deck, quests, colecao e status de conta/sync. |
-| `camera.tsx` | Portal de captura, camera, galeria no modo admin de catalogo, permissoes e salvamento de captura bruta. |
-| `inventory.tsx` | Pendentes, transformacao, IA opcional, criacao, filtros, exclusao e revelacao. |
+| `camera.tsx` | Portal de captura, camera, galeria no modo admin de catalogo, permissoes e orquestracao do salvamento de captura bruta. Helpers de URI/copia ficam em `src/lib/capturePhotoSource.ts`. |
+| `inventory.tsx` | Camara do Grimorio: pendentes, transformacao, IA opcional, criacao, filtros, exclusao, revelacao e colecao visual por raridade. |
 | `battle.tsx` | Batalha local completa, setup, turnos, selecao, cartas, ataques e vencedor. |
 | `login.tsx` | Login/cadastro Supabase com guest mode e mensagens de confirmacao. |
 
@@ -37,10 +37,12 @@ Local: `src/components/`
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `BottomNav.tsx` | HUD inferior mobile com Base, Captura, Deck e Duelo. |
+| `BottomNav.tsx` | HUD inferior mobile premium com runas de Base, Portal, Deck e Duelo. |
 | `BattleLog.tsx` | Log visual de batalha. |
-| `CardItem.tsx` | Renderizacao de Carta. |
-| `FighterCard.tsx` | Renderizacao de Fighter. |
+| `CardItem.tsx` | Renderizacao de Carta usando template colecionavel por raridade. |
+| `FighterCard.tsx` | Renderizacao de Fighter usando template colecionavel por raridade. |
+| `card/CardTemplate.tsx` | Template visual unico das cartas colecionaveis, com foto real, HP, habilidade, stats e raridade. |
+| `card/cardFrameConfig.ts` | Registro das molduras por raridade, proporcao base, cores de classe/categoria e guarda de foto renderizavel. |
 | `LegendaryAura.tsx` | Efeito visual para raridade/revelacao. |
 | `NameInputModal.tsx` | Confirmacao de nome e acao de IA. |
 | `RevealModal.tsx` | Revelacao do item final criado. |

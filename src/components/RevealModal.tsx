@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { BlurView } from "expo-blur";
-import Svg, { Circle, Line, Path, Polygon } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Easing,
-  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -14,8 +12,6 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { FighterCard } from "./FighterCard";
-import { CardItem } from "./CardItem";
 import { GameButton } from "./game/GameButton";
 import { fighterRarity, cardRarity, RARITY_COLORS, RARITY_LABELS, RARITY_ORDER, type Rarity } from "../lib/rarityConfig";
 import { fireHaptic, type HapticEvent } from "../lib/haptics";
@@ -31,69 +27,131 @@ export type RevealTarget =
 
 const CARD_WIDTH = 208;
 const CARD_HEIGHT = Math.round(CARD_WIDTH * 1.6);
+const RING_SIZE = 360;
 
 function rarityRank(rarity: Rarity) {
   return Math.max(0, RARITY_ORDER.indexOf(rarity));
 }
-function chargeMs(rarity: Rarity, reduced: boolean) {
-  if (reduced) return 120;
-  return [460, 680, 980, 1360, 1850][rarityRank(rarity)] ?? 900;
-}
-const isHigh = (r: Rarity) => rarityRank(r) >= 3;
-const isLeg = (r: Rarity) => rarityRank(r) >= 4;
 
-function RevealSigil({ color, active }: { color: string; active: boolean }) {
+function chargeMs(rarity: Rarity, reduced: boolean) {
+  if (reduced) return 80;
+  return [460, 660, 920, 1280, 1680][rarityRank(rarity)] ?? 820;
+}
+
+function revealName(reveal: NonNullable<RevealTarget>) {
+  return reveal.kind === "fighter" ? reveal.data.nome : reveal.data.nome_efeito;
+}
+
+function revealKindLabel(reveal: NonNullable<RevealTarget>) {
+  return reveal.kind === "fighter" ? "FIGHTER" : "CARTA";
+}
+
+function revealIcon(reveal: NonNullable<RevealTarget>) {
+  return reveal.kind === "fighter" ? reveal.data.icon ?? "F" : reveal.data.icon ?? "C";
+}
+
+function revealPhoto(reveal: NonNullable<RevealTarget>) {
+  return reveal.kind === "fighter" ? reveal.data.foto : reveal.data.foto;
+}
+
+function isRenderablePhoto(uri?: string | null) {
+  if (!uri) return false;
+  if (uri.includes("/var/mobile/Media/") || uri.includes("/DCIM/")) return false;
+  return uri.startsWith("file://") || uri.startsWith("http") || uri.startsWith("data:") || uri.startsWith("content://");
+}
+
+function revealDetail(reveal: NonNullable<RevealTarget>) {
+  if (reveal.kind === "fighter") return reveal.data.golpe || reveal.data.classe || "Criatura revelada";
+  return `${reveal.data.polaridade} | ${reveal.data.atributo} +${reveal.data.intensidade}`;
+}
+
+function PreviewCard({ reveal, rarity, color }: { reveal: NonNullable<RevealTarget>; rarity: Rarity; color: string }) {
+  const fighter = reveal.kind === "fighter" ? reveal.data : null;
+  const card = reveal.kind === "card" ? reveal.data : null;
+  const polarityColor = card?.polaridade === "DEBUFF" ? COLORS.red : COLORS.greenSoft;
+  const photoUri = revealPhoto(reveal);
+  const hasPhoto = isRenderablePhoto(photoUri);
+  const premium = rarityRank(rarity) >= 3;
+  const levelLabel = reveal.kind === "fighter" ? `HP ${reveal.data.hp}` : `${reveal.data.atributo} +${reveal.data.intensidade}`;
+
   return (
-    <Svg width="120" height="120" viewBox="0 0 118 118">
-      <Circle cx="59" cy="59" r="52" fill="rgba(10,18,38,.62)" stroke={COLORS.gold} strokeWidth="1.6" />
-      <Circle cx="59" cy="59" r="42" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeDasharray="6 7" opacity={active ? 0.9 : 0.5} />
-      <Circle cx="59" cy="59" r="28" fill="rgba(255,61,180,.14)" stroke={color} strokeWidth="2" />
-      <Polygon points="59,16 78,59 59,102 40,59" fill={active ? color : "rgba(255,61,180,.42)"} stroke="rgba(255,255,255,.56)" strokeWidth="1.4" />
-      <Path d="M34 59h50M59 34v50" stroke={COLORS.gold} strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-      <Circle cx="59" cy="59" r="10" fill={COLORS.accent} stroke="#ffffff" strokeWidth="1.5" />
-      <Circle cx="63" cy="55" r="2.4" fill="#ffffff" opacity="0.92" />
-    </Svg>
+    <View style={[s.previewCard, { borderColor: color, shadowColor: color }, premium && s.previewCardPremium]}>
+      <LinearGradient colors={[color + "55", COLORS.panelGold, COLORS.cardSurfaceDeep, COLORS.bgNav]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      <View style={[s.cardFoilBand, { backgroundColor: color }]} />
+      <View style={[s.cardFoilBandAlt, { backgroundColor: COLORS.accent }]} />
+
+      <View style={[s.cardHeader, { borderColor: color }]}>
+        <View style={[s.kindMedal, { borderColor: COLORS.gold, backgroundColor: color }]}>
+          <Text style={s.kindMedalText}>{revealIcon(reveal)}</Text>
+        </View>
+        <View style={s.headerTextWrap}>
+          <Text style={s.previewName} numberOfLines={1}>{revealName(reveal)}</Text>
+          <Text style={s.previewKind}>{revealKindLabel(reveal)} | {RARITY_LABELS[rarity]}</Text>
+        </View>
+        <View style={[s.powerSeal, { borderColor: color }]}>
+          <Text style={[s.powerSealText, { color }]}>{levelLabel}</Text>
+        </View>
+      </View>
+
+      <View style={[s.artFrame, { borderColor: color }]}>
+        <View style={s.artBevel}>
+          {hasPhoto ? (
+            <Image source={{ uri: photoUri ?? undefined }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={[color + "66", COLORS.panelHero, COLORS.bgDeep]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={StyleSheet.absoluteFill} />
+          )}
+          <LinearGradient colors={["rgba(255,255,255,.2)", "transparent", "rgba(6,12,26,.62)"]} start={{ x: 0, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
+          {!hasPhoto ? (
+            <View style={[s.previewOrb, { borderColor: COLORS.gold, shadowColor: color }]}>
+              <Text style={s.previewIcon}>{revealIcon(reveal)}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={[s.effectPanel, { borderColor: color }]}>
+        <Text style={s.previewDetail} numberOfLines={2}>{revealDetail(reveal)}</Text>
+
+        {fighter ? (
+          <View style={s.arenaStats}>
+            <View style={[s.arenaStat, { borderColor: COLORS.red }]}>
+              <Text style={[s.arenaStatValue, { color: COLORS.red }]}>{fighter.atk}</Text>
+              <Text style={s.arenaStatLabel}>ATK</Text>
+            </View>
+            <View style={[s.arenaStat, { borderColor: COLORS.accent }]}>
+              <Text style={[s.arenaStatValue, { color: COLORS.accent }]}>{fighter.def}</Text>
+              <Text style={s.arenaStatLabel}>DEF</Text>
+            </View>
+            <View style={[s.arenaStat, { borderColor: COLORS.gold }]}>
+              <Text style={[s.arenaStatValue, { color: COLORS.gold }]}>{fighter.lck}</Text>
+              <Text style={s.arenaStatLabel}>LCK</Text>
+            </View>
+            <View style={[s.arenaStat, { borderColor: COLORS.greenSoft }]}>
+              <Text style={[s.arenaStatValue, { color: COLORS.greenSoft }]}>{fighter.spd}</Text>
+              <Text style={s.arenaStatLabel}>SPD</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {card ? (
+          <View style={[s.cardEffectArena, { borderColor: polarityColor, backgroundColor: polarityColor + "20" }]}>
+            <Text style={[s.cardEffectMain, { color: polarityColor }]}>{card.polaridade}</Text>
+            <Text style={s.cardEffectSub}>{card.atributo} +{card.intensidade}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View pointerEvents="none" style={[s.cardInset, { borderColor: color + "77" }]} />
+      <View pointerEvents="none" style={s.cardTopLine} />
+      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemTl, { borderColor: color, backgroundColor: premium ? color : COLORS.cardSurfaceDeep }]} />
+      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemTr, { borderColor: color, backgroundColor: premium ? COLORS.gold : COLORS.cardSurfaceDeep }]} />
+      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemBl, { borderColor: color, backgroundColor: premium ? COLORS.accent : COLORS.cardSurfaceDeep }]} />
+      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemBr, { borderColor: color, backgroundColor: premium ? color : COLORS.cardSurfaceDeep }]} />
+    </View>
   );
 }
 
-// Faisca do impacto: explode do centro.
-function Spark({ burst, angle, dist, size, color }: {
-  burst: SharedValue<number>; angle: number; dist: number; size: number; color: string;
-}) {
-  const dx = Math.cos(angle), dy = Math.sin(angle);
-  const style = useAnimatedStyle(() => {
-    const b = burst.value;
-    return {
-      opacity: b <= 0.02 ? 0 : Math.max(0, 1 - b) * 0.95,
-      transform: [{ translateX: dx * dist * b }, { translateY: dy * dist * b }, { scale: 1 - b * 0.55 }],
-    };
-  });
-  return <Animated.View pointerEvents="none" style={[{ position: "absolute", width: size, height: size, borderRadius: size, backgroundColor: color, shadowColor: color, shadowOpacity: 0.95, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } }, style]} />;
-}
-
-// Mote orbitando em elipse (perspectiva). layer decide se aparece na frente ou atras da carta.
-function Mote({ orbit, reveal, phase, rx, ry, size, color, layer }: {
-  orbit: SharedValue<number>; reveal: SharedValue<number>; phase: number; rx: number; ry: number; size: number; color: string; layer: "front" | "back";
-}) {
-  const style = useAnimatedStyle(() => {
-    const a = orbit.value * Math.PI * 2 + phase;
-    const depth = (Math.sin(a) + 1) / 2; // 0 atras .. 1 frente
-    const inLayer = layer === "front" ? depth >= 0.5 : depth < 0.5;
-    const vis = inLayer ? (0.18 + depth * 0.7) * Math.min(1, reveal.value * 1.4) : 0;
-    return {
-      opacity: vis,
-      transform: [
-        { translateX: Math.cos(a) * rx },
-        { translateY: Math.sin(a) * ry },
-        { scale: 0.45 + depth * 0.95 },
-      ],
-    };
-  });
-  return <Animated.View pointerEvents="none" style={[{ position: "absolute", width: size, height: size, borderRadius: size, backgroundColor: color, shadowColor: color, shadowOpacity: 0.9, shadowRadius: 7, shadowOffset: { width: 0, height: 0 } }, style]} />;
-}
-
 export function RevealModal({ reveal, onClose }: { reveal: RevealTarget; onClose: () => void }) {
-  console.log("[reveal] render", reveal?.kind);
   const { width, height } = useWindowDimensions();
   const reduced = useReducedMotion();
   const [done, setDone] = useState(false);
@@ -103,222 +161,530 @@ export function RevealModal({ reveal, onClose }: { reveal: RevealTarget; onClose
       ? fighterRarity(reveal.data.bonus_intensidade ?? 1)
       : cardRarity(reveal.data.raridade ?? "")
     : "comum";
-
-  const color = RARITY_COLORS[rarity];
-  const label = RARITY_LABELS[rarity];
   const rank = rarityRank(rarity);
-  const legendary = isLeg(rarity);
-  const high = isHigh(rarity);
+  const color = RARITY_COLORS[rarity];
+  const legendary = rank >= 4;
+  const high = rank >= 3;
   const delay = chargeMs(rarity, reduced);
 
-  const gate = useSharedValue(0);
-  const card = useSharedValue(0);
-  const burst = useSharedValue(0);
+  const charge = useSharedValue(0);
+  const revealT = useSharedValue(0);
+  const pulse = useSharedValue(0.5);
+  const spin = useSharedValue(0);
   const flash = useSharedValue(0);
-  const idle = useSharedValue(0.5); // balanço 3D contínuo
-  const orbit = useSharedValue(0); // motes
-  const spin = useSharedValue(0); // anel parallax
-  const pulse = useSharedValue(0);
 
   const hapticEvent = useMemo<HapticEvent>(() => (legendary ? "legendary" : high ? "reveal" : "success"), [high, legendary]);
 
-  const sparks = useMemo(() => {
-    const count = 8 + rank * 4;
-    const palette = [COLORS.gold, COLORS.accent, COLORS.primary, "#ffffff"];
-    return Array.from({ length: count }, (_, i) => ({
-      angle: (i / count) * Math.PI * 2 + (i % 2 ? 0.2 : 0),
-      dist: Math.max(width, height) * 0.26 * (0.7 + (i % 3) * 0.18),
-      size: 3 + (i % 3),
-      color: palette[i % palette.length],
-    }));
-  }, [rank, width, height]);
-
-  const motes = useMemo(() => {
-    const count = 6 + rank * 2;
-    const palette = [COLORS.gold, COLORS.accent, COLORS.primary];
-    return Array.from({ length: count }, (_, i) => ({
-      phase: (i / count) * Math.PI * 2,
-      rx: CARD_WIDTH * (0.62 + (i % 3) * 0.12),
-      ry: 24 + (i % 4) * 8,
-      size: 3 + (i % 3),
-      color: palette[i % palette.length],
-    }));
-  }, [rank]);
-
   useEffect(() => {
     if (!reveal) return;
+
     setDone(false);
-    gate.value = 0; card.value = 0; burst.value = 0; flash.value = 0;
+    charge.value = 0;
+    revealT.value = 0;
+    pulse.value = 0.5;
+    spin.value = 0;
+    flash.value = 0;
 
     if (!reduced) {
-      pulse.value = withRepeat(withTiming(1, { duration: 1900, easing: Easing.inOut(Easing.sin) }), -1, true);
-      idle.value = withRepeat(withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }), -1, true);
-      orbit.value = withRepeat(withTiming(1, { duration: 9000, easing: Easing.linear }), -1, false);
-      spin.value = withRepeat(withTiming(1, { duration: 26000, easing: Easing.linear }), -1, false);
-    } else {
-      pulse.value = 0.5; idle.value = 0.5; orbit.value = 0; spin.value = 0;
+      pulse.value = withRepeat(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.sin) }), -1, true);
+      spin.value = withRepeat(withTiming(1, { duration: 16000, easing: Easing.linear }), -1, false);
     }
 
-    gate.value = withTiming(1, { duration: delay, easing: Easing.in(Easing.cubic) });
-    card.value = withDelay(delay, withSpring(1, SPRING.settle));
-    burst.value = withDelay(delay, withTiming(1, { duration: reduced ? 1 : 720, easing: Easing.out(Easing.cubic) }));
-    if (high && !reduced) {
-      flash.value = withDelay(delay, withSequence(withTiming(1, { duration: 80 }), withTiming(0, { duration: legendary ? 560 : 320 })));
-    }
+    charge.value = withTiming(1, { duration: delay, easing: Easing.in(Easing.cubic) });
+    revealT.value = withDelay(delay, withSpring(1, SPRING.settle));
+    flash.value = withDelay(
+      delay,
+      withSequence(
+        withTiming(high ? 1 : 0.62, { duration: reduced ? 1 : 80 }),
+        withTiming(0, { duration: reduced ? 1 : legendary ? 620 : 340 })
+      )
+    );
 
-    const timer = setTimeout(() => { fireHaptic(hapticEvent); setDone(true); }, delay + (reduced ? 60 : 320));
+    const timer = setTimeout(() => {
+      fireHaptic(hapticEvent);
+      setDone(true);
+    }, delay + (reduced ? 40 : 320));
+
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reveal, rarity, reduced]);
 
-  const tilt = (v: number) => (v - 0.5) * 2; // -1..1
+  const backPortalStyle = useAnimatedStyle(() => ({
+    opacity: 0.14 + charge.value * 0.32 + revealT.value * 0.14,
+    transform: [
+      { perspective: 1000 },
+      { rotateX: "68deg" },
+      { scale: 0.84 + charge.value * 0.16 + pulse.value * 0.03 },
+      { rotateZ: `${spin.value * -90}deg` },
+    ],
+  }));
 
-  const ambientStyle = useAnimatedStyle(() => ({
-    opacity: (0.28 + gate.value * 0.34 + pulse.value * 0.12),
-    transform: [{ scale: 0.8 + gate.value * 0.4 + pulse.value * 0.08 }],
+  const beamStyle = useAnimatedStyle(() => ({
+    opacity: reduced ? 0.28 : 0.16 + charge.value * (0.28 + rank * 0.03) + revealT.value * 0.14,
+    transform: [
+      { scaleY: 0.86 + charge.value * 0.12 + pulse.value * 0.04 },
+      { scaleX: 0.82 + revealT.value * 0.1 },
+    ],
   }));
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity: 0.18 + gate.value * 0.22 + card.value * 0.1,
-    transform: [{ rotate: `${spin.value * 360}deg` }, { scaleY: 0.42 }],
+
+  const sideGlowStyle = useAnimatedStyle(() => ({
+    opacity: reduced ? 0 : 0.07 + charge.value * (0.16 + rank * 0.025) + revealT.value * 0.12,
+    transform: [
+      { translateY: (pulse.value - 0.5) * -18 },
+      { scale: 0.96 + pulse.value * 0.05 },
+    ],
   }));
-  const sigilStyle = useAnimatedStyle(() => ({
-    opacity: Math.max(0, 1 - card.value * 1.4),
-    transform: [{ scale: 0.7 + gate.value * 0.4 + pulse.value * 0.05 }, { rotate: `${spin.value * (220 + rank * 90)}deg` }],
+
+  const coreStyle = useAnimatedStyle(() => ({
+    opacity: Math.max(0, 0.92 - revealT.value * 1.18),
+    transform: [
+      { scale: 0.56 + charge.value * 0.34 + pulse.value * 0.03 },
+      { rotateZ: `${spin.value * (160 + rank * 30)}deg` },
+    ],
   }));
-  const lightStyle = useAnimatedStyle(() => {
-    const b = burst.value, peak = Math.max(0, 1 - Math.abs(0.5 - b) * 2.2);
-    return { opacity: reduced ? 0 : peak * (0.7 + rank * 0.06), transform: [{ scale: 0.4 + b * 2.0 }] };
-  });
-  const shockStyle = useAnimatedStyle(() => {
-    const b = burst.value;
-    return { opacity: reduced ? 0 : Math.max(0, 1 - b) * 0.7, transform: [{ scale: 0.3 + b * 2.6 }] };
-  });
-  const pedestalStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, card.value * 1.2),
-    transform: [{ scaleY: 0.4 }, { scale: 0.7 + card.value * 0.35 }],
+
+  const burstStyle = useAnimatedStyle(() => ({
+    opacity: reduced ? 0 : Math.max(0, 1 - revealT.value) * (0.34 + rank * 0.04),
+    transform: [{ scale: 0.62 + revealT.value * (1.25 + rank * 0.08) }],
   }));
-  const cardStyle = useAnimatedStyle(() => {
-    const c = card.value, t = tilt(idle.value);
-    return {
-      opacity: Math.min(1, c * 1.3),
-      transform: [
-        { perspective: 1000 },
-        { translateY: (1 - c) * 44 },
-        { rotateY: `${(1 - c) * -100 + t * 13 * c}deg` },
-        { rotateX: `${t * 4 * c}deg` },
-        { scale: 0.62 + c * 0.38 },
-      ],
-    };
-  });
-  const specStyle = useAnimatedStyle(() => {
-    const t = tilt(idle.value);
-    return { opacity: reduced ? 0 : 0.18 + (t + 1) / 2 * 0.22, transform: [{ translateX: t * CARD_WIDTH * 0.5 }, { rotateZ: "16deg" }] };
-  });
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: revealT.value,
+    transform: [
+      { perspective: 1000 },
+      { translateY: (1 - revealT.value) * 72 },
+      { scale: 0.56 + revealT.value * 0.44 },
+      { rotateX: `${(1 - revealT.value) * 24}deg` },
+      { rotateY: `${(1 - revealT.value) * -42}deg` },
+      { rotateZ: `${(1 - revealT.value) * -8}deg` },
+    ],
+  }));
+
+  const cardAuraStyle = useAnimatedStyle(() => ({
+    opacity: revealT.value * (0.18 + rank * 0.035 + pulse.value * 0.14),
+    transform: [
+      { scale: 0.96 + revealT.value * 0.07 + pulse.value * 0.025 },
+    ],
+  }));
+
+  const sweepStyle = useAnimatedStyle(() => ({
+    opacity: reduced ? 0 : revealT.value * (0.22 + rank * 0.045 + pulse.value * 0.24),
+    transform: [
+      { translateX: -CARD_WIDTH + spin.value * CARD_WIDTH * 2 },
+      { rotateZ: "14deg" },
+    ],
+  }));
+
   const labelStyle = useAnimatedStyle(() => ({
-    opacity: Math.max(0, (card.value - 0.4) / 0.6),
-    transform: [{ translateY: (1 - card.value) * 16 }],
+    opacity: revealT.value,
+    transform: [{ translateY: (1 - revealT.value) * 18 }],
   }));
+
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
 
   if (!reveal) return null;
 
+  const centerTop = height / 2 - 82;
+
   return (
     <View style={[StyleSheet.absoluteFill, s.root]} pointerEvents="auto">
-        {reduced ? (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(6,12,26,.96)" }]} />
-        ) : (
-          <BlurView intensity={42} tint="dark" style={StyleSheet.absoluteFill}>
-            <LinearGradient colors={["rgba(8,14,30,.9)", "rgba(10,18,38,.84)", "rgba(6,12,26,.97)"]} style={StyleSheet.absoluteFill} />
-          </BlurView>
-        )}
-        <Pressable style={StyleSheet.absoluteFill} disabled={!done} onPress={onClose} />
+      {reduced ? (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(6,12,26,.97)" }]} />
+      ) : (
+        <BlurView intensity={34} tint="dark" style={StyleSheet.absoluteFill}>
+          <LinearGradient colors={["rgba(6,12,26,.98)", "rgba(15,27,56,.94)", "rgba(6,12,26,.98)"]} style={StyleSheet.absoluteFill} />
+        </BlurView>
+      )}
+      <Pressable style={StyleSheet.absoluteFill} disabled={!done} onPress={onClose} />
 
-        {/* ----- CENA (altar) ----- */}
-        <View pointerEvents="none" style={s.stage}>
-          {/* glow ambiente volumetrico */}
-          <Animated.View style={[s.ambient, { backgroundColor: color, shadowColor: color }, ambientStyle]} />
-          {/* anel parallax achatado (chao do altar) */}
-          <Animated.View style={[s.ringWrap, ringStyle]}>
-            <Svg width={width * 0.9} height={width * 0.9} viewBox="0 0 300 300">
-              <Circle cx="150" cy="150" r="140" stroke="rgba(245,197,66,.5)" strokeWidth="2" fill="none" />
-              <Circle cx="150" cy="150" r="108" stroke="rgba(52,225,255,.4)" strokeWidth="1.5" fill="none" strokeDasharray="6 9" />
-              <Circle cx="150" cy="150" r="70" stroke="rgba(255,61,180,.4)" strokeWidth="1.5" fill="none" strokeDasharray="3 11" />
-            </Svg>
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <LinearGradient colors={["rgba(255,61,180,.24)", "transparent", "rgba(52,225,255,.2)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[StyleSheet.absoluteFill, s.energyWash]} />
+        <LinearGradient colors={["transparent", "rgba(245,197,66,.16)", "transparent"]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={[StyleSheet.absoluteFill, s.energyColumn]} />
+      </View>
+
+      <Animated.View pointerEvents="none" style={[s.beam, { top: centerTop - 285 }, beamStyle]}>
+        <LinearGradient colors={["transparent", color + "55", "rgba(255,255,255,.22)", color + "35", "transparent"]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={StyleSheet.absoluteFill} />
+      </Animated.View>
+
+      <Animated.View pointerEvents="none" style={[s.sideGlowLeft, { top: centerTop - 208, backgroundColor: COLORS.primary, shadowColor: COLORS.primary }, sideGlowStyle]} />
+      <Animated.View pointerEvents="none" style={[s.sideGlowRight, { top: centerTop - 196, backgroundColor: COLORS.accent, shadowColor: COLORS.accent }, sideGlowStyle]} />
+
+      <Animated.View pointerEvents="none" style={[s.portal, { top: centerTop - RING_SIZE / 2, shadowColor: color }, backPortalStyle]}>
+        <View style={[s.ringOuter, { borderColor: color }]} />
+        <View style={[s.ringMid, { borderColor: COLORS.accent }]} />
+        <View style={[s.ringInner, { borderColor: COLORS.gold }]} />
+      </Animated.View>
+
+      <Animated.View pointerEvents="none" style={[s.portalCore, { top: centerTop - 62 }, coreStyle]}>
+        <LinearGradient colors={[COLORS.primary, COLORS.accent, COLORS.gold]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <View style={s.portalCoreCut} />
+      </Animated.View>
+
+      <Animated.View pointerEvents="none" style={[s.burst, { top: centerTop - 120, backgroundColor: color, shadowColor: color }, burstStyle]} />
+
+      <Animated.View style={[s.cardWrap, cardStyle]}>
+        <Animated.View pointerEvents="none" style={[s.cardAura, { borderColor: color, shadowColor: color }, cardAuraStyle]} />
+        <View pointerEvents="none" style={[s.backLight, { borderColor: color, shadowColor: color }]} />
+        <View style={s.previewClip}>
+          <PreviewCard reveal={reveal} rarity={rarity} color={color} />
+          <Animated.View pointerEvents="none" style={[s.cardSweep, sweepStyle]}>
+            <LinearGradient colors={["transparent", "rgba(255,255,255,.76)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
           </Animated.View>
-          {/* sigilo de carga */}
-          <Animated.View style={sigilStyle}><RevealSigil color={color} active={high} /></Animated.View>
-          {/* impacto */}
-          <Animated.View style={[s.lightBurst, { backgroundColor: legendary ? "#ffffff" : color, shadowColor: color }, lightStyle]} />
-          <Animated.View style={[s.shock, { borderColor: color, shadowColor: color }, shockStyle]} />
-          {!reduced ? sparks.map((sp, i) => <Spark key={i} burst={burst} {...sp} />) : null}
-          {/* motes ATRAS da carta */}
-          {!reduced ? motes.map((m, i) => <Mote key={`b${i}`} orbit={orbit} reveal={card} layer="back" {...m} />) : null}
         </View>
+      </Animated.View>
 
-        {/* pedestal */}
-        <Animated.View pointerEvents="none" style={[s.pedestal, { shadowColor: color, borderColor: color }, pedestalStyle]} />
-
-        {/* flash */}
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: legendary ? "#ffffff" : color }, flashStyle]} />
-
-        {/* carta girando em 3D */}
-        <Animated.View style={[s.cardWrap, cardStyle]}>
-          <View pointerEvents="none" style={[s.backLight, { borderColor: color, shadowColor: color }]} />
-          <View style={s.cardHolder}>
-            {reveal.kind === "fighter" ? (
-              <FighterCard fighter={reveal.data} width={CARD_WIDTH} interactive />
-            ) : (
-              <CardItem card={reveal.data} width={CARD_WIDTH} interactive />
-            )}
-            <Animated.View pointerEvents="none" style={[s.spec, specStyle]}>
-              <LinearGradient colors={["transparent", "rgba(255,255,255,.7)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
-            </Animated.View>
-          </View>
-        </Animated.View>
-
-        {/* motes NA FRENTE da carta */}
-        <View pointerEvents="none" style={s.stage}>
-          {!reduced ? motes.map((m, i) => <Mote key={`f${i}`} orbit={orbit} reveal={card} layer="front" {...m} />) : null}
+      <Animated.View style={[s.labelWrap, labelStyle]}>
+        <View style={[s.raritySeal, { borderColor: color, shadowColor: color }]}>
+          <Text style={[s.rarityText, { color }]}>{RARITY_LABELS[rarity]}</Text>
         </View>
+        {legendary ? <Text style={s.legendary}>JACKPOT ARCANO</Text> : null}
+        <Text style={s.name} numberOfLines={2}>{revealName(reveal)}</Text>
+        <Text style={s.move} numberOfLines={1}>{revealDetail(reveal)}</Text>
+        {done ? (
+          <GameButton
+            title="COLETAR"
+            variant={legendary ? "gold" : high ? "primary" : "accent"}
+            size="md"
+            haptic="tap"
+            shimmer={high}
+            onPress={onClose}
+            style={s.collect}
+          />
+        ) : (
+          <Text style={s.charging}>canalizando raridade...</Text>
+        )}
+      </Animated.View>
 
-        {/* textos */}
-        <Animated.View style={[s.labelWrap, labelStyle]}>
-          <View style={[s.raritySeal, { borderColor: color, shadowColor: color }]}>
-            <Text style={[s.rarityText, { color }]}>{label}</Text>
-          </View>
-          {legendary ? <Text style={s.legendary}>✦ JACKPOT ARCANO ✦</Text> : null}
-          <Text style={s.name} numberOfLines={2}>
-            {reveal.kind === "fighter" ? reveal.data.nome : reveal.data.nome_efeito}
-          </Text>
-          {reveal.kind === "fighter" && reveal.data.golpe ? <Text style={s.move} numberOfLines={1}>🎯 {reveal.data.golpe}</Text> : null}
-          {done ? (
-            <GameButton title="COLETAR" variant={legendary ? "gold" : high ? "primary" : "accent"} size="md" haptic="tap" shimmer={high} onPress={onClose} style={s.collect} />
-          ) : (
-            <Text style={s.charging}>canalizando raridade...</Text>
-          )}
-        </Animated.View>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: legendary ? "#ffffff" : color }, flashStyle]} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { alignItems: "center", justifyContent: "center", paddingHorizontal: 22, zIndex: 100, elevation: 100 },
-  stage: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", marginTop: -46 },
-  ambient: { position: "absolute", width: 320, height: 320, borderRadius: 160, opacity: 0.36, shadowOpacity: 0.9, shadowRadius: 64, shadowOffset: { width: 0, height: 0 } },
-  ringWrap: { position: "absolute", alignItems: "center", justifyContent: "center" },
-  lightBurst: { position: "absolute", width: 220, height: 220, borderRadius: 110, shadowOpacity: 1, shadowRadius: 50, shadowOffset: { width: 0, height: 0 } },
-  shock: { position: "absolute", width: 150, height: 150, borderRadius: 75, borderWidth: 3, shadowOpacity: 0.9, shadowRadius: 18, shadowOffset: { width: 0, height: 0 } },
-  pedestal: {
-    position: "absolute", alignSelf: "center", top: "54%", width: CARD_WIDTH + 70, height: CARD_WIDTH + 70,
-    borderRadius: (CARD_WIDTH + 70) / 2, borderWidth: 2, backgroundColor: "rgba(255,61,180,.08)",
-    shadowOpacity: 0.8, shadowRadius: 34, shadowOffset: { width: 0, height: 0 },
+  energyWash: { opacity: 0.42 },
+  energyColumn: { opacity: 0.52, transform: [{ scaleX: 0.54 }, { rotateZ: "-5deg" }] },
+  beam: {
+    position: "absolute",
+    width: 180,
+    height: 570,
+    borderRadius: RADIUS.round,
+    overflow: "hidden",
   },
-  cardWrap: { alignItems: "center", justifyContent: "center", marginTop: -40 },
-  backLight: { position: "absolute", width: CARD_WIDTH + 40, height: CARD_HEIGHT + 40, borderRadius: RADIUS.lg, borderWidth: 1, opacity: 0.5, shadowOpacity: 0.95, shadowRadius: 32, shadowOffset: { width: 0, height: 0 } },
-  cardHolder: { width: CARD_WIDTH, borderRadius: RADIUS.md, overflow: "hidden" },
-  spec: { position: "absolute", top: -50, bottom: -50, width: 90, left: -30 },
-  labelWrap: { position: "absolute", bottom: 54, alignItems: "center", width: "100%" },
-  raritySeal: { borderWidth: 1.5, borderRadius: RADIUS.round, backgroundColor: "rgba(6,12,26,.8)", paddingHorizontal: 18, paddingVertical: 7, shadowOpacity: 0.5, shadowRadius: 14, shadowOffset: { width: 0, height: 0 } },
+  sideGlowLeft: {
+    position: "absolute",
+    left: -72,
+    width: 150,
+    height: 420,
+    borderRadius: RADIUS.round,
+    opacity: 0.18,
+    shadowOpacity: 0.7,
+    shadowRadius: 46,
+    shadowOffset: { width: 0, height: 0 },
+    transform: [{ rotateZ: "-13deg" }],
+  },
+  sideGlowRight: {
+    position: "absolute",
+    right: -74,
+    width: 150,
+    height: 420,
+    borderRadius: RADIUS.round,
+    opacity: 0.18,
+    shadowOpacity: 0.7,
+    shadowRadius: 46,
+    shadowOffset: { width: 0, height: 0 },
+    transform: [{ rotateZ: "13deg" }],
+  },
+  portal: {
+    position: "absolute",
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: RADIUS.round,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOpacity: 0.96,
+    shadowRadius: 44,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  ringOuter: {
+    position: "absolute",
+    width: 350,
+    height: 350,
+    borderRadius: RADIUS.round,
+    borderWidth: 1.5,
+    opacity: 0.42,
+  },
+  ringMid: {
+    position: "absolute",
+    width: 266,
+    height: 266,
+    borderRadius: RADIUS.round,
+    borderWidth: 1.2,
+    opacity: 0.36,
+  },
+  ringInner: {
+    position: "absolute",
+    width: 182,
+    height: 182,
+    borderRadius: RADIUS.round,
+    borderWidth: 1,
+    opacity: 0.34,
+  },
+  portalCore: {
+    position: "absolute",
+    width: 124,
+    height: 124,
+    borderRadius: RADIUS.round,
+    overflow: "hidden",
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.92,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  portalCoreCut: {
+    position: "absolute",
+    left: 27,
+    top: 27,
+    right: 27,
+    bottom: 27,
+    borderRadius: RADIUS.round,
+    backgroundColor: "rgba(6,12,26,.82)",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,.6)",
+  },
+  burst: {
+    position: "absolute",
+    width: 240,
+    height: 240,
+    borderRadius: RADIUS.round,
+    shadowOpacity: 1,
+    shadowRadius: 70,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  cardWrap: { alignItems: "center", justifyContent: "center", marginTop: -36 },
+  cardAura: {
+    position: "absolute",
+    width: CARD_WIDTH + 46,
+    height: CARD_HEIGHT + 52,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    opacity: 0.42,
+    shadowOpacity: 0.78,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  backLight: {
+    position: "absolute",
+    width: CARD_WIDTH + 58,
+    height: CARD_HEIGHT + 60,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    opacity: 0.52,
+    shadowOpacity: 0.94,
+    shadowRadius: 32,
+    shadowOffset: { width: 0, height: 0 },
+    transform: [{ rotateZ: "-3deg" }, { scale: 1.02 }],
+  },
+  previewClip: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: RADIUS.md,
+    overflow: "hidden",
+  },
+  previewCard: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    overflow: "hidden",
+    borderRadius: 10,
+    borderWidth: 2.5,
+    backgroundColor: COLORS.cardSurface,
+    padding: 9,
+    shadowOpacity: 0.76,
+    shadowRadius: 26,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 14,
+  },
+  previewCardPremium: { borderWidth: 3 },
+  cardFoilBand: {
+    position: "absolute",
+    top: -38,
+    bottom: -38,
+    left: -42,
+    width: 72,
+    opacity: 0.1,
+    transform: [{ rotateZ: "-18deg" }, { scaleX: 0.55 }],
+  },
+  cardFoilBandAlt: {
+    position: "absolute",
+    top: -44,
+    bottom: -44,
+    right: -28,
+    width: 54,
+    opacity: 0.08,
+    transform: [{ rotateZ: "17deg" }, { scaleX: 0.62 }],
+  },
+  cardSweep: {
+    position: "absolute",
+    top: -60,
+    bottom: -60,
+    width: 72,
+    left: 0,
+  },
+  cardHeader: {
+    height: 52,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: "rgba(6,12,26,.76)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 7,
+    marginBottom: 7,
+  },
+  kindMedal: {
+    width: 34,
+    height: 34,
+    borderRadius: RADIUS.round,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: COLORS.gold,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  kindMedalText: { color: COLORS.cream, fontSize: 17, fontWeight: "900" },
+  headerTextWrap: { flex: 1, minWidth: 0 },
+  powerSeal: {
+    minWidth: 42,
+    maxWidth: 56,
+    minHeight: 32,
+    borderRadius: 7,
+    borderWidth: 1,
+    backgroundColor: "rgba(6,12,26,.78)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  powerSealText: { fontSize: 9, lineHeight: 11, fontWeight: "900", textAlign: "center" },
+  artFrame: {
+    height: 154,
+    borderRadius: 9,
+    borderWidth: 2,
+    backgroundColor: COLORS.panelGold,
+    padding: 4,
+    marginBottom: 7,
+    shadowColor: COLORS.gold,
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  artBevel: {
+    flex: 1,
+    borderRadius: 6,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.bgDeep,
+  },
+  effectPanel: {
+    flex: 1,
+    borderRadius: 8,
+    borderWidth: 2,
+    backgroundColor: "rgba(6,12,26,.82)",
+    padding: 7,
+    justifyContent: "space-between",
+  },
+  previewOrb: {
+    width: 86,
+    height: 86,
+    borderRadius: RADIUS.round,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    backgroundColor: "rgba(6,12,26,.5)",
+    shadowOpacity: 0.9,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  previewIcon: { color: COLORS.cream, fontSize: 42, fontWeight: "900" },
+  previewKind: {
+    color: COLORS.textMuted,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.9,
+    textTransform: "uppercase",
+  },
+  previewName: { color: COLORS.cream, fontSize: 13, lineHeight: 15, fontWeight: "900" },
+  previewDetail: { color: COLORS.cream, fontSize: 10, lineHeight: 13, fontWeight: "800", opacity: 0.86 },
+  arenaStats: { flexDirection: "row", gap: 5, justifyContent: "space-between" },
+  arenaStat: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 7,
+    backgroundColor: "rgba(234,242,255,.06)",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  arenaStatValue: { fontSize: 13, lineHeight: 15, fontWeight: "900" },
+  arenaStatLabel: {
+    color: COLORS.textMuted,
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+  },
+  cardEffectArena: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    alignItems: "center",
+    gap: 2,
+  },
+  cardEffectMain: { fontSize: 13, lineHeight: 15, fontWeight: "900", letterSpacing: 0.8 },
+  cardEffectSub: { color: COLORS.cream, fontSize: 10, fontWeight: "900" },
+  cardInset: {
+    position: "absolute",
+    inset: 5,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    opacity: 0.5,
+  },
+  cardTopLine: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    top: 7,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,.34)",
+  },
+  cornerGem: {
+    position: "absolute",
+    width: 13,
+    height: 13,
+    borderWidth: 1,
+    opacity: 0.86,
+    shadowColor: "#ffffff",
+    shadowOpacity: 0.28,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 0 },
+    transform: [{ rotateZ: "45deg" }],
+  },
+  cornerGemTl: { top: 8, left: 8 },
+  cornerGemTr: { top: 8, right: 8 },
+  cornerGemBl: { bottom: 8, left: 8 },
+  cornerGemBr: { bottom: 8, right: 8 },
+  labelWrap: { position: "absolute", bottom: 48, alignItems: "center", width: "100%" },
+  raritySeal: {
+    borderWidth: 1.5,
+    borderRadius: RADIUS.round,
+    backgroundColor: "rgba(6,12,26,.82)",
+    paddingHorizontal: 18,
+    paddingVertical: 7,
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+  },
   rarityText: { fontSize: 15, fontWeight: "900", letterSpacing: 2, textTransform: "uppercase" },
   legendary: { color: COLORS.gold, fontSize: 12, fontWeight: "900", letterSpacing: 2, marginTop: 10, textShadowColor: "rgba(245,197,66,.8)", textShadowRadius: 12 },
   name: { color: COLORS.cream, fontSize: 21, lineHeight: 25, fontWeight: "900", marginTop: 10, textAlign: "center", maxWidth: 300 },
