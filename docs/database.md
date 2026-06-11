@@ -45,7 +45,8 @@ O app mobile atual usa:
 - `snapquest_effect_cards`
 - `is_catalog`
 - `user_id`
-- `photo_data_url`
+- `photo_data_url` (legado, somente fallback de leitura)
+- `photo_storage_path` (fonte oficial para novas fotos)
 - campos de atributos, classe/categoria e raridade
 - `can_manage_catalog` em `snapquest_profiles` para permitir escrita administrativa no catalogo
 
@@ -69,7 +70,7 @@ can_manage_catalog boolean not null default false
 
 Modelo de acesso:
 
-- usuarios autenticados podem ler itens de catalogo;
+- usuarios anonimos e autenticados podem ler itens de catalogo;
 - usuarios autenticados podem ler/escrever seus proprios itens pessoais;
 - somente perfis com `can_manage_catalog = true` podem inserir, atualizar ou excluir itens de catalogo;
 - `can_manage_catalog` nao pode ser atualizado pelo frontend autenticado.
@@ -105,6 +106,7 @@ Resultado registrado:
 - usuario comum nao se autopromove com `can_manage_catalog`;
 - usuario dono escreve/remove catalogo;
 - usuario comum le catalogo;
+- usuario anonimo le catalogo;
 - usuario comum nao atualiza/remove catalogo.
 
 ## Fotos
@@ -112,7 +114,8 @@ Resultado registrado:
 Estado atual:
 
 - Mobile comprime e persiste foto localmente em `src/lib/photoStorage.ts`.
-- Banco ainda aceita `photo_data_url`.
+- Mobile e web sobem fotos novas para o bucket privado `snapquest-photos`.
+- O banco passa a persistir `photo_storage_path`; `photo_data_url` fica apenas para compatibilidade de leitura em registros antigos.
 
 Destino recomendado:
 
@@ -124,7 +127,7 @@ snapquest-photos/
   catalog/cards/{card_id}.jpg
 ```
 
-O banco deve passar a guardar URL/path de Storage, nao a imagem inteira.
+Leitura e feita via signed URL curta. O banco guarda apenas o path do objeto, nao a imagem inteira.
 
 ## Checklist de mudanca de banco
 

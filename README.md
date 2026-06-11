@@ -16,11 +16,11 @@ Data de referencia: 2026-06-10.
 | MVP web | Implementado | Valida o loop base e preserva a entrada `index.html`. |
 | Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; LCK e SPD tem efeito completo na batalha local. |
 | Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
-| Supabase Auth | Implementado no mobile | Login/cadastro com anon key publica. UX ainda nao e final. |
-| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog`, controle por `can_manage_catalog` e validacao real via `test:rls:catalog`. |
+| Supabase Auth | Implementado no mobile | Login/cadastro com perfil garantido, guest mode e status de sync/confirmacao. |
+| Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog`, controle por `can_manage_catalog`, leitura publica anonima e validacao real via `test:rls:catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
 | Gemini | Implementado com fallback | IA opcional sob demanda; fallback deterministico quando chave/cota/modelo falha. |
-| Fotos | Parcial | Mobile persiste arquivo local comprimido; banco ainda aceita `photo_data_url`. Storage remoto e pendente. |
+| Fotos | Implementado com rollout manual | Mobile/web persistem arquivo local para uso imediato e sincronizam caminho privado em Supabase Storage; aplicar `supabase/schema.sql` para habilitar bucket e policies no ambiente. |
 | Qualidade automatizada | Parcial | CI roda Expo check, TypeScript, checks estaticos, build web e testes automatizados do core. |
 
 ## Fluxos principais
@@ -41,6 +41,14 @@ Inventario
   -> Catalogo cloud ou seed local
   -> Filtros por tipo e raridade
   -> Batalha local se houver minimo de Fighters e Cartas
+```
+
+```txt
+Conta
+  -> Entrar ou criar conta
+  -> Garantir linha em snapquest_profiles
+  -> Sincronizar deck cloud
+  -> Exibir estado de sync e permissao de catalogo na home
 ```
 
 ## Estrutura
@@ -78,11 +86,16 @@ VITE_SUPABASE_ANON_KEY=
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
 EXPO_PUBLIC_OWNER_EMAIL=
-EXPO_PUBLIC_GEMINI_API_KEY=
-EXPO_PUBLIC_GEMINI_MODELS=
 ```
 
 Nunca coloque `service_role`, chave admin, senha de banco ou segredo privado no frontend.
+
+Secrets privados da Edge Function ficam fora do app:
+
+```txt
+GEMINI_API_KEY=
+GEMINI_MODELS=
+```
 
 ## Comandos
 
@@ -166,7 +179,7 @@ O schema cria:
 - policies por `auth.uid()`
 - trigger de `updated_at`
 
-Ponto de atencao atual: o schema de catalogo foi versionado e aplicado manualmente no Supabase em 2026-06-10. Para escrever no catalogo compartilhado, o perfil do usuario dono precisa ter `can_manage_catalog = true`. Essa permissao nao e alteravel pelo frontend.
+Ponto de atencao atual: para escrever no catalogo compartilhado, o perfil do usuario dono precisa ter `can_manage_catalog = true`. Essa permissao nao e alteravel pelo frontend e agora tambem governa o modo admin do app mobile.
 
 O roteiro executavel de validacao esta em [Validacao RLS do Catalogo](docs/catalog-rls-validation.md). Ele usa apenas anon key e dois usuarios autenticados de teste. A ultima execucao real passou em 2026-06-10.
 
@@ -212,7 +225,6 @@ Uma entrega so pode ser tratada como pronta quando:
 
 ## Proximas prioridades tecnicas
 
-1. Migrar fotos para Supabase Storage.
-2. Mover chamada Gemini para backend/edge function antes de producao.
-3. Refinar cerimonia visual.
-4. Criar smoke test mobile/web.
+1. Refinar cerimonia visual.
+2. Criar smoke test mobile/web.
+3. Validar fluxo local/cloud em dispositivo.

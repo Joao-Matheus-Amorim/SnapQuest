@@ -33,7 +33,7 @@ Pendencias:
 
 - UX web de conta/nuvem nao e experiencia final.
 - Sync web precisa de validacao mais forte.
-- Fotos web/prototipo ainda nao usam Storage.
+- Fotos novas ja usam Storage privado versionado; falta consolidar smoke operacional mais formal.
 
 ## Fase 2 - Bootstrap React Native + Expo
 
@@ -80,6 +80,10 @@ Entregas:
 
 Divida:
 
+- TD-010 fechado: `npm audit` zerou com `vite@^6.4.3`, remocao de `@expo/ngrok` e `overrides` de `postcss`/`uuid`.
+- TD-008 fechado: workflow duplicado saiu do repo e `ci.yml` virou a unica pipeline de CI.
+- TD-005 fechado: `App.tsx` legado saiu do repo e o entry mobile ficou consolidado em `expo-router/entry`.
+- TD-004 fechado: conta mobile agora garante perfil, diferencia confirmacao de email, mostra estado de sync e usa permissao real de catalogo.
 - TD-002 fechado: cobertura automatizada do core MVP esta completa para balance, factories, sugestao de cartas e batalha local.
 - TD-003 fechado: regras de LCK/SPD estao documentadas em `battle-rules.md`, implementadas no core e expostas na UI.
 
@@ -100,7 +104,7 @@ Entregas pendentes:
 - Cerimonia visual completa de analise.
 - Roleta de atributos/raridade.
 - Revisao humana mais rica antes de salvar.
-- Backend/edge para proteger Gemini.
+- Validar comportamento real da edge de Gemini no fluxo de dispositivo apos rollout operacional.
 
 ## Fase 6 - Nuvem pronta para producao
 
@@ -114,7 +118,6 @@ Entregas:
 
 - Migration para catalogo (`is_catalog`) ou redesign do catalogo.
 - Politicas RLS para catalogo compartilhado, se mantido.
-- Supabase Storage para fotos.
 - Rerodar `npm run test:rls:catalog` apos qualquer mudanca em catalogo/RLS.
 - Sync local/cloud validado.
 
@@ -134,6 +137,6 @@ Possiveis entregas:
 
 ## Prioridade imediata recomendada
 
-1. Criar Storage para fotos.
-2. Mover Gemini para backend/edge.
-3. Refinar cerimonia visual.
+1. Refinar cerimonia visual.
+2. Criar smoke test mobile/web.
+3. Validar fluxo local/cloud em dispositivo sem misturar escopos.

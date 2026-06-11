@@ -2,6 +2,7 @@ export type EffectCard = {
   id: string;
   type: 'effect_card';
   foto: string | null;
+  foto_storage_path?: string | null;
   foto_fake: string;
   categoria_key: string;
   categoria: string;

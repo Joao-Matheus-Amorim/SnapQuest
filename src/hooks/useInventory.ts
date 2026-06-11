@@ -11,12 +11,16 @@ export function useInventory() {
 
   const fighters = [...playerDeck.fighters, ...catalog.fighters];
   const cards = [...playerDeck.cards, ...catalog.cards];
+  const playerBattleReady = canStartBattle(playerDeck.fighters, playerDeck.cards);
+  const quickBattleReady = canStartBattle(fighters, cards);
 
   return {
     cards,
     fighters,
     playerFighters: playerDeck.fighters,
     playerCards: playerDeck.cards,
+    catalogFighters: catalog.fighters,
+    catalogCards: catalog.cards,
     isLoading: playerDeck.isLoading,
     reload: playerDeck.reload,
     reloadCatalog: catalog.reload,
@@ -27,7 +31,12 @@ export function useInventory() {
       minCards: MIN_CARDS_TO_BATTLE,
       fighterCount: fighters.length,
       cardCount: cards.length,
-      canBattle: canStartBattle(fighters, cards),
+      playerFighterCount: playerDeck.fighters.length,
+      playerCardCount: playerDeck.cards.length,
+      catalogFighterCount: catalog.fighters.length,
+      catalogCardCount: catalog.cards.length,
+      canBattle: quickBattleReady,
+      canBattleWithPlayerDeck: playerBattleReady,
     },
   };
 }

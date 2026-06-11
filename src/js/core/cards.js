@@ -12,6 +12,7 @@ export function createEffectCard({ categoryKey, name, photo }) {
     id: uid(),
     type: 'effect_card',
     foto: photo || null,
+    foto_storage_path: null,
     foto_fake: pick(fakePhotos),
     categoria_key: category[0],
     categoria: category[2],

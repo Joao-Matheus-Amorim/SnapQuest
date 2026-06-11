@@ -3,9 +3,10 @@ import { useRouter } from "expo-router";
 import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
+import * as FileSystemLegacy from "expo-file-system/legacy";
+import { Paths } from "expo-file-system";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 import { useAuth } from "../hooks/useAuth";
-import { isOwner } from "../lib/ownerConfig";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
 
 function isRenderableUri(uri: string) {
@@ -21,12 +22,49 @@ async function resolveLocalUri(asset: MediaLibrary.Asset, fallback: string): Pro
   return isRenderableUri(uri) ? uri : null;
 }
 
+async function tryResolveAssetUri(assetId: string | undefined, fallback: string): Promise<{
+  assetId?: string;
+  filename?: string;
+  savedUri: string;
+} | null> {
+  if (!assetId || Platform.OS === "web") return null;
+
+  try {
+    const perm = await MediaLibrary.requestPermissionsAsync();
+    if (!perm.granted) return null;
+
+    const asset = await MediaLibrary.getAssetInfoAsync(assetId);
+    const localUri = asset?.localUri && isRenderableUri(asset.localUri) ? asset.localUri : null;
+    if (!localUri) return null;
+
+    return {
+      assetId,
+      filename: asset.filename,
+      savedUri: localUri,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function writeReadableGalleryCopy(base64: string | undefined, assetId: string | undefined, filename: string | undefined) {
+  if (!base64 || Platform.OS === "web") return null;
+
+  const safeName = filename?.replace(/[^\w.-]+/g, "_") || `${assetId ?? Date.now()}.jpg`;
+  const finalName = safeName.endsWith(".jpg") || safeName.endsWith(".jpeg") ? safeName : `${safeName}.jpg`;
+  const destination = `${Paths.cache.uri}snapquest-picker-${finalName}`;
+  await FileSystemLegacy.writeAsStringAsync(destination, base64, {
+    encoding: FileSystemLegacy.EncodingType.Base64,
+  });
+  return destination;
+}
+
 export default function CameraScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { addCapturedPhoto } = useCapturedPhotos();
-  const { user } = useAuth();
-  const ownerMode = isOwner(user?.email);
+  const { canManageCatalog } = useAuth();
+  const ownerMode = canManageCatalog;
   const router = useRouter();
 
   async function pickFromCamera() {
@@ -46,7 +84,11 @@ export default function CameraScreen() {
       Alert.alert("Permissão necessária", "Autorize o acesso à galeria.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.9, mediaTypes: ["images"] });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      quality: 0.9,
+      mediaTypes: ["images"],
+      base64: Platform.OS !== "web",
+    });
     if (result.canceled) return;
     const asset = result.assets[0];
     const uri = isRenderableUri(asset.uri) ? asset.uri : null;
@@ -54,10 +96,16 @@ export default function CameraScreen() {
       Alert.alert("Foto inválida", "Selecione uma foto da galeria.");
       return;
     }
-    await saveCapture(uri, asset.assetId ?? undefined, asset.fileName ?? undefined, "gallery");
+    await saveCapture(uri, asset.assetId ?? undefined, asset.fileName ?? undefined, "gallery", asset.base64 ?? undefined);
   }
 
-  async function saveCapture(capturedUri: string, assetId: string | undefined, filename: string | undefined, source: "camera" | "gallery") {
+  async function saveCapture(
+    capturedUri: string,
+    assetId: string | undefined,
+    filename: string | undefined,
+    source: "camera" | "gallery",
+    pickedBase64?: string
+  ) {
     setIsSaving(true);
     try {
       let savedUri = capturedUri;
@@ -85,6 +133,20 @@ export default function CameraScreen() {
           }
         } catch {
           // fallback: capturedUri
+        }
+      }
+
+      if (Platform.OS !== "web" && source === "gallery") {
+        const readableCopy = await writeReadableGalleryCopy(pickedBase64, assetId, filename);
+        if (readableCopy) {
+          savedUri = readableCopy;
+        } else {
+          const resolvedGalleryAsset = await tryResolveAssetUri(assetId, capturedUri);
+          if (resolvedGalleryAsset) {
+            assetId = resolvedGalleryAsset.assetId;
+            filename = resolvedGalleryAsset.filename;
+            savedUri = resolvedGalleryAsset.savedUri;
+          }
         }
       }
 

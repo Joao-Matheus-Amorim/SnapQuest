@@ -101,3 +101,23 @@ Decisao: versionar `is_catalog` nas tabelas de Fighters/Cartas e `can_manage_cat
 Motivo: o app atual consulta e grava catalogo via `is_catalog`; sem esse contrato no banco, um ambiente novo nao sustenta o fluxo.
 
 Consequencia: o schema foi aplicado manualmente no Supabase em 2026-06-10. A validacao real com `npm run test:rls:catalog` passou em 2026-06-10.
+
+## D-011 — Derivar administracao de catalogo do perfil RLS
+
+Data: 2026-06-10
+
+Decisao: o app mobile passa a derivar permissao administrativa de catalogo a partir de `snapquest_profiles.can_manage_catalog`, e nao mais de email publico como fonte principal.
+
+Motivo: o contrato de acesso real ja vive no banco. Duplicar a decisao no frontend por email criava divergencia entre UX, RLS e operacao.
+
+Consequencia: login garante a linha em `snapquest_profiles`, a home exibe estado de conta/sync, e camera/inventario obedecem a permissao real do perfil.
+
+## D-012 — Fechar o audit sem salto de SDK
+
+Data: 2026-06-10
+
+Decisao: corrigir o `npm audit` sem promover upgrade major de Expo nesta frente, usando `vite@^6.4.3`, remocao de `@expo/ngrok` e `overrides` versionados para `postcss` e `uuid`.
+
+Motivo: o problema estava concentrado em dependencias web/transitivas e podia ser resolvido sem reabrir a migracao de SDK nem misturar um upgrade estrutural de Expo com outras frentes.
+
+Consequencia: `npm audit` zerou, `expo install --check`, `npx tsc --noEmit`, `npm run check` e `npm run build` permaneceram verdes, e o repositorio ganhou um contrato explicito para evitar regressao dessa correção.

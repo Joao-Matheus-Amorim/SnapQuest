@@ -7,7 +7,6 @@ import { usePlayerDeck } from "../hooks/usePlayerDeck";
 import { transformCapturedPhoto, mockTransform, type GeminiTransformResult } from "../services/geminiTransform";
 import { useAuth } from "../hooks/useAuth";
 import { syncFighterToCloud, syncCardToCloud, syncCatalogFighter, syncCatalogCard, deleteFighterFromCloud, deleteCardFromCloud } from "../services/cloudSync";
-import { isOwner } from "../lib/ownerConfig";
 import { persistPhoto } from "../lib/photoStorage";
 import { FighterCard } from "../components/FighterCard";
 import { CardItem } from "../components/CardItem";
@@ -21,6 +20,7 @@ import type { EffectCard } from "../js/core/cards.js";
 
 type TypeFilter = "all" | "fighters" | "cards";
 type RarityFilter = "all" | Rarity;
+type InventoryView = "player" | "catalog";
 
 function PendingCapture({ item, onFighter, onCard }: {
   item: CapturedPhoto; onFighter: () => void; onCard: () => void;
@@ -32,15 +32,15 @@ function PendingCapture({ item, onFighter, onCard }: {
       <View style={s.pendingInfo}>
         <View style={s.pendingLabelRow}>
           <Text style={s.pendingLabel}>Captura bruta</Text>
-          {isCatalog && <View style={s.catalogBadge}><Text style={s.catalogBadgeText}>CATÁLOGO</Text></View>}
+          {isCatalog && <View style={s.catalogBadge}><Text style={s.catalogBadgeText}>CATALOGO</Text></View>}
         </View>
         <Text style={s.pendingDate}>{new Date(item.createdAt).toLocaleString("pt-BR")}</Text>
         <View style={s.pendingActions}>
           <Pressable style={s.btnFighter} onPress={onFighter}>
-            <Text style={s.btnFighterText}>⚔️ Fighter</Text>
+            <Text style={s.btnFighterText}>Fighter</Text>
           </Pressable>
           <Pressable style={s.btnCard} onPress={onCard}>
-            <Text style={s.btnCardText}>✨ Carta</Text>
+            <Text style={s.btnCardText}>Carta</Text>
           </Pressable>
         </View>
       </View>
@@ -48,7 +48,7 @@ function PendingCapture({ item, onFighter, onCard }: {
   );
 }
 
-function TypeTab({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+function FilterTab({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <Pressable style={[s.typeTab, active && s.typeTabActive]} onPress={onPress}>
       <Text style={[s.typeTabText, active && s.typeTabTextActive]}>{label}</Text>
@@ -76,8 +76,9 @@ export default function InventoryScreen() {
   const inv = useInventory();
   const raw = useCapturedPhotos();
   const deck = usePlayerDeck();
-  const { user } = useAuth();
-  const ownerMode = isOwner(user?.email);
+  const { user, canManageCatalog } = useAuth();
+  const ownerMode = canManageCatalog;
+  const [inventoryView, setInventoryView] = useState<InventoryView>("player");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>("all");
   const [editMode, setEditMode] = useState(false);
@@ -102,7 +103,7 @@ export default function InventoryScreen() {
     const isPersonal = kind === "fighter" ? personalFighterIds.has(id) : personalCardIds.has(id);
     Alert.alert(
       "Excluir",
-      `Excluir "${name}"? Esta ação não pode ser desfeita.`,
+      `Excluir "${name}"? Esta acao nao pode ser desfeita.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -121,7 +122,6 @@ export default function InventoryScreen() {
     );
   }
 
-  // Passo 1: gera offline na hora (sem IA) e abre o modal de nome.
   function makeFighter(item: CapturedPhoto) {
     setAiTried(false);
     setPendingCreate({ item, transform: mockTransform(item, "fighter"), kind: "fighter" });
@@ -132,7 +132,6 @@ export default function InventoryScreen() {
     setPendingCreate({ item, transform: mockTransform(item, "effect_card"), kind: "card" });
   }
 
-  // Sob demanda: gasta 1 chamada de IA pra melhorar nome/golpe/vacilo a partir da foto.
   async function requestAI() {
     if (!pendingCreate || aiLoading) return;
     setAiLoading(true);
@@ -146,14 +145,12 @@ export default function InventoryScreen() {
     }
   }
 
-  // Passo 2: usuário confirmou o nome → cria de fato e revela.
   async function finalizeCreate(name: string) {
     if (!pendingCreate) return;
     const { item, transform, kind } = pendingCreate;
     setPendingCreate(null);
 
     try {
-      // Comprime e copia a foto pra pasta permanente (senão fica preta após reiniciar).
       const photoUri = await persistPhoto(item.uri, item.id);
       const persistedItem = { ...item, uri: photoUri };
 
@@ -168,7 +165,7 @@ export default function InventoryScreen() {
           });
           await syncCatalogFighter(fighter, user.id);
           await raw.removeCapturedPhoto(item.id);
-          await inv.reload();
+          await inv.reloadCatalog();
           setReveal({ kind: "fighter", data: fighter });
         } else {
           const fighter = await deck.addFighterFromPhoto(persistedItem, transform, name);
@@ -187,7 +184,7 @@ export default function InventoryScreen() {
           });
           await syncCatalogCard(card, user.id);
           await raw.removeCapturedPhoto(item.id);
-          await inv.reload();
+          await inv.reloadCatalog();
           setReveal({ kind: "card", data: card });
         } else {
           const card = await deck.addCardFromPhoto(persistedItem, transform, name);
@@ -200,93 +197,120 @@ export default function InventoryScreen() {
       }
     } catch (e) {
       console.warn("[finalizeCreate] falhou:", String(e));
-      Alert.alert("Erro ao criar", "Não consegui salvar a criatura. A foto continua na lista de pendentes — tente de novo.");
+      Alert.alert("Erro ao criar", "Nao consegui salvar a criatura. A foto continua na lista de pendentes - tente de novo.");
     }
   }
 
-  const allFighters = inv.fighters as Fighter[];
-  const allCards = inv.cards as EffectCard[];
+  const allFighters = (inventoryView === "catalog" ? inv.catalogFighters : inv.playerFighters) as Fighter[];
+  const allCards = (inventoryView === "catalog" ? inv.catalogCards : inv.playerCards) as EffectCard[];
 
   const filterFighters = (list: Fighter[]) =>
-    rarityFilter === "all" ? list : list.filter(f => fighterRarity(f.bonus_intensidade ?? 1) === rarityFilter);
+    rarityFilter === "all" ? list : list.filter((f) => fighterRarity(f.bonus_intensidade ?? 1) === rarityFilter);
 
   const filterCards = (list: EffectCard[]) =>
-    rarityFilter === "all" ? list : list.filter(c => cardRarity(c.raridade ?? "") === rarityFilter);
+    rarityFilter === "all" ? list : list.filter((c) => cardRarity(c.raridade ?? "") === rarityFilter);
 
   const visibleFighters = typeFilter !== "cards" ? filterFighters(allFighters) : [];
   const visibleCards = typeFilter !== "fighters" ? filterCards(allCards) : [];
   const isEmpty = visibleFighters.length === 0 && visibleCards.length === 0;
+  const isCatalogView = inventoryView === "catalog";
 
   return (
     <ScrollView contentContainerStyle={s.container}>
       <View style={s.titleRow}>
-        <Text style={s.title}>Inventário</Text>
+        <View style={s.titleBlock}>
+          <Text style={s.title}>Inventario</Text>
+          <Text style={s.subtitle}>
+            {isCatalogView
+              ? "Itens compartilhados para explorar e usar em batalhas rapidas."
+              : "Itens criados por voce. Seu progresso fica separado do catalogo."}
+          </Text>
+        </View>
         <Pressable style={[s.editBtn, editMode && s.editBtnActive]} onPress={() => setEditMode((v) => !v)}>
           <Text style={[s.editBtnText, editMode && s.editBtnTextActive]}>
-            {editMode ? "✓ Pronto" : "✏️ Editar"}
+            {editMode ? "Pronto" : "Editar"}
           </Text>
         </Pressable>
       </View>
 
-      {/* Resumo */}
       <View style={s.summaryBox}>
+        <Text style={s.summaryLabel}>Batalha rapida</Text>
         <Text style={s.summaryText}>
-          ⚔️ {inv.battleRequirements.fighterCount}/{inv.battleRequirements.minFighters}{"   "}
-          ✨ {inv.battleRequirements.cardCount}/{inv.battleRequirements.minCards}
+          {inv.battleRequirements.fighterCount} fighters disponiveis - {inv.battleRequirements.cardCount} cartas disponiveis
         </Text>
+        <View style={s.summarySplit}>
+          <Text style={s.summarySplitText}>
+            Meu deck: {inv.battleRequirements.playerFighterCount} fighters - {inv.battleRequirements.playerCardCount} cartas
+          </Text>
+          <Text style={s.summarySplitText}>
+            Catalogo: {inv.battleRequirements.catalogFighterCount} fighters - {inv.battleRequirements.catalogCardCount} cartas
+          </Text>
+        </View>
         {raw.capturedPhotos.length > 0 && (
-          <Text style={s.pendingBadge}>📷 {raw.capturedPhotos.length} pendente{raw.capturedPhotos.length > 1 ? "s" : ""}</Text>
+          <Text style={s.pendingBadge}>{raw.capturedPhotos.length} pendente{raw.capturedPhotos.length > 1 ? "s" : ""}</Text>
         )}
       </View>
 
-      {/* Capturas pendentes */}
+      <View style={s.viewTabs}>
+        <FilterTab label="Meu Deck" active={inventoryView === "player"} onPress={() => setInventoryView("player")} />
+        <FilterTab label="Catalogo" active={inventoryView === "catalog"} onPress={() => setInventoryView("catalog")} />
+      </View>
+
       {raw.capturedPhotos.length > 0 && (
         <View style={s.section}>
           <Text style={s.sectionTitle}>Pendentes</Text>
-          {raw.capturedPhotos.map(item => (
-            <PendingCapture key={item.id} item={item}
-              onFighter={() => makeFighter(item)} onCard={() => makeCard(item)} />
+          {raw.capturedPhotos.map((item) => (
+            <PendingCapture key={item.id} item={item} onFighter={() => makeFighter(item)} onCard={() => makeCard(item)} />
           ))}
         </View>
       )}
 
-      {/* Filtro de tipo */}
-      <View style={s.typeTabs}>
-        <TypeTab label="⚔️ Fighters + ✨ Cartas" active={typeFilter === "all"} onPress={() => setTypeFilter("all")} />
-        <TypeTab label="⚔️ Fighters" active={typeFilter === "fighters"} onPress={() => setTypeFilter("fighters")} />
-        <TypeTab label="✨ Cartas" active={typeFilter === "cards"} onPress={() => setTypeFilter("cards")} />
+      <View style={s.sectionHeader}>
+        <Text style={s.sectionTitle}>{isCatalogView ? "Catalogo" : "Meu Deck"}</Text>
+        <Text style={s.sectionMeta}>
+          {allFighters.length} fighters - {allCards.length} cartas
+        </Text>
       </View>
 
-      {/* Filtro de raridade */}
+      <View style={s.typeTabs}>
+        <FilterTab label="Fighters + Cartas" active={typeFilter === "all"} onPress={() => setTypeFilter("all")} />
+        <FilterTab label="Fighters" active={typeFilter === "fighters"} onPress={() => setTypeFilter("fighters")} />
+        <FilterTab label="Cartas" active={typeFilter === "cards"} onPress={() => setTypeFilter("cards")} />
+      </View>
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.rarityRow} contentContainerStyle={s.rarityContent}>
         <RarityPill label="Todos" color="#f5a623" active={rarityFilter === "all"} onPress={() => setRarityFilter("all")} />
-        {RARITY_ORDER.map(r => (
-          <RarityPill key={r} label={RARITY_LABELS[r]} color={RARITY_COLORS[r]}
-            active={rarityFilter === r} onPress={() => setRarityFilter(r)} />
+        {RARITY_ORDER.map((r) => (
+          <RarityPill
+            key={r}
+            label={RARITY_LABELS[r]}
+            color={RARITY_COLORS[r]}
+            active={rarityFilter === r}
+            onPress={() => setRarityFilter(r)}
+          />
         ))}
       </ScrollView>
 
-      {/* Grid */}
       {isEmpty ? (
-        <Text style={s.emptyText}>Nenhum item nesta raridade.</Text>
+        <Text style={s.emptyText}>Nenhum item encontrado nesse recorte.</Text>
       ) : (
         <View style={s.grid}>
-          {visibleFighters.map(f => (
+          {visibleFighters.map((f) => (
             <View key={f.id} style={s.cardSlot}>
               <FighterCard fighter={f} width={cardWidth} />
               {editMode && isDeletable(f.id, "fighter") && (
                 <Pressable style={s.deleteBtn} onPress={() => confirmDelete(f.id, "fighter", f.nome)}>
-                  <Text style={s.deleteBtnText}>✕</Text>
+                  <Text style={s.deleteBtnText}>X</Text>
                 </Pressable>
               )}
             </View>
           ))}
-          {visibleCards.map(c => (
+          {visibleCards.map((c) => (
             <View key={c.id} style={s.cardSlot}>
               <CardItem card={c} width={cardWidth} />
               {editMode && isDeletable(c.id, "card") && (
                 <Pressable style={s.deleteBtn} onPress={() => confirmDelete(c.id, "card", c.nome_efeito)}>
-                  <Text style={s.deleteBtnText}>✕</Text>
+                  <Text style={s.deleteBtnText}>X</Text>
                 </Pressable>
               )}
             </View>
@@ -303,11 +327,11 @@ export default function InventoryScreen() {
         aiNote={
           aiLoading
             ? ""
-            : aiTried && pendingCreate?.transform.provider === "gemini"
-            ? "✨ Nome e golpe gerados pela IA!"
-            : aiTried
-            ? "⚠️ IA indisponível agora (cota). Usando nome offline."
-            : ""
+            : aiTried && pendingCreate?.transform.provider === "gemini-backend"
+              ? "Nome e golpe gerados pela IA."
+              : aiTried
+                ? "IA indisponivel agora. Usando nome offline."
+                : ""
         }
         onRequestAI={requestAI}
         onConfirm={finalizeCreate}
@@ -321,13 +345,13 @@ export default function InventoryScreen() {
 const s = StyleSheet.create({
   container: { backgroundColor: "#1a1a2e", padding: 20, paddingBottom: BOTTOM_NAV_HEIGHT + 16 },
   titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8, marginBottom: 16 },
+  titleBlock: { flex: 1, paddingRight: 12 },
   title: { color: "#f5a623", fontSize: 28, fontWeight: "800" },
+  subtitle: { color: "rgba(255,255,255,.65)", fontSize: 12, marginTop: 4, lineHeight: 18 },
   editBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, borderWidth: 1.5, borderColor: "rgba(245,166,35,.5)" },
   editBtnActive: { backgroundColor: "#4caf50", borderColor: "#4caf50" },
   editBtnText: { color: "#f5a623", fontSize: 12, fontWeight: "800" },
   editBtnTextActive: { color: "#fff" },
-
-  // Card slot with delete overlay
   cardSlot: { position: "relative" },
   deleteBtn: {
     position: "absolute", top: 6, right: 6, zIndex: 10,
@@ -338,14 +362,19 @@ const s = StyleSheet.create({
   deleteBtnText: { color: "#fff", fontSize: 13, fontWeight: "900", lineHeight: 15 },
   summaryBox: {
     borderColor: "#f5a623", borderWidth: 1, borderRadius: 16,
-    padding: 14, marginBottom: 20, alignItems: "center", gap: 4,
+    padding: 14, marginBottom: 16, alignItems: "center", gap: 4,
   },
+  summaryLabel: { color: "#f5a623", fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
   summaryText: { color: "#fff", fontSize: 15, fontWeight: "700", textAlign: "center" },
-  pendingBadge: { color: "#f5a623", fontSize: 13, fontWeight: "700" },
+  summaryHint: { color: "rgba(255,255,255,.65)", fontSize: 12, textAlign: "center" },
+  summarySplit: { width: "100%", marginTop: 6, gap: 4 },
+  summarySplitText: { color: "rgba(255,255,255,.82)", fontSize: 12, textAlign: "center", fontWeight: "600" },
+  pendingBadge: { color: "#f5a623", fontSize: 13, fontWeight: "700", marginTop: 4 },
   section: { marginBottom: 20 },
   sectionTitle: { color: "#f5a623", fontSize: 17, fontWeight: "800", marginBottom: 12 },
-
-  // Type tabs
+  sectionHeader: { marginBottom: 12 },
+  sectionMeta: { color: "rgba(255,255,255,.65)", fontSize: 12, marginTop: -6, marginBottom: 4 },
+  viewTabs: { flexDirection: "row", gap: 8, marginBottom: 16 },
   typeTabs: { flexDirection: "row", gap: 8, marginBottom: 12, flexWrap: "wrap" },
   typeTab: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
@@ -354,20 +383,14 @@ const s = StyleSheet.create({
   typeTabActive: { backgroundColor: "#f5a623" },
   typeTabText: { color: "#f5a623", fontSize: 12, fontWeight: "700" },
   typeTabTextActive: { color: "#1a1a2e" },
-
-  // Rarity filter
   rarityRow: { marginBottom: 16 },
   rarityContent: { gap: 8, paddingRight: 8 },
   rarityPill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5,
   },
   rarityPillText: { fontSize: 12, fontWeight: "800" },
-
-  // Grid
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   emptyText: { color: "rgba(255,255,255,.5)", fontSize: 14, textAlign: "center", marginTop: 24 },
-
-  // Pending
   pendingRow: {
     flexDirection: "row", backgroundColor: "#16213e", borderRadius: 16,
     borderWidth: 1, borderColor: "rgba(245,166,35,.35)", marginBottom: 10, overflow: "hidden",

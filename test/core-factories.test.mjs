@@ -32,6 +32,7 @@ test('createFighter trims names, applies rarity bonus and preserves AI attack te
   assert.equal(fighter.nome, 'Heroi');
   assert.equal(fighter.class_key, 'guerreiro');
   assert.equal(fighter.foto, 'file://photo.jpg');
+  assert.equal(fighter.foto_storage_path, null);
   assert.equal(fighter.atk, 13);
   assert.equal(fighter.bonus_atributo, 'atk');
   assert.equal(fighter.bonus_intensidade, 5);
@@ -55,6 +56,7 @@ test('createEffectCard trims name and applies rolled effect metadata', () => {
   assert.equal(card.nome_efeito, 'Carta Forte');
   assert.equal(card.categoria_key, 'natural');
   assert.equal(card.foto, 'file://card.jpg');
+  assert.equal(card.foto_storage_path, null);
   assert.equal(card.polaridade, 'DEBUFF');
   assert.equal(card.atributo, 'SPD');
   assert.equal(card.intensidade, 5);

@@ -13,23 +13,31 @@ const required = [
   'src/js/core/balance.js',
   'src/js/core/battle.js',
   'src/js/core/cards.js',
+  'src/js/core/photoPaths.d.ts',
+  'src/js/core/photoPaths.js',
   'src/js/core/fighters.js',
   'src/js/services/inventoryRepository.js',
   'src/js/services/localStore.js',
+  'src/js/services/photoCloudStorage.js',
   'src/js/services/supabaseClient.js',
   'src/js/services/cardSuggestionService.js',
   'src/lib/mobileStorage.ts',
   'src/hooks/useCapturedPhotos.ts',
   'src/hooks/usePlayerDeck.ts',
+  'src/services/accountProfile.ts',
   'src/services/geminiTransform.ts',
+  'src/services/photoCloudStorage.ts',
   'scripts/validate-catalog-rls.mjs',
   'test/core-balance.test.mjs',
   'test/core-battle.test.mjs',
   'test/core-factories.test.mjs',
   'test/card-suggestion.test.mjs',
+  'test/photo-paths.test.mjs',
   'docs/gemini-card-suggestions.md',
   'docs/gemini-transform-flow.md',
   'docs/catalog-rls-validation.md',
+  'supabase/functions/gemini-transform/index.ts',
+  'supabase/functions/README.md',
   'supabase/schema.sql',
 ];
 
@@ -60,6 +68,30 @@ if (packageJson.scripts?.['test:core'] !== 'node --test "test/*.test.mjs"') {
   fail('package.json must expose npm run test:core for automated core coverage.');
 }
 
+if (packageJson.main !== 'expo-router/entry') {
+  fail('package.json must keep Expo Router as the mobile entrypoint.');
+}
+
+if (packageJson.dependencies?.['@react-navigation/native'] || packageJson.dependencies?.['@react-navigation/native-stack']) {
+  fail('package.json must not keep legacy React Navigation dependencies after TD-005.');
+}
+
+if (fs.existsSync('App.tsx')) {
+  fail('App.tsx should be removed after Expo Router becomes the single mobile entrypoint.');
+}
+
+if (packageJson.dependencies?.['@expo/ngrok']) {
+  fail('package.json must not keep @expo/ngrok after TD-010 cleanup.');
+}
+
+if (packageJson.devDependencies?.vite !== '^6.4.3') {
+  fail('package.json must pin vite to ^6.4.3 or an explicitly reviewed replacement.');
+}
+
+if (packageJson.overrides?.postcss !== '^8.5.10' || packageJson.overrides?.uuid !== '^11.1.1') {
+  fail('package.json must keep reviewed overrides for postcss and uuid.');
+}
+
 const schema = fs.readFileSync('supabase/schema.sql', 'utf8');
 if (!schema.includes('alter table public.snapquest_fighters enable row level security')) {
   fail('schema.sql must enable RLS for fighters.');
@@ -77,8 +109,8 @@ if (!schema.includes('can_manage_catalog boolean not null default false')) {
   fail('schema.sql must define can_manage_catalog for catalog write control.');
 }
 
-if (!schema.includes('to authenticated')) {
-  fail('schema.sql policies must explicitly target authenticated users.');
+if (!schema.includes('to authenticated') || !schema.includes('to anon, authenticated')) {
+  fail('schema.sql policies must explicitly target authenticated users and public catalog reads.');
 }
 
 if (!schema.includes('revoke update (can_manage_catalog)')) {
@@ -93,6 +125,18 @@ if (!schema.includes('snapquest_fighters_catalog_idx') || !schema.includes('snap
   fail('schema.sql must index catalog lookups for fighters and cards.');
 }
 
+if (!schema.includes('photo_storage_path text')) {
+  fail('schema.sql must version photo_storage_path for fighters and cards.');
+}
+
+if (!schema.includes('storage.buckets') || !schema.includes('snapquest-photos')) {
+  fail('schema.sql must provision the snapquest-photos Storage bucket.');
+}
+
+if (!schema.includes('on storage.objects for select') || !schema.includes('storage.foldername(name)')) {
+  fail('schema.sql must define Storage object policies scoped by folder path.');
+}
+
 const rlsValidation = fs.readFileSync('scripts/validate-catalog-rls.mjs', 'utf8');
 for (const requiredRlsCheck of [
   'common cannot insert catalog fighter',
@@ -101,6 +145,7 @@ for (const requiredRlsCheck of [
   'owner can insert catalog fighter',
   'owner can insert catalog card',
   'common can read catalog fighter',
+  'anon can read catalog fighter',
   'common cannot delete catalog fighter',
 ]) {
   if (!rlsValidation.includes(requiredRlsCheck)) {
@@ -144,6 +189,19 @@ if (!transformService.includes('target: "fighter"') || !transformService.include
   fail('geminiTransform must support fighter and effect_card targets.');
 }
 
+if (!transformService.includes('supabase.functions.invoke("gemini-transform"')) {
+  fail('geminiTransform must call the gemini-transform edge function.');
+}
+
+if (transformService.includes('EXPO_PUBLIC_GEMINI_API_KEY')) {
+  fail('geminiTransform must not read Gemini API keys from frontend env anymore.');
+}
+
+const edgeFunction = fs.readFileSync('supabase/functions/gemini-transform/index.ts', 'utf8');
+if (!edgeFunction.includes('GEMINI_API_KEY') || !edgeFunction.includes('generateContent')) {
+  fail('gemini-transform edge function must call Gemini with a private server-side key.');
+}
+
 const inventoryScreen = fs.readFileSync('src/app/inventory.tsx', 'utf8');
 if (!inventoryScreen.includes('transformCapturedPhoto')) {
   fail('inventory conversion must route through transformCapturedPhoto.');
@@ -151,6 +209,53 @@ if (!inventoryScreen.includes('transformCapturedPhoto')) {
 
 if (!inventoryScreen.includes('removeCapturedPhoto')) {
   fail('inventory conversion must remove raw captures after deck save.');
+}
+
+const authHook = fs.readFileSync('src/hooks/useAuth.ts', 'utf8');
+if (!authHook.includes('ensureProfileForUser')) {
+  fail('useAuth must ensure a snapquest_profiles row for authenticated users.');
+}
+
+if (!authHook.includes('canManageCatalog')) {
+  fail('useAuth must expose canManageCatalog from the account profile.');
+}
+
+const cloudSyncHook = fs.readFileSync('src/hooks/useCloudSync.ts', 'utf8');
+if (!cloudSyncHook.includes('status: "syncing"') || !cloudSyncHook.includes('status: "synced"') || !cloudSyncHook.includes('status: "error"')) {
+  fail('useCloudSync must expose explicit syncing, synced and error states.');
+}
+
+const loginScreen = fs.readFileSync('src/app/login.tsx', 'utf8');
+if (!loginScreen.includes('Continuar sem conta')) {
+  fail('login screen must support guest mode.');
+}
+
+const accountProfile = fs.readFileSync('src/services/accountProfile.ts', 'utf8');
+if (!accountProfile.includes('Confirme o email')) {
+  fail('account profile service must expose email confirmation messaging.');
+}
+
+const homeScreen = fs.readFileSync('src/app/index.tsx', 'utf8');
+if (!homeScreen.includes('cloudSync.message')) {
+  fail('home screen must surface cloud sync status to the user.');
+}
+
+const cloudSync = fs.readFileSync('src/services/cloudSync.ts', 'utf8');
+if (!cloudSync.includes('photo_storage_path')) {
+  fail('cloudSync must persist photo_storage_path for remote photos.');
+}
+
+if (!cloudSync.includes('resolvePhotoUrls')) {
+  fail('cloudSync must resolve private storage photos through signed URLs.');
+}
+
+const inventoryRepository = fs.readFileSync('src/js/services/inventoryRepository.js', 'utf8');
+if (!inventoryRepository.includes('photo_storage_path')) {
+  fail('inventoryRepository must persist photo_storage_path for web sync.');
+}
+
+if (!inventoryRepository.includes('resolvePhotoUrls')) {
+  fail('inventoryRepository must resolve private storage photos through signed URLs.');
 }
 
 const categoryKeys = new Set(EFFECT_CATEGORIES.map(category => category[0]));

@@ -12,7 +12,7 @@ O repositorio possui:
 - App mobile Expo em MVP funcional.
 - Core de jogo reutilizavel em `src/js/core/`.
 - Supabase Auth/DB integrado em nivel inicial.
-- Gemini real opcional com fallback offline.
+- Gemini via backend/edge function com fallback offline.
 - Documentacao PMBOK adaptada.
 
 ## Implementado
@@ -40,10 +40,11 @@ O repositorio possui:
 
 - Expo Router em `src/app/`.
 - Home com contadores reais.
-- Login/cadastro Supabase.
+- Login/cadastro Supabase com mensagens de sessao e confirmacao.
 - Logout limpando deck local.
+- Perfil `snapquest_profiles` garantido no primeiro login.
 - Captura por camera.
-- Galeria no modo dono.
+- Galeria no modo admin de catalogo.
 - Resolucao de URI local em iOS/native.
 - Fila de capturas brutas.
 - Persistencia local de capturas.
@@ -67,6 +68,7 @@ O repositorio possui:
 - RLS habilitado nas tabelas.
 - Policies por `auth.uid()`.
 - Sync de Fighters e Cartas pessoais.
+- Estado de sync cloud exposto na home.
 
 ### Qualidade e CI
 
@@ -77,23 +79,21 @@ O repositorio possui:
 - `npm run test:rls:catalog` para validacao real de RLS de catalogo quando `RLS_TEST_*` estiver configurado.
 - `npm run check`.
 - `npm run build`.
+- `npm audit` zerado.
 - Testes automatizados para balanceamento, factories, sugestao de cartas e batalha local.
 - Checks estaticos para arquivos criticos, RLS basica, storage mobile e contrato Gemini/mock.
 - Validacao RLS real de catalogo com usuario comum e dono.
 
 ## Parcial ou em validacao
 
-- Sync cloud/local precisa de validacao de fluxo completo com usuario real.
-- Catalogo cloud tem contrato versionado com `is_catalog`; schema aplicado manualmente no Supabase em 2026-06-10; escrita de catalogo depende de perfil com `can_manage_catalog = true`.
-- Auth existe, mas UX de conta ainda e MVP.
-- Gemini funciona como chamada publica no app; aceitavel para prototipo, nao para producao.
-- Fotos finais podem ser sincronizadas como `photo_data_url`; Storage remoto ainda nao foi implantado.
+- Sync cloud/local precisa de smoke mais formal de fluxo completo com usuario real.
+- Catalogo cloud tem contrato versionado com `is_catalog`; leitura publica anonima, escrita restrita a perfil com `can_manage_catalog = true`.
+- Gemini sai pelo endpoint `gemini-transform` no Supabase Edge Functions; fallback offline continua quando a edge falha.
+- Fotos novas usam `photo_storage_path` em bucket privado `snapquest-photos`, com signed URL para leitura e `photo_data_url` apenas como fallback legado.
 - Cerimonia visual de transformacao ainda nao e a experiencia final desejada.
 
 ## Nao implementado
 
-- Supabase Storage para fotos.
-- Backend/edge function para proteger chamada Gemini.
 - XP, conquistas, diario de aventuras e colecoes completas.
 - Multiplayer online.
 - Publicacao em loja.
@@ -103,8 +103,8 @@ O repositorio possui:
 | ID | Gap | Impacto | Proxima acao |
 |---|---|---|---|
 | GAP-001 | Schema versionado de catalogo precisava alinhar `is_catalog` e permissao de escrita. | Catalogo cloud podia quebrar em banco novo. | Fechado: schema versionado e aplicado manualmente no Supabase em 2026-06-10. |
-| GAP-002 | Gemini roda no app com env publica. | Chave fica exposta em bundle mobile. | Mover para backend/edge antes de producao. |
-| GAP-003 | Fotos ainda nao usam Storage remoto. | Peso no banco e risco de escalabilidade. | Criar bucket e guardar URLs. |
+| GAP-002 | Gemini rodava no app com env publica. | Chave ficava exposta em bundle mobile. | Fechado em codigo; rollout operacional depende apenas do ambiente alvo. |
+| GAP-003 | Fotos ainda nao usavam Storage remoto. | Peso no banco e risco de escalabilidade. | Fechado em codigo/schema; aplicar `supabase/schema.sql` no Supabase alvo e validar upload/leitura real. |
 | GAP-004 | Cobertura automatizada de comportamento era inicial. | Regressao podia passar em cenarios de core nao cobertos. | Fechado: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada. |
 | GAP-005 | LCK/SPD nao tinham efeito completo. | Atributos pareciam mais ricos que a regra real. | Fechado: regra definida em `docs/battle-rules.md`, implementada no core e coberta por `npm run test:core`. |
 | GAP-006 | RLS de catalogo ainda nao tinha prova real com usuario comum e usuario dono. | Risco fechado com evidencia funcional registrada. | Fechado: `npm run test:rls:catalog` passou no Supabase real em 2026-06-10. |
@@ -113,7 +113,6 @@ O repositorio possui:
 
 A prioridade tecnica recomendada agora e:
 
-1. Storage para fotos;
-2. Gemini via backend/edge;
-3. cerimonia visual final;
-4. smoke test mobile/web.
+1. Cerimonia visual final;
+2. smoke test mobile/web;
+3. validar fluxo completo local/cloud em dispositivo apos rollout final de schema/storage.

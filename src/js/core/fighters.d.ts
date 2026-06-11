@@ -2,6 +2,7 @@ export type Fighter = {
   id: string;
   type: 'fighter';
   foto: string | null;
+  foto_storage_path?: string | null;
   foto_fake: string;
   classe: string;
   class_key: string;

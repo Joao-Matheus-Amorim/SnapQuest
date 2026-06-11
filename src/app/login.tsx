@@ -1,55 +1,94 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../hooks/useAuth";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn, signUp } = useAuth();
+  const { loading: authLoading, signIn, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState<{ tone: "neutral" | "success" | "error"; text: string } | null>(null);
 
   async function handleSignIn() {
     if (!email || !password) {
-      Alert.alert("Preencha email e senha.");
+      setNotice({ tone: "error", text: "Preencha email e senha." });
       return;
     }
-    setLoading(true);
+
+    setSubmitting(true);
+    setNotice(null);
+
     try {
       await signIn(email, password);
-      router.back();
+      setNotice({ tone: "success", text: "Conta conectada. Sincronizando seu deck..." });
+      router.replace("/");
     } catch (e: unknown) {
-      Alert.alert("Erro ao entrar", e instanceof Error ? e.message : "Tente novamente.");
+      setNotice({ tone: "error", text: e instanceof Error ? e.message : "Tente novamente." });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
   async function handleSignUp() {
     if (!email || !password) {
-      Alert.alert("Preencha email e senha.");
+      setNotice({ tone: "error", text: "Preencha email e senha." });
       return;
     }
+
     if (password.length < 6) {
-      Alert.alert("Senha deve ter pelo menos 6 caracteres.");
+      setNotice({ tone: "error", text: "A senha deve ter pelo menos 6 caracteres." });
       return;
     }
-    setLoading(true);
+
+    setSubmitting(true);
+    setNotice(null);
+
     try {
-      await signUp(email, password);
-      Alert.alert("Conta criada!", "Verifique seu email para confirmar o cadastro, depois entre com sua senha.");
+      const result = await signUp(email, password);
+      setNotice({
+        tone: result.requiresEmailConfirmation ? "neutral" : "success",
+        text: result.message,
+      });
+
+      if (!result.requiresEmailConfirmation) {
+        router.replace("/");
+      }
     } catch (e: unknown) {
-      Alert.alert("Erro ao cadastrar", e instanceof Error ? e.message : "Tente novamente.");
+      setNotice({ tone: "error", text: e instanceof Error ? e.message : "Tente novamente." });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
+
+  const busy = authLoading || submitting;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Conta SnapQuest</Text>
-      <Text style={styles.subtitle}>Entre para sincronizar seu deck na nuvem.</Text>
+      <Text style={styles.subtitle}>
+        Entre para sincronizar seu deck pessoal. Sem conta, voce continua jogando no modo local.
+      </Text>
+
+      {authLoading && (
+        <View style={styles.statusBox}>
+          <ActivityIndicator color="#f5a623" />
+          <Text style={styles.statusText}>Verificando sessao...</Text>
+        </View>
+      )}
+
+      {notice && (
+        <View
+          style={[
+            styles.noticeBox,
+            notice.tone === "success" && styles.noticeSuccess,
+            notice.tone === "error" && styles.noticeError,
+          ]}
+        >
+          <Text style={styles.noticeText}>{notice.text}</Text>
+        </View>
+      )}
 
       <TextInput
         style={styles.input}
@@ -59,7 +98,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-        editable={!loading}
+        editable={!busy}
       />
       <TextInput
         style={styles.input}
@@ -68,10 +107,10 @@ export default function LoginScreen() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        editable={!loading}
+        editable={!busy}
       />
 
-      {loading ? (
+      {busy ? (
         <ActivityIndicator color="#f5a623" style={{ marginVertical: 20 }} />
       ) : (
         <>
@@ -108,7 +147,42 @@ const styles = StyleSheet.create({
   subtitle: {
     color: "#ffffff",
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: 20,
+    maxWidth: 340,
+  },
+  statusBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
+  },
+  statusText: {
+    color: "rgba(255,255,255,.7)",
+    fontSize: 13,
+  },
+  noticeBox: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 14,
+    backgroundColor: "#16213e",
+    borderWidth: 1,
+    borderColor: "rgba(245,166,35,.35)",
+  },
+  noticeSuccess: {
+    borderColor: "rgba(76,175,80,.45)",
+    backgroundColor: "rgba(76,175,80,.12)",
+  },
+  noticeError: {
+    borderColor: "rgba(233,69,96,.5)",
+    backgroundColor: "rgba(233,69,96,.12)",
+  },
+  noticeText: {
+    color: "#ffffff",
+    fontSize: 13,
+    lineHeight: 18,
   },
   input: {
     backgroundColor: "#16213e",

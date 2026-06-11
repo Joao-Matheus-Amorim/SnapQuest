@@ -12,6 +12,7 @@ export function createFighter({ classKey, name, photo, attackName, missName }) {
     id: uid(),
     type: 'fighter',
     foto: photo || null,
+    foto_storage_path: null,
     foto_fake: pick(fakePhotos),
     classe: cls.name,
     class_key: cls.key,

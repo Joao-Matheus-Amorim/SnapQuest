@@ -13,7 +13,7 @@ Este documento consolida a gestao do SnapQuest em formato PMBOK adaptado para um
 | Objetivo | Validar e evoluir um loop familiar de captura, colecao e batalha com base reutilizavel para mobile. |
 | Entrega atual | MVP web preservado e MVP mobile Expo com captura, inventario, transformacao e batalha local. |
 | Principal restricao | Segredos nao podem entrar no frontend. |
-| Principal risco atual | Fotos ainda usam `photo_data_url` e Gemini ainda roda no app antes do backend seguro. |
+| Principal risco atual | Rollout operacional final de Storage/sync e validacao completa em dispositivo ainda precisam ser fechados no ambiente alvo. |
 
 ## 2. Escopo do produto
 
@@ -23,14 +23,15 @@ Este documento consolida a gestao do SnapQuest em formato PMBOK adaptado para um
 - App mobile com Expo Router.
 - Core de regras em JavaScript puro reutilizavel.
 - Captura de foto por camera.
-- Galeria para modo dono.
+- Galeria para modo admin de catalogo.
 - Fila de capturas brutas.
 - Criacao de Fighter ou Carta a partir da captura.
 - Gemini opcional sob demanda, com fallback offline.
 - Deck local persistente.
 - Catalogo vindo da nuvem ou seed local.
 - Login/cadastro Supabase.
-- Sync Supabase de Fighters e Cartas.
+- Perfil `snapquest_profiles` garantido no primeiro login.
+- Sync Supabase de Fighters e Cartas com estado visivel na home.
 - Batalha local entre dois jogadores.
 - Documentacao viva.
 
@@ -39,8 +40,6 @@ Este documento consolida a gestao do SnapQuest em formato PMBOK adaptado para um
 - Multiplayer online.
 - Monetizacao.
 - Loja.
-- Supabase Storage em producao.
-- Backend seguro para Gemini.
 - Testes automatizados E2E/mobile completos.
 - Publicacao em loja mobile.
 - Sistema completo de XP, conquistas e diario.
@@ -130,7 +129,7 @@ Toda mudanca deve responder:
 | Mobile | `app.json`, `src/app/`, Expo Router |
 | Banco | `supabase/schema.sql` |
 | Ambiente | `.env.example` |
-| CI | `.github/workflows/ci.yml`, `.github/workflows/static-check.yml` |
+| CI | `.github/workflows/ci.yml` |
 
 ## 11. Criterios de aceite do projeto
 
@@ -148,7 +147,7 @@ O projeto e considerado tecnicamente rastreavel quando:
 | ID | Lacuna | Plano |
 |---|---|---|
 | GAP-001 | Contrato de catalogo precisava de `is_catalog` e controle de admin. | Fechado: tratado no schema versionado e aplicado manualmente em 2026-06-10. |
-| GAP-002 | Gemini roda no app com chave publica. | Migrar para backend/edge function antes de producao. |
-| GAP-003 | Fotos ainda podem ir como `photo_data_url`. | Migrar para Supabase Storage. |
+| GAP-002 | Gemini rodava no app com chave publica. | Fechado em codigo; rollout operacional depende apenas do ambiente alvo. |
+| GAP-003 | Fotos ainda podiam ir como `photo_data_url`. | Fechado em codigo/schema; validar rollout completo no Supabase alvo. |
 | GAP-004 | Poucos testes automatizados de comportamento. | Fechado para core: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada; smoke mobile/web segue como melhoria. |
 | GAP-005 | LCK e SPD nao tinham efeito completo na batalha. | Fechado: regra documentada em `battle-rules.md`, implementada no core e coberta por testes. |

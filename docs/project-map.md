@@ -15,7 +15,6 @@ Este documento descreve onde cada parte do SnapQuest vive e qual responsabilidad
 | `vite.config.js` | Configuracao Vite SPA. |
 | `vercel.json` | Build e rewrites do deploy web. |
 | `app.json` | Configuracao Expo, plugins e permissoes. |
-| `App.tsx` | Arquivo legado de navegacao React Navigation; entry atual e `expo-router/entry`. |
 | `tsconfig.json` | TypeScript estrito baseado em Expo. |
 | `.env.example` | Exemplo de variaveis publicas. |
 
@@ -26,11 +25,11 @@ Local: `src/app/`
 | Arquivo | Responsabilidade |
 |---|---|
 | `_layout.tsx` | Stack do Expo Router. |
-| `index.tsx` | Home mobile, contadores, login/logout e entrada para captura. |
-| `camera.tsx` | Camera, galeria no modo dono, permissoes e salvamento de captura bruta. |
+| `index.tsx` | Home mobile, contadores, status de conta/sync e entrada para captura. |
+| `camera.tsx` | Camera, galeria no modo admin de catalogo, permissoes e salvamento de captura bruta. |
 | `inventory.tsx` | Pendentes, transformacao, IA opcional, criacao, filtros, exclusao e revelacao. |
 | `battle.tsx` | Batalha local completa, setup, turnos, selecao, cartas, ataques e vencedor. |
-| `login.tsx` | Login/cadastro Supabase. |
+| `login.tsx` | Login/cadastro Supabase com guest mode e mensagens de confirmacao. |
 
 ## Componentes mobile
 
@@ -52,24 +51,25 @@ Local: `src/hooks/`
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `useAuth.ts` | Sessao Supabase, login, cadastro e logout com limpeza de deck local. |
+| `useAuth.ts` | Sessao Supabase, perfil `snapquest_profiles`, permissao de catalogo, login, cadastro e logout com limpeza de deck local. |
 | `useCapturedPhotos.ts` | Fila local de capturas brutas. |
 | `usePlayerDeck.ts` | Deck pessoal local, merge cloud, criacao e remocao de itens. |
 | `useCatalog.ts` | Catalogo cloud com fallback para seed local. |
 | `useInventory.ts` | Agrega deck pessoal + catalogo e calcula requisitos de batalha. |
 | `useBattle.ts` | Adapter React para o core de batalha. |
-| `useCloudSync.ts` | Sincronizacao cloud quando aplicavel. |
+| `useCloudSync.ts` | Sincronizacao cloud quando aplicavel, com status compartilhado para UI. |
 
 ## Services e libs mobile
 
 | Caminho | Responsabilidade |
 |---|---|
 | `src/services/cloudSync.ts` | Leitura/sync/delete de Fighters, Cartas e catalogo no Supabase. |
+| `src/services/accountProfile.ts` | Garantia e leitura do perfil de conta, mais normalizacao de mensagens de auth. |
 | `src/services/geminiTransform.ts` | Transformacao por Gemini real ou mock offline. |
 | `src/lib/supabase.ts` | Cliente Supabase com storage de auth por plataforma. |
 | `src/lib/mobileStorage.ts` | Adapter localStorage web + SecureStore/AsyncStorage native. |
 | `src/lib/photoStorage.ts` | Compressao e persistencia permanente de fotos finais. |
-| `src/lib/ownerConfig.ts` | Identificacao de modo dono por email publico. |
+| `src/lib/ownerConfig.ts` | Legado de identificacao por email; o mobile atual deriva admin do perfil `can_manage_catalog`. |
 | `src/lib/rarityConfig.ts` | Calculo e metadata visual de raridade. |
 
 ## Core de jogo
@@ -120,8 +120,7 @@ Atencao: o app atual usa `is_catalog` para catalogo, e o schema versionado tambe
 |---|---|
 | `scripts/check.mjs` | Checks estaticos do projeto. |
 | `scripts/check-card-suggestion.mjs` | Check especifico de sugestao de carta. |
-| `.github/workflows/ci.yml` | CI principal com Expo check, TypeScript, static check e build. |
-| `.github/workflows/static-check.yml` | Workflow adicional de static check/build. |
+| `.github/workflows/ci.yml` | Pipeline unica de CI com Expo check, TypeScript, testes core, static check e build. |
 
 ## Documentacao
 

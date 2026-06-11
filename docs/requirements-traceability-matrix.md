@@ -16,28 +16,28 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-008 | Guardar capturas brutas separadas do deck. | `src/hooks/useCapturedPhotos.ts` | `npm run check` verifica contrato | Implementado |
 | REQ-009 | Persistir foto final em arquivo local permanente. | `src/lib/photoStorage.ts` | TypeScript | Implementado |
 | REQ-010 | Transformar captura em Fighter ou Carta. | `src/app/inventory.tsx`, `src/services/geminiTransform.ts`, `usePlayerDeck.ts` | `npm run check` verifica rota por `transformCapturedPhoto` | Implementado |
-| REQ-011 | Usar Gemini real quando chave existir. | `src/services/geminiTransform.ts` | TypeScript; fallback em runtime | Implementado com risco |
+| REQ-011 | Usar Gemini via backend quando a edge function estiver disponivel. | `src/services/geminiTransform.ts`, `supabase/functions/gemini-transform` | TypeScript; fallback em runtime; `npm run check` valida invoke da function | Implementado |
 | REQ-012 | Ter fallback offline para IA indisponivel. | `mockTransform`, `mockFallback` | `npm run check` verifica provider mock | Implementado |
 | REQ-013 | Permitir revisao de nome antes de criar item. | `src/components/NameInputModal.tsx`, `src/app/inventory.tsx` | TypeScript | Implementado |
 | REQ-014 | Revelar item criado. | `src/components/RevealModal.tsx`, `src/components/LegendaryAura.tsx` | TypeScript | Implementado |
 | REQ-015 | Persistir deck local. | `src/hooks/usePlayerDeck.ts`, `src/lib/mobileStorage.ts` | `npm run check` verifica storage web/native | Implementado |
 | REQ-016 | Limpar deck local no logout. | `src/hooks/useAuth.ts`, `clearPlayerDeck` | TypeScript | Implementado |
-| REQ-017 | Login/cadastro Supabase. | `src/app/login.tsx`, `src/hooks/useAuth.ts`, `src/lib/supabase.ts` | TypeScript | Implementado em MVP |
-| REQ-018 | Sincronizar deck pessoal com nuvem. | `src/services/cloudSync.ts` | TypeScript | Parcial |
+| REQ-017 | Login/cadastro Supabase com mensagens de sessao e confirmacao. | `src/app/login.tsx`, `src/hooks/useAuth.ts`, `src/services/accountProfile.ts`, `src/lib/supabase.ts` | `npx tsc --noEmit`, `npm run check`, validacao local | Implementado |
+| REQ-018 | Sincronizar deck pessoal com nuvem e expor estado de sync. | `src/services/cloudSync.ts`, `src/hooks/useCloudSync.ts`, `src/app/index.tsx` | `npx tsc --noEmit`, `npm run check`, validacao local | Implementado em MVP |
 | REQ-019 | Carregar catalogo da nuvem com fallback seed. | `src/hooks/useCatalog.ts`, `src/services/cloudSync.ts`, `supabase/schema.sql` | TypeScript e check estatico de schema | Implementado e aplicado; validar leitura real |
-| REQ-020 | Modo dono para catalogo via galeria. | `src/app/camera.tsx`, `src/app/inventory.tsx`, `src/lib/ownerConfig.ts` | TypeScript | Implementado com risco de schema |
+| REQ-020 | Modo admin para catalogo via galeria. | `src/app/camera.tsx`, `src/app/inventory.tsx`, `src/hooks/useAuth.ts`, `snapquest_profiles.can_manage_catalog` | `npx tsc --noEmit`, `npm run check`, `npm run test:rls:catalog` | Implementado |
 | REQ-021 | Proteger dados por usuario no banco. | `supabase/schema.sql` | `npm run check` verifica RLS e `auth.uid()` | Implementado para inventario pessoal |
-| REQ-022 | Suportar catalogo compartilhado. | `cloudSync.ts`, `is_catalog`, `can_manage_catalog`, RLS, `scripts/validate-catalog-rls.mjs` | Check estatico de schema; `npm run test:rls:catalog` passou no Supabase real em 2026-06-10 | Implementado e validado |
+| REQ-022 | Suportar catalogo compartilhado visivel sem login. | `cloudSync.ts`, `is_catalog`, `can_manage_catalog`, RLS, `scripts/validate-catalog-rls.mjs` | Check estatico de schema; `npm run test:rls:catalog` valida leitura anonima e escrita restrita | Implementado |
 | REQ-023 | Evitar segredo privado no frontend. | `.env.example`, docs, `supabase.ts` | Revisao manual; check parcial | Implementado como regra |
 | REQ-024 | Deploy web na Vercel. | `vercel.json`, `vite.config.js` | `npm run build` | Implementado |
-| REQ-025 | CI minima. | `.github/workflows/ci.yml`, `.github/workflows/static-check.yml` | GitHub Actions com test:core, typecheck, static check e build | Implementado |
+| REQ-025 | CI minima. | `.github/workflows/ci.yml` | GitHub Actions com Expo check, test:core, typecheck, static check e build | Implementado |
 | REQ-026 | Documentacao de governanca e estado. | `docs/` | Revisao documental | Implementado |
 
 ## Gaps por requisito
 
 | Requisito | Gap | Acao necessaria |
 |---|---|---|
-| REQ-018 | Sync depende de contrato cloud ainda pouco testado. | Testar login, merge local/cloud e erro offline. |
+| REQ-018 | Sync ainda precisa de smoke mais formal em cenarios de erro offline e merge repetido. | Manter validacao manual em dispositivo ate existir smoke test automatizado. |
 | REQ-019 | Catalogo precisa de validacao de leitura no fluxo app completo. | Validar leitura/fallback no app, alem do teste RLS direto. |
 | REQ-025 | CI ainda nao cobre RLS real. | Manter `test:rls:catalog` como gate manual/local porque depende de usuarios reais. |
 

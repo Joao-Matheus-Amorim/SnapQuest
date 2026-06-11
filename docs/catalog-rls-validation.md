@@ -28,6 +28,7 @@ Comportamentos:
 - usuario comum nao consegue se promover com `can_manage_catalog=true`;
 - usuario dono com `can_manage_catalog=true` cria item de catalogo;
 - usuario comum le item de catalogo;
+- usuario anonimo le item de catalogo;
 - usuario comum nao atualiza nem remove item de catalogo;
 - usuario dono remove os itens de catalogo criados pelo teste.
 
@@ -135,6 +136,8 @@ E deve listar os cenarios permitidos/bloqueados, incluindo:
 - `owner can insert catalog card`
 - `common can read catalog fighter`
 - `common can read catalog card`
+- `anon can read catalog fighter`
+- `anon can read catalog card`
 - `common cannot update catalog fighter: denied`
 - `common cannot delete catalog fighter: denied`
 - `owner can delete catalog card cleanup`

@@ -11,16 +11,18 @@ A migracao para React Native + Expo saiu do bootstrap e chegou a um MVP mobile f
 - Estrutura Expo com `expo-router/entry`.
 - `src/app/` com rotas mobile.
 - Home com contadores reais.
+- Home com status de conta e sync.
 - Camera com `expo-image-picker`.
-- Galeria para modo dono.
+- Galeria para modo admin de catalogo.
 - Persistencia de capturas brutas.
 - Persistencia de deck local.
 - Adapter `mobileStorage.ts` para web/native.
 - Inventario com deck, catalogo, filtros e exclusao.
 - Transformacao de captura em Fighter/Carta.
-- Gemini real opcional com fallback.
+- Gemini via edge function com fallback.
 - Persistencia de foto final comprimida no aparelho.
-- Login/cadastro Supabase.
+- Login/cadastro Supabase com confirmacao de email e guest mode.
+- Perfil `snapquest_profiles` garantido no primeiro login.
 - Batalha local completa usando o core.
 - TypeScript estrito via `expo/tsconfig.base`.
 
@@ -28,7 +30,7 @@ A migracao para React Native + Expo saiu do bootstrap e chegou a um MVP mobile f
 
 ### Expo Router
 
-O projeto usa `expo-router/entry` como entry principal. `App.tsx` permanece como legado do bootstrap inicial, mas nao e a fonte principal de navegacao.
+O projeto usa `expo-router/entry` como entry principal. O `App.tsx` legado foi removido quando a navegacao Expo Router passou a ser a unica fonte ativa do app mobile.
 
 ### SDK 54
 
@@ -42,10 +44,9 @@ O projeto esta alinhado ao Expo SDK 54 para compatibilidade com o dispositivo de
 
 - Validar fluxo completo em dispositivo fisico atualizado.
 - `npm run test:rls:catalog` passou com usuario comum e usuario dono no Supabase real em 2026-06-10.
-- Migrar fotos para Supabase Storage.
-- Criar backend/edge para Gemini antes de producao.
+- Validar rollout final de fotos em Supabase Storage no ambiente alvo.
+- Validar comportamento real da edge Gemini no fluxo operacional.
 - Adicionar testes automatizados de batalha.
-- Remover ou aposentar oficialmente `App.tsx` se nao for mais necessario.
 
 ## Comandos uteis
 

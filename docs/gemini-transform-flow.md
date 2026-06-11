@@ -21,7 +21,7 @@ Camera/Galeria -> Capturas Brutas -> Nome/IA -> Persistencia da foto -> Fighter 
 | Captura de foto | `src/app/camera.tsx` | Implementado |
 | Fila de capturas brutas | `src/hooks/useCapturedPhotos.ts` | Implementado |
 | Transformacao offline | `mockTransform` em `src/services/geminiTransform.ts` | Implementado |
-| Gemini real opcional | `transformCapturedPhoto` em `src/services/geminiTransform.ts` | Implementado |
+| Gemini via backend | `transformCapturedPhoto` em `src/services/geminiTransform.ts` + `supabase/functions/gemini-transform` | Implementado |
 | Modal de nome | `src/components/NameInputModal.tsx` | Implementado |
 | Persistencia de foto final | `src/lib/photoStorage.ts` | Implementado |
 | Criacao do item | `src/hooks/usePlayerDeck.ts` e `src/app/inventory.tsx` | Implementado |
@@ -60,8 +60,9 @@ Por padrao, o app gera uma sugestao offline deterministica.
 Se o usuario pedir IA:
 
 - a imagem e redimensionada para 512px;
-- o app tenta a cadeia de modelos configurada;
-- erro 429, 404 ou falha de JSON cai para fallback;
+- o app envia a imagem reduzida para a edge function `gemini-transform`;
+- a edge function tenta a cadeia de modelos configurada;
+- erro de edge, 429, 404 ou falha de JSON cai para fallback;
 - o resultado e normalizado antes de criar item.
 
 ### 3. Item final
@@ -124,19 +125,19 @@ natural, consumivel, ferramenta, criatura, vestimenta, fogo, liquido, conhecimen
 ## Variaveis de ambiente
 
 ```txt
-EXPO_PUBLIC_GEMINI_API_KEY=
-EXPO_PUBLIC_GEMINI_MODELS=
+GEMINI_API_KEY=
+GEMINI_MODELS=
 ```
 
-`EXPO_PUBLIC_GEMINI_MODELS` aceita lista separada por virgula.
+`GEMINI_MODELS` aceita lista separada por virgula e fica no ambiente privado da edge function.
 
 ## Restricao de producao
 
-Chaves `EXPO_PUBLIC_` entram no bundle do app. Por isso, Gemini no app e aceitavel para prototipo, mas nao para producao.
+O app nao guarda mais a chave Gemini. O segredo fica na edge function.
 
-Antes de producao:
+Para producao:
 
-- criar backend/edge function;
+- deployar `supabase/functions/gemini-transform`;
 - mover a API key para ambiente privado;
 - rate limit por usuario;
 - registrar erro/cota;

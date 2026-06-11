@@ -32,6 +32,7 @@ if (missing.length) {
 }
 
 const runId = `rls_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const anon = createSupabaseClient();
 const common = createSupabaseClient();
 const owner = createSupabaseClient();
 
@@ -89,6 +90,14 @@ try {
 
   await expectAllowed('common can read catalog card', () =>
     common.from('snapquest_effect_cards').select('id').eq('id', artifacts.ownerCatalogCardId).eq('is_catalog', true).single()
+  );
+
+  await expectAllowed('anon can read catalog fighter', () =>
+    anon.from('snapquest_fighters').select('id').eq('id', artifacts.ownerCatalogFighterId).eq('is_catalog', true).single()
+  );
+
+  await expectAllowed('anon can read catalog card', () =>
+    anon.from('snapquest_effect_cards').select('id').eq('id', artifacts.ownerCatalogCardId).eq('is_catalog', true).single()
   );
 
   await expectDenied('common cannot update catalog fighter', () =>

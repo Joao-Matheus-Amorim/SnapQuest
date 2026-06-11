@@ -15,11 +15,12 @@ foto -> captura bruta -> Fighter/Carta -> inventario -> batalha -> jogar de novo
 - MVP web preservado.
 - App mobile Expo.
 - Captura por camera.
-- Galeria no modo dono.
+- Galeria no modo admin de catalogo.
 - Inventario local.
 - Catalogo com fallback seed.
 - Supabase Auth.
-- Sync inicial com Supabase.
+- Sync inicial com Supabase e estado visivel na home.
+- Perfil `snapquest_profiles` garantido no primeiro login.
 - 4 classes de Fighter.
 - 8 categorias de Carta.
 - Gemini opcional para melhorar nome/golpe/vacilo.
@@ -32,8 +33,6 @@ foto -> captura bruta -> Fighter/Carta -> inventario -> batalha -> jogar de novo
 - Multiplayer online.
 - Loja.
 - Monetizacao.
-- Supabase Storage em producao.
-- Backend/edge function para Gemini.
 - XP/level completo.
 - Conquistas completas.
 - Diario de aventuras.
@@ -57,3 +56,4 @@ foto -> captura bruta -> Fighter/Carta -> inventario -> batalha -> jogar de novo
 - `npm run build` passa quando web for afetado.
 - `npx expo install --check` passa quando mobile/deps forem afetados.
 - Riscos e dividas conhecidos estao documentados.
+- Login, sync e catalogo passam em validacao local antes de qualquer declaracao de pronto.

@@ -47,7 +47,7 @@ transformCapturedPhoto({
 
 Status:
 
-- Gemini real opcional;
+- Gemini via backend/edge function;
 - fallback offline deterministico;
 - usado por `src/app/inventory.tsx`;
 - documentado em `docs/gemini-transform-flow.md`.
@@ -97,14 +97,11 @@ Observacao: o contrato legado atual valida `BÔNUS` e `DEBUFF`.
 
 ## Seguranca
 
-O contrato mobile atual chama Gemini diretamente do app quando `EXPO_PUBLIC_GEMINI_API_KEY` existe.
+O contrato mobile atual chama a edge function `gemini-transform`, que entao conversa com Gemini usando segredo privado.
 
-Isso e aceitavel para prototipo, mas nao para producao.
+Para producao:
 
-Antes de producao:
-
-- mover chamada Gemini para backend/edge function;
-- guardar chave em env privada;
+- guardar chave em env privada da edge function;
 - aplicar rate limit;
 - registrar falhas;
 - preservar fallback offline.

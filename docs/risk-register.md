@@ -12,12 +12,12 @@ Ultima atualizacao: 2026-06-10.
 | R-006 | Documentacao prometer recurso nao entregue | Alto | Media | `current-state.md` como fonte documental e matriz de rastreabilidade | Em mitigacao |
 | R-007 | Arquivos temporarios entrarem no repo | Medio | Media | Revisao de diff e `.gitignore` | Aberto |
 | R-008 | Contrato de catalogo precisava de schema Supabase | Critico | Alta | Fechado no schema versionado e aplicado manualmente em 2026-06-10 | Fechado |
-| R-009 | Chave Gemini publica no app ser extraida do bundle | Alto | Alta em producao | Migrar chamada para backend/edge antes de producao | Aberto |
-| R-010 | Fotos em `photo_data_url` degradarem performance/custo | Alto | Media | Migrar para Supabase Storage | Aberto |
+| R-009 | Edge Function Gemini ficar sem secrets validos ou degradar no ambiente alvo | Alto | Media | Revisar `GEMINI_API_KEY` e `GEMINI_MODELS`, manter fallback no app e validar logs operacionais | Aberto |
+| R-010 | Rollout de Storage nao ser aplicado integralmente no Supabase alvo | Alto | Media | Aplicar `supabase/schema.sql`, validar upload/leitura/delete com usuario comum e dono | Aberto |
 | R-011 | Build/typecheck passar enquanto gameplay quebra | Alto | Baixa | `npm run test:core` cobre core MVP: balance, factories, cartas e batalha avancada | Em mitigacao |
 | R-012 | Catalogo compartilhado conflitar com RLS por usuario | Alto | Baixa | Fechado com `npm run test:rls:catalog` no Supabase real em 2026-06-10 | Fechado |
 | R-013 | Logout apagar deck local que ainda nao sincronizou | Alto | Media | Validar sync/merge e UX de aviso antes de producao | Aberto |
-| R-014 | Dependencias com vulnerabilidades moderadas em audit | Medio | Alta | Revisar upgrade Expo/Vite em PR proprio; evitar `--force` sem validar SDK | Aberto |
+| R-014 | Dependencias com vulnerabilidades moderadas em audit | Medio | Alta | Fechado: `npm audit` zerado com ajuste de `vite`, remocao de `@expo/ngrok` e `overrides` de `postcss`/`uuid` | Fechado |
 
 ## Regras
 

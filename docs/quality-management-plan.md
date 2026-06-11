@@ -35,10 +35,10 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 | Core de jogo | `npm run test:core` cobre balanceamento, factories, sugestao de cartas, compra, cartas, dano, turno, vencedor, critico, falha critica, matchup e reserva | Nao substitui E2E mobile nem validacao RLS real. |
 | RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()`; `npm run test:rls:catalog` passou no Supabase real em 2026-06-10 | Rerodar quando catalogo/RLS mudar. |
 | Mobile storage | `scripts/check.mjs` verifica fallback web/native | Nao testa falhas reais de plataforma. |
-| Gemini/mock | `scripts/check.mjs` verifica contrato basico | Nao testa API real nem cota. |
+| Gemini/mock | `scripts/check.mjs` verifica invoke da edge function e fallback mock | Nao testa API real nem cota. |
 | TypeScript | `npx tsc --noEmit` | Nao substitui teste funcional. |
 | Web build | `npm run build` | Nao valida navegacao manual. |
-| Dependency audit | `npm audit` reporta 16 moderadas | Correcoes sugeridas envolvem upgrades major de Expo/Vite e precisam de PR proprio. |
+| Dependency audit | `npm audit` zerado apos ajuste de `vite`, remocao de `@expo/ngrok` e `overrides` de `postcss`/`uuid` | Rerodar quando dependencias mudarem. |
 
 ## Criterios de qualidade por area
 
@@ -50,7 +50,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 
 ### Mobile
 
-- Deve usar `EXPO_PUBLIC_` para env publica.
+- Deve usar `EXPO_PUBLIC_` apenas para env publica.
 - Deve manter capturas brutas fora do deck ate confirmacao.
 - Deve manter foto persistida antes de remover captura bruta.
 - Deve tratar IA como opcional e recuperavel.
@@ -66,7 +66,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 
 - Resposta do modelo deve ser JSON normalizado.
 - Erro, cota ou modelo inexistente deve cair em fallback.
-- Antes de producao, chamada Gemini deve sair do app e ir para backend/edge function.
+- Edge function Gemini deve manter segredo privado fora do app e preservar fallback quando indisponivel.
 
 ### Documentacao
 
@@ -90,7 +90,6 @@ Um PR esta pronto quando:
 | Prioridade | Melhoria | Motivo |
 |---|---|---|
 | Alta | Rerodar `npm run test:rls:catalog` em mudancas de catalogo/RLS | Evidencia inicial registrada; manter como gate manual por depender de usuarios reais. |
-| Alta | Plano de upgrade para vulnerabilidades moderadas | `npm audit` aponta Expo/Vite/transitivas com upgrades potencialmente quebradores. |
 | Media | Smoke test mobile/web | Prova minima de navegacao principal. |
 | Media | Check automatizado contra `service_role` e `sb_secret_` | Evita vazamento acidental. |
 | Baixa | Snapshot visual de componentes principais | Ajuda apos estabilizar UI. |

@@ -20,6 +20,7 @@ create table if not exists public.snapquest_fighters (
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   photo_data_url text,
+  photo_storage_path text,
   photo_fake text,
   class_key text not null,
   class_name text not null,
@@ -41,6 +42,7 @@ create table if not exists public.snapquest_effect_cards (
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   photo_data_url text,
+  photo_storage_path text,
   photo_fake text,
   category_key text not null,
   category_name text not null,
@@ -60,8 +62,14 @@ add column if not exists can_manage_catalog boolean not null default false;
 alter table public.snapquest_fighters
 add column if not exists is_catalog boolean not null default false;
 
+alter table public.snapquest_fighters
+add column if not exists photo_storage_path text;
+
 alter table public.snapquest_effect_cards
 add column if not exists is_catalog boolean not null default false;
+
+alter table public.snapquest_effect_cards
+add column if not exists photo_storage_path text;
 
 create index if not exists snapquest_fighters_user_id_idx
 on public.snapquest_fighters (user_id);
@@ -74,6 +82,19 @@ on public.snapquest_effect_cards (user_id);
 
 create index if not exists snapquest_effect_cards_catalog_idx
 on public.snapquest_effect_cards (is_catalog, created_at);
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'snapquest-photos',
+  'snapquest-photos',
+  false,
+  10485760,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
 
 create table if not exists public.snapquest_battle_logs (
   id uuid primary key default gen_random_uuid(),
@@ -96,15 +117,22 @@ drop policy if exists "profiles_select_own" on public.snapquest_profiles;
 drop policy if exists "profiles_insert_own" on public.snapquest_profiles;
 drop policy if exists "profiles_update_own" on public.snapquest_profiles;
 drop policy if exists "fighters_select_own" on public.snapquest_fighters;
+drop policy if exists "fighters_select_catalog_public" on public.snapquest_fighters;
 drop policy if exists "fighters_insert_own" on public.snapquest_fighters;
 drop policy if exists "fighters_update_own" on public.snapquest_fighters;
 drop policy if exists "fighters_delete_own" on public.snapquest_fighters;
 drop policy if exists "cards_select_own" on public.snapquest_effect_cards;
+drop policy if exists "cards_select_catalog_public" on public.snapquest_effect_cards;
 drop policy if exists "cards_insert_own" on public.snapquest_effect_cards;
 drop policy if exists "cards_update_own" on public.snapquest_effect_cards;
 drop policy if exists "cards_delete_own" on public.snapquest_effect_cards;
 drop policy if exists "battle_logs_select_own" on public.snapquest_battle_logs;
 drop policy if exists "battle_logs_insert_own" on public.snapquest_battle_logs;
+drop policy if exists "snapquest_photos_select_authenticated" on storage.objects;
+drop policy if exists "snapquest_photos_select_catalog_public" on storage.objects;
+drop policy if exists "snapquest_photos_insert_authenticated" on storage.objects;
+drop policy if exists "snapquest_photos_update_authenticated" on storage.objects;
+drop policy if exists "snapquest_photos_delete_authenticated" on storage.objects;
 
 create policy "profiles_select_own"
 on public.snapquest_profiles for select
@@ -153,8 +181,14 @@ create policy "fighters_select_own"
 on public.snapquest_fighters for select
 to authenticated
 using (
+  (select auth.uid()) = user_id
+);
+
+create policy "fighters_select_catalog_public"
+on public.snapquest_fighters for select
+to anon, authenticated
+using (
   is_catalog = true
-  or (select auth.uid()) = user_id
 );
 
 create policy "fighters_insert_own"
@@ -235,8 +269,14 @@ create policy "cards_select_own"
 on public.snapquest_effect_cards for select
 to authenticated
 using (
+  (select auth.uid()) = user_id
+);
+
+create policy "cards_select_catalog_public"
+on public.snapquest_effect_cards for select
+to anon, authenticated
+using (
   is_catalog = true
-  or (select auth.uid()) = user_id
 );
 
 create policy "cards_insert_own"
@@ -322,6 +362,107 @@ create policy "battle_logs_insert_own"
 on public.snapquest_battle_logs for insert
 to authenticated
 with check ((select auth.uid()) = user_id);
+
+create policy "snapquest_photos_select_authenticated"
+on storage.objects for select
+to authenticated
+using (
+  bucket_id = 'snapquest-photos'
+  and (storage.foldername(name))[1] = 'users'
+  and (storage.foldername(name))[2] = ((select auth.uid())::text)
+);
+
+create policy "snapquest_photos_select_catalog_public"
+on storage.objects for select
+to anon, authenticated
+using (
+  bucket_id = 'snapquest-photos'
+  and (storage.foldername(name))[1] = 'catalog'
+);
+
+create policy "snapquest_photos_insert_authenticated"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'snapquest-photos'
+  and (
+    (
+      (storage.foldername(name))[1] = 'users'
+      and (storage.foldername(name))[2] = ((select auth.uid())::text)
+    )
+    or (
+      (storage.foldername(name))[1] = 'catalog'
+      and exists (
+        select 1
+        from public.snapquest_profiles
+        where id = (select auth.uid())
+          and can_manage_catalog = true
+      )
+    )
+  )
+);
+
+create policy "snapquest_photos_update_authenticated"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'snapquest-photos'
+  and (
+    (
+      (storage.foldername(name))[1] = 'users'
+      and (storage.foldername(name))[2] = ((select auth.uid())::text)
+    )
+    or (
+      (storage.foldername(name))[1] = 'catalog'
+      and exists (
+        select 1
+        from public.snapquest_profiles
+        where id = (select auth.uid())
+          and can_manage_catalog = true
+      )
+    )
+  )
+)
+with check (
+  bucket_id = 'snapquest-photos'
+  and (
+    (
+      (storage.foldername(name))[1] = 'users'
+      and (storage.foldername(name))[2] = ((select auth.uid())::text)
+    )
+    or (
+      (storage.foldername(name))[1] = 'catalog'
+      and exists (
+        select 1
+        from public.snapquest_profiles
+        where id = (select auth.uid())
+          and can_manage_catalog = true
+      )
+    )
+  )
+);
+
+create policy "snapquest_photos_delete_authenticated"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'snapquest-photos'
+  and (
+    (
+      (storage.foldername(name))[1] = 'users'
+      and (storage.foldername(name))[2] = ((select auth.uid())::text)
+    )
+    or (
+      (storage.foldername(name))[1] = 'catalog'
+      and exists (
+        select 1
+        from public.snapquest_profiles
+        where id = (select auth.uid())
+          and can_manage_catalog = true
+      )
+    )
+  )
+);
 
 create or replace function public.snapquest_touch_updated_at()
 returns trigger

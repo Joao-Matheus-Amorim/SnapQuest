@@ -1,4 +1,5 @@
 import { getSupabaseClient, getUser } from './supabaseClient.js';
+import { resolvePhotoUrls, uploadPhotoToCloud } from './photoCloudStorage.js';
 
 export async function loadCloudInventory() {
   const client = getSupabaseClient();
@@ -13,9 +14,14 @@ export async function loadCloudInventory() {
   if (fightersResult.error) throw fightersResult.error;
   if (cardsResult.error) throw cardsResult.error;
 
+  const photoUrls = await resolvePhotoUrls(client, [
+    ...fightersResult.data.map((row) => row.photo_storage_path),
+    ...cardsResult.data.map((row) => row.photo_storage_path),
+  ]);
+
   return {
-    fighters: fightersResult.data.map(fromDbFighter),
-    cards: cardsResult.data.map(fromDbCard),
+    fighters: fightersResult.data.map((row) => fromDbFighter(row, photoUrls)),
+    cards: cardsResult.data.map((row) => fromDbCard(row, photoUrls)),
   };
 }
 
@@ -24,8 +30,8 @@ export async function upsertCloudInventory({ fighters, cards }) {
   const user = await getUser();
   if (!client || !user) throw new Error('Entre na conta antes de sincronizar.');
 
-  const fighterRows = fighters.map(fighter => toDbFighter(fighter, user.id));
-  const cardRows = cards.map(card => toDbCard(card, user.id));
+  const fighterRows = await Promise.all(fighters.map(fighter => toDbFighter(client, fighter, user.id)));
+  const cardRows = await Promise.all(cards.map(card => toDbCard(client, card, user.id)));
 
   if (fighterRows.length) {
     const { error } = await client.from('snapquest_fighters').upsert(fighterRows, { onConflict: 'id' });
@@ -40,12 +46,22 @@ export async function upsertCloudInventory({ fighters, cards }) {
   return loadCloudInventory();
 }
 
-function toDbFighter(fighter, userId) {
+async function toDbFighter(client, fighter, userId) {
+  const uploadedPhoto = await uploadPhotoToCloud(client, {
+    uri: fighter.foto,
+    itemId: fighter.id,
+    entity: 'fighters',
+    userId,
+    isCatalog: Boolean(fighter.is_catalog),
+    existingPath: fighter.foto_storage_path || null,
+  });
+
   return {
     id: fighter.id,
     user_id: userId,
     name: fighter.nome,
-    photo_data_url: fighter.foto,
+    photo_data_url: null,
+    photo_storage_path: uploadedPhoto.path,
     photo_fake: fighter.foto_fake,
     class_key: fighter.class_key,
     class_name: fighter.classe,
@@ -61,12 +77,14 @@ function toDbFighter(fighter, userId) {
   };
 }
 
-function fromDbFighter(row) {
+function fromDbFighter(row, photoUrls = new Map()) {
+  const storagePath = row.photo_storage_path || null;
   return {
     id: row.id,
     type: 'fighter',
     nome: row.name,
-    foto: row.photo_data_url,
+    foto: storagePath ? photoUrls.get(storagePath) || null : row.photo_data_url,
+    foto_storage_path: storagePath,
     foto_fake: row.photo_fake,
     class_key: row.class_key,
     classe: row.class_name,
@@ -82,12 +100,22 @@ function fromDbFighter(row) {
   };
 }
 
-function toDbCard(card, userId) {
+async function toDbCard(client, card, userId) {
+  const uploadedPhoto = await uploadPhotoToCloud(client, {
+    uri: card.foto,
+    itemId: card.id,
+    entity: 'cards',
+    userId,
+    isCatalog: Boolean(card.is_catalog),
+    existingPath: card.foto_storage_path || null,
+  });
+
   return {
     id: card.id,
     user_id: userId,
     name: card.nome_efeito,
-    photo_data_url: card.foto,
+    photo_data_url: null,
+    photo_storage_path: uploadedPhoto.path,
     photo_fake: card.foto_fake,
     category_key: card.categoria_key,
     category_name: card.categoria,
@@ -100,12 +128,14 @@ function toDbCard(card, userId) {
   };
 }
 
-function fromDbCard(row) {
+function fromDbCard(row, photoUrls = new Map()) {
+  const storagePath = row.photo_storage_path || null;
   return {
     id: row.id,
     type: 'effect_card',
     nome_efeito: row.name,
-    foto: row.photo_data_url,
+    foto: storagePath ? photoUrls.get(storagePath) || null : row.photo_data_url,
+    foto_storage_path: storagePath,
     foto_fake: row.photo_fake,
     categoria_key: row.category_key,
     categoria: row.category_name,
