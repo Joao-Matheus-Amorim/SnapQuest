@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { clearPlayerDeck } from "./usePlayerDeck";
@@ -27,7 +27,9 @@ export type AuthState = {
   refreshProfile: () => Promise<void>;
 };
 
-export function useAuth(): AuthState {
+const AuthContext = createContext<AuthState | null>(null);
+
+function useAuthState(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<SnapQuestProfile | null>(null);
@@ -57,22 +59,29 @@ export function useAuth(): AuthState {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     supabase.auth.getSession().then(async ({ data }) => {
       const nextUser = data.session?.user ?? null;
+      if (!isMounted) return;
       setUser(nextUser);
       await hydrateProfile(nextUser);
-      setLoading(false);
+      if (isMounted) setLoading(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const nextUser = session?.user ?? null;
+      if (!isMounted) return;
       setUser(nextUser);
       await hydrateProfile(nextUser);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [hydrateProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -117,7 +126,7 @@ export function useAuth(): AuthState {
     await clearPlayerDeck();
   }, []);
 
-  return {
+  return useMemo(() => ({
     user,
     loading,
     profile,
@@ -128,5 +137,28 @@ export function useAuth(): AuthState {
     signUp,
     signOut,
     refreshProfile,
-  };
+  }), [
+    user,
+    loading,
+    profile,
+    profileLoading,
+    profileError,
+    signIn,
+    signUp,
+    signOut,
+    refreshProfile,
+  ]);
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const auth = useAuthState();
+  return createElement(AuthContext.Provider, { value: auth }, children);
+}
+
+export function useAuth(): AuthState {
+  const auth = useContext(AuthContext);
+  if (!auth) {
+    throw new Error("useAuth precisa estar dentro de AuthProvider.");
+  }
+  return auth;
 }

@@ -26,10 +26,12 @@ export async function loadCloudDeck(userId: string): Promise<{ fighters: Fighter
 }
 
 export async function loadCatalog(): Promise<{ fighters: Fighter[]; cards: EffectCard[] }> {
-  const [{ data: fRows }, { data: cRows }] = await Promise.all([
+  const [{ data: fRows, error: fErr }, { data: cRows, error: cErr }] = await Promise.all([
     supabase.from("snapquest_fighters").select("*").eq("is_catalog", true).order("created_at", { ascending: true }),
     supabase.from("snapquest_effect_cards").select("*").eq("is_catalog", true).order("created_at", { ascending: true }),
   ]);
+  if (fErr) throw fErr;
+  if (cErr) throw cErr;
 
   const photoUrls = await resolvePhotoUrls([
     ...collectPhotoPaths(fRows),

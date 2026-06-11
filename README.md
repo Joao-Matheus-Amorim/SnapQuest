@@ -16,7 +16,7 @@ Data de referencia: 2026-06-10.
 | MVP web | Implementado | Valida o loop base e preserva a entrada `index.html`. |
 | Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; LCK e SPD tem efeito completo na batalha local. |
 | Mobile Expo | Implementado em MVP | Home, login, camera/galeria, inventario, filtros, exclusao, revelacao e batalha local. |
-| Supabase Auth | Implementado no mobile | Login/cadastro com perfil garantido, guest mode e status de sync/confirmacao. |
+| Supabase Auth | Implementado no mobile | Login/cadastro com perfil garantido, provider unico de sessao, guest mode e status de sync/confirmacao. |
 | Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog`, controle por `can_manage_catalog`, leitura publica anonima e validacao real via `test:rls:catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |
 | Gemini | Implementado com fallback | IA opcional sob demanda; fallback deterministico quando chave/cota/modelo falha. |
@@ -38,7 +38,7 @@ Camera/Galeria
 ```txt
 Inventario
   -> Deck pessoal local/cloud
-  -> Catalogo cloud ou seed local
+  -> Catalogo cloud ou seed local com estado explicito de fallback/erro
   -> Filtros por tipo e raridade
   -> Batalha local se houver minimo de Fighters e Cartas
 ```
@@ -47,7 +47,8 @@ Inventario
 Conta
   -> Entrar ou criar conta
   -> Garantir linha em snapquest_profiles
-  -> Sincronizar deck cloud
+  -> AuthProvider unico hidrata sessao/perfil
+  -> Sincronizar deck cloud sem duplicar listener de sessao
   -> Exibir estado de sync e permissao de catalogo na home
 ```
 

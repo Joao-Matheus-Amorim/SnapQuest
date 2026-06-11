@@ -256,6 +256,12 @@ export default function InventoryScreen() {
         <FilterTab label="Catalogo" active={inventoryView === "catalog"} onPress={() => setInventoryView("catalog")} />
       </View>
 
+      {isCatalogView && inv.catalogStatus !== "ready" && inv.catalogErrorMessage ? (
+        <View style={[s.catalogNotice, inv.catalogStatus === "error" && s.catalogNoticeError]}>
+          <Text style={s.catalogNoticeText}>{inv.catalogErrorMessage}</Text>
+        </View>
+      ) : null}
+
       {raw.capturedPhotos.length > 0 && (
         <View style={s.section}>
           <Text style={s.sectionTitle}>Pendentes</Text>
@@ -375,6 +381,20 @@ const s = StyleSheet.create({
   sectionHeader: { marginBottom: 12 },
   sectionMeta: { color: "rgba(255,255,255,.65)", fontSize: 12, marginTop: -6, marginBottom: 4 },
   viewTabs: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  catalogNotice: {
+    borderWidth: 1,
+    borderColor: "rgba(245,166,35,.35)",
+    backgroundColor: "rgba(245,166,35,.08)",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  catalogNoticeError: {
+    borderColor: "rgba(233,69,96,.55)",
+    backgroundColor: "rgba(233,69,96,.1)",
+  },
+  catalogNoticeText: { color: "rgba(255,255,255,.78)", fontSize: 12, lineHeight: 17 },
   typeTabs: { flexDirection: "row", gap: 8, marginBottom: 12, flexWrap: "wrap" },
   typeTab: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,

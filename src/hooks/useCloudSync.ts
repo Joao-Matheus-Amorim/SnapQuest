@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { useAuth } from "./useAuth";
 import { loadCloudDeck } from "../services/cloudSync";
@@ -22,6 +22,7 @@ let cloudSyncSnapshot: CloudSyncSnapshot = {
 
 let inFlightUserId: string | null = null;
 let inFlightPromise: Promise<void> | null = null;
+let lastSyncedUserId: string | null = null;
 
 function emitCloudSync(snapshot: CloudSyncSnapshot) {
   cloudSyncSnapshot = snapshot;
@@ -43,6 +44,7 @@ async function runCloudSync(user: User) {
   inFlightPromise = loadCloudDeck(user.id)
     .then(async ({ fighters, cards }) => {
       await mergeDeckFromCloud(fighters, cards);
+      lastSyncedUserId = user.id;
       emitCloudSync({
         status: "synced",
         message: "Deck sincronizado com a nuvem.",
@@ -66,7 +68,6 @@ async function runCloudSync(user: User) {
 
 export function useCloudSync() {
   const { user } = useAuth();
-  const lastUserId = useRef<string | null>(null);
   const [snapshot, setSnapshot] = useState<CloudSyncSnapshot>(cloudSyncSnapshot);
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export function useCloudSync() {
 
   useEffect(() => {
     if (!user) {
-      lastUserId.current = null;
+      lastSyncedUserId = null;
       emitCloudSync({
         status: "idle",
         message: "Deck local ativo.",
@@ -92,8 +93,7 @@ export function useCloudSync() {
       return;
     }
 
-    if (user.id === lastUserId.current) return;
-    lastUserId.current = user.id;
+    if (user.id === lastSyncedUserId || user.id === inFlightUserId) return;
 
     void runCloudSync(user);
   }, [user]);

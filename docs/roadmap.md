@@ -59,6 +59,7 @@ Entregas:
 - Persistencia de foto final em arquivo permanente.
 - Inventario com filtros.
 - Catalogo cloud com fallback seed.
+- Estado explicito de catalogo cloud/seed/erro para a UI.
 - Modo dono para catalogo via galeria.
 
 Validacao operacional:
@@ -84,6 +85,7 @@ Divida:
 - TD-008 fechado: workflow duplicado saiu do repo e `ci.yml` virou a unica pipeline de CI.
 - TD-005 fechado: `App.tsx` legado saiu do repo e o entry mobile ficou consolidado em `expo-router/entry`.
 - TD-004 fechado: conta mobile agora garante perfil, diferencia confirmacao de email, mostra estado de sync e usa permissao real de catalogo.
+- Base UX de conta/catalogo reforcada: `AuthProvider` unico no layout e fallback de catalogo visivel para a UI.
 - TD-002 fechado: cobertura automatizada do core MVP esta completa para balance, factories, sugestao de cartas e batalha local.
 - TD-003 fechado: regras de LCK/SPD estao documentadas em `battle-rules.md`, implementadas no core e expostas na UI.
 

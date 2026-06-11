@@ -41,6 +41,7 @@ O repositorio possui:
 - Expo Router em `src/app/`.
 - Home com contadores reais.
 - Login/cadastro Supabase com mensagens de sessao e confirmacao.
+- `AuthProvider` unico no layout para hidratar sessao/perfil sem duplicar listeners por tela.
 - Logout limpando deck local.
 - Perfil `snapquest_profiles` garantido no primeiro login.
 - Captura por camera.
@@ -56,6 +57,7 @@ O repositorio possui:
 - Modal de nome antes de criar item.
 - Modal de revelacao.
 - Inventario com deck pessoal + catalogo.
+- Catalogo expõe origem/estado: cloud, seed por vazio/incompleto remoto ou seed por erro remoto.
 - Filtros por tipo e raridade.
 - Exclusao de itens permitidos.
 - Batalha mobile local completa com dois jogadores passando o celular.
@@ -86,8 +88,9 @@ O repositorio possui:
 
 ## Parcial ou em validacao
 
-- Sync cloud/local precisa de smoke mais formal de fluxo completo com usuario real.
+- Sync cloud/local precisa de smoke mais formal de fluxo completo com usuario real, mas a hidratacao de auth/sync ja foi centralizada para evitar duplicidade por tela.
 - Catalogo cloud tem contrato versionado com `is_catalog`; leitura publica anonima, escrita restrita a perfil com `can_manage_catalog = true`.
+- Falha, vazio ou incompletude do catalogo remoto nao fica mais invisivel: o app preserva seed local para jogabilidade e expõe status/mensagem para a UI.
 - Gemini sai pelo endpoint `gemini-transform` no Supabase Edge Functions; fallback offline continua quando a edge falha.
 - Fotos novas usam `photo_storage_path` em bucket privado `snapquest-photos`, com signed URL para leitura e `photo_data_url` apenas como fallback legado.
 - Cerimonia visual de transformacao ainda nao e a experiencia final desejada.

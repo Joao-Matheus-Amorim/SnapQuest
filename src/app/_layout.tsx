@@ -1,21 +1,29 @@
-﻿import { Stack } from "expo-router";
+import { Stack } from "expo-router";
+import { AuthProvider } from "../hooks/useAuth";
 import { useCloudSync } from "../hooks/useCloudSync";
 
-export default function RootLayout() {
+function CloudSyncBridge() {
   useCloudSync();
+  return null;
+}
+
+export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: "#1a1a2e" },
-        headerTintColor: "#f5a623",
-        contentStyle: { backgroundColor: "#1a1a2e" },
-      }}
-    >
-      <Stack.Screen name="index" options={{ title: "SnapQuest" }} />
-      <Stack.Screen name="camera" options={{ title: "Novo Fighter" }} />
-      <Stack.Screen name="inventory" options={{ title: "Inventário" }} />
-      <Stack.Screen name="battle" options={{ title: "Batalha" }} />
-      <Stack.Screen name="login" options={{ title: "Conta" }} />
-    </Stack>
+    <AuthProvider>
+      <CloudSyncBridge />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: "#1a1a2e" },
+          headerTintColor: "#f5a623",
+          contentStyle: { backgroundColor: "#1a1a2e" },
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: "SnapQuest" }} />
+        <Stack.Screen name="camera" options={{ title: "Novo Fighter" }} />
+        <Stack.Screen name="inventory" options={{ title: "Inventario" }} />
+        <Stack.Screen name="battle" options={{ title: "Batalha" }} />
+        <Stack.Screen name="login" options={{ title: "Conta" }} />
+      </Stack>
+    </AuthProvider>
   );
 }

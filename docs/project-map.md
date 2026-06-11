@@ -24,7 +24,7 @@ Local: `src/app/`
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `_layout.tsx` | Stack do Expo Router. |
+| `_layout.tsx` | Stack do Expo Router, `AuthProvider` global e ponte de sync cloud. |
 | `index.tsx` | Home mobile, contadores, status de conta/sync e entrada para captura. |
 | `camera.tsx` | Camera, galeria no modo admin de catalogo, permissoes e salvamento de captura bruta. |
 | `inventory.tsx` | Pendentes, transformacao, IA opcional, criacao, filtros, exclusao e revelacao. |
@@ -51,11 +51,11 @@ Local: `src/hooks/`
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `useAuth.ts` | Sessao Supabase, perfil `snapquest_profiles`, permissao de catalogo, login, cadastro e logout com limpeza de deck local. |
+| `useAuth.ts` | Provider/hook de sessao Supabase, perfil `snapquest_profiles`, permissao de catalogo, login, cadastro e logout com limpeza de deck local. |
 | `useCapturedPhotos.ts` | Fila local de capturas brutas. |
 | `usePlayerDeck.ts` | Deck pessoal local, merge cloud, criacao e remocao de itens. |
-| `useCatalog.ts` | Catalogo cloud com fallback para seed local. |
-| `useInventory.ts` | Agrega deck pessoal + catalogo e calcula requisitos de batalha. |
+| `useCatalog.ts` | Catalogo cloud com estado de origem e fallback para seed local. |
+| `useInventory.ts` | Agrega deck pessoal + catalogo, estado do catalogo e requisitos de batalha. |
 | `useBattle.ts` | Adapter React para o core de batalha. |
 | `useCloudSync.ts` | Sincronizacao cloud quando aplicavel, com status compartilhado para UI. |
 

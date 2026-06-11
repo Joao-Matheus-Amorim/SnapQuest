@@ -121,3 +121,13 @@ Decisao: corrigir o `npm audit` sem promover upgrade major de Expo nesta frente,
 Motivo: o problema estava concentrado em dependencias web/transitivas e podia ser resolvido sem reabrir a migracao de SDK nem misturar um upgrade estrutural de Expo com outras frentes.
 
 Consequencia: `npm audit` zerou, `expo install --check`, `npx tsc --noEmit`, `npm run check` e `npm run build` permaneceram verdes, e o repositorio ganhou um contrato explicito para evitar regressao dessa correção.
+
+## D-013 - Centralizar auth e tornar fallback de catalogo visivel
+
+Data: 2026-06-10
+
+Decisao: montar `AuthProvider` uma unica vez no layout mobile e expor estado/origem do catalogo (`cloud`, seed por vazio/incompleto remoto ou seed por erro remoto).
+
+Motivo: varias telas liam `useAuth()` diretamente, o que podia duplicar hidratacao de sessao/perfil. Alem disso, erro real de catalogo podia virar seed local sem sinal claro para a UI.
+
+Consequencia: telas continuam usando `useAuth()`, mas agora por contexto global. O sync cloud roda por uma ponte no layout e o inventario pode mostrar aviso discreto quando o catalogo remoto nao esta sendo usado.
