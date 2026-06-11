@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { Alert, Platform, View, Text, Pressable, StyleSheet, Image } from "react-native";
+import { Alert, Platform, View, Text, StyleSheet, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystemLegacy from "expo-file-system/legacy";
@@ -8,6 +8,7 @@ import { Paths } from "expo-file-system";
 import { useCapturedPhotos } from "../hooks/useCapturedPhotos";
 import { useAuth } from "../hooks/useAuth";
 import { BottomNav, BOTTOM_NAV_HEIGHT } from "../components/BottomNav";
+import { PressableScale } from "../components/motion/PressableScale";
 
 function isRenderableUri(uri: string) {
   return uri.startsWith("file://") || uri.startsWith("http");
@@ -185,14 +186,14 @@ export default function CameraScreen() {
           </View>
         </View>
 
-        <Pressable style={styles.button} onPress={pickFromCamera} disabled={isSaving}>
+        <PressableScale style={styles.button} onPress={pickFromCamera} disabled={isSaving} haptic="select">
           <Text style={styles.buttonText}>{isSaving ? "Canalizando..." : "Abrir camera"}</Text>
-        </Pressable>
+        </PressableScale>
 
         {ownerMode && (
-          <Pressable style={[styles.button, styles.galleryButton]} onPress={pickFromGallery} disabled={isSaving}>
+          <PressableScale style={[styles.button, styles.galleryButton]} onPress={pickFromGallery} disabled={isSaving} haptic="tap">
             <Text style={styles.buttonText}>Importar para catalogo</Text>
-          </Pressable>
+          </PressableScale>
         )}
       </View>
 
