@@ -88,7 +88,7 @@ export function rollEffect(random = Math.random) {
   const polaridade = polarityRoll <= 5 ? 'DEBUFF' : 'BÔNUS';
 
   const attrRoll = Math.floor(random() * 100) + 1;
-  const atributo = attrRoll <= 25 ? 'ATK' : attrRoll <= 50 ? 'DEF' : attrRoll <= 75 ? 'LCK' : 'SPD';
+  const atributo = attrRoll <= 20 ? 'ATK' : attrRoll <= 40 ? 'DEF' : attrRoll <= 60 ? 'LCK' : attrRoll <= 80 ? 'SPD' : 'HP';
 
   const intensidade = rollRarity(random);
   const raridade = RARITY_TIER_LABELS[intensidade];

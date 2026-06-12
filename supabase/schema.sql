@@ -25,6 +25,9 @@ create table if not exists public.snapquest_fighters (
   class_key text not null,
   class_name text not null,
   icon text,
+  description text,
+  signature_move text,
+  signature_miss text,
   hp integer not null check (hp > 0),
   atk integer not null check (atk >= 0),
   def integer not null check (def >= 0),
@@ -47,6 +50,7 @@ create table if not exists public.snapquest_effect_cards (
   category_key text not null,
   category_name text not null,
   icon text,
+  description text,
   polarity text not null check (polarity in ('BÔNUS', 'DEBUFF')),
   attribute text not null check (attribute in ('ATK', 'DEF', 'LCK', 'SPD', 'HP', 'MANA')),
   intensity integer not null check (intensity between 1 and 5),
@@ -65,11 +69,23 @@ add column if not exists is_catalog boolean not null default false;
 alter table public.snapquest_fighters
 add column if not exists photo_storage_path text;
 
+alter table public.snapquest_fighters
+add column if not exists description text;
+
+alter table public.snapquest_fighters
+add column if not exists signature_move text;
+
+alter table public.snapquest_fighters
+add column if not exists signature_miss text;
+
 alter table public.snapquest_effect_cards
 add column if not exists is_catalog boolean not null default false;
 
 alter table public.snapquest_effect_cards
 add column if not exists photo_storage_path text;
+
+alter table public.snapquest_effect_cards
+add column if not exists description text;
 
 create index if not exists snapquest_fighters_user_id_idx
 on public.snapquest_fighters (user_id);

@@ -166,6 +166,24 @@ test('useSelectedCard applies debuff to enemy fighter', () => {
   assert.equal(battle.players[1].fighters[0].buffs.def, -3);
 });
 
+test('useSelectedCard applies HP cards to current and max health', () => {
+  const battle = makeBattle();
+  battle.turn = 0;
+  const target = battle.players[0].fighters[0];
+  target.current_hp = 4;
+
+  battle.players[0].hand = [card({ id: 'manual-hp', polaridade: 'BÃ”NUS', atributo: 'HP', intensidade: 2 })];
+  battle.selectedCardId = 'manual-hp';
+  battle.selectedOwnId = 'p1-a';
+
+  const result = useSelectedCard(battle);
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(target.max_hp, 12);
+  assert.equal(target.current_hp, 6);
+  assert.equal(target.buffs.hp, 2);
+});
+
 test('effective battle stats include buffs and never go below zero', () => {
   const battle = makeBattle();
   const target = battle.players[0].fighters[0];
@@ -183,7 +201,7 @@ test('effective battle stats include buffs and never go below zero', () => {
     lck: 4,
     spd: 0,
   });
-  assert.throws(() => effectiveStat(target, 'hp'), /Atributo de batalha invalido/);
+  assert.equal(effectiveStat(target, 'hp'), 10);
 });
 
 test('attackSelectedTarget requires draw, damages target, and passes turn', () => {

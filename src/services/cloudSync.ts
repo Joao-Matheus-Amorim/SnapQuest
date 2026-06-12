@@ -75,6 +75,7 @@ export function fromDbFighter(row: DbRow, photoUrls: Map<string, string> = new M
     class_key: row.class_key,
     classe: row.class_name,
     icon: row.icon,
+    descricao: (row.description as string | null | undefined) ?? null,
     hp: row.hp,
     atk: row.atk,
     def: row.def,
@@ -100,6 +101,7 @@ export function fromDbCard(row: DbRow, photoUrls: Map<string, string> = new Map(
     categoria_key: row.category_key,
     categoria: row.category_name,
     icon: row.icon,
+    descricao: (row.description as string | null | undefined) ?? null,
     polaridade: row.polarity,
     atributo: row.attribute,
     intensidade: row.intensity,
@@ -121,6 +123,9 @@ export async function syncFighterToCloud(fighter: Fighter, userId: string): Prom
   const { error } = await supabase.from("snapquest_fighters").upsert(
     { id: fighter.id, user_id: userId, name: fighter.nome, photo_data_url: null, photo_storage_path: uploadedPhoto.path,
       photo_fake: fighter.foto_fake ?? null, class_key: fighter.class_key, class_name: fighter.classe,
+      description: fighter.descricao?.trim() || null,
+      signature_move: fighter.golpe?.trim() || null,
+      signature_miss: fighter.erro?.trim() || null,
       icon: fighter.icon, hp: fighter.hp, atk: fighter.atk, def: fighter.def, lck: fighter.lck,
       spd: fighter.spd, bonus_attribute: fighter.bonus_atributo, bonus_intensity: fighter.bonus_intensidade,
       is_catalog: false },
@@ -142,6 +147,7 @@ export async function syncCardToCloud(card: EffectCard, userId: string): Promise
   const { error } = await supabase.from("snapquest_effect_cards").upsert(
     { id: card.id, user_id: userId, name: card.nome_efeito, photo_data_url: null, photo_storage_path: uploadedPhoto.path,
       photo_fake: card.foto_fake ?? null, category_key: card.categoria_key, category_name: card.categoria,
+      description: card.descricao?.trim() || null,
       icon: card.icon, polarity: card.polaridade, attribute: card.atributo, intensity: card.intensidade,
       rarity: card.raridade, is_catalog: false },
     { onConflict: "id" }
@@ -162,6 +168,9 @@ export async function syncCatalogFighter(fighter: Fighter, userId: string): Prom
   const { error } = await supabase.from("snapquest_fighters").upsert(
     { id: fighter.id, user_id: userId, name: fighter.nome, photo_data_url: null, photo_storage_path: uploadedPhoto.path,
       photo_fake: fighter.foto_fake ?? null, class_key: fighter.class_key, class_name: fighter.classe,
+      description: fighter.descricao?.trim() || null,
+      signature_move: fighter.golpe?.trim() || null,
+      signature_miss: fighter.erro?.trim() || null,
       icon: fighter.icon, hp: fighter.hp, atk: fighter.atk, def: fighter.def, lck: fighter.lck,
       spd: fighter.spd, bonus_attribute: fighter.bonus_atributo, bonus_intensity: fighter.bonus_intensidade,
       is_catalog: true },
@@ -211,6 +220,7 @@ export async function syncCatalogCard(card: EffectCard, userId: string): Promise
   const { error } = await supabase.from("snapquest_effect_cards").upsert(
     { id: card.id, user_id: userId, name: card.nome_efeito, photo_data_url: null, photo_storage_path: uploadedPhoto.path,
       photo_fake: card.foto_fake ?? null, category_key: card.categoria_key, category_name: card.categoria,
+      description: card.descricao?.trim() || null,
       icon: card.icon, polarity: card.polaridade, attribute: card.atributo, intensity: card.intensidade,
       rarity: card.raridade, is_catalog: true },
     { onConflict: "id" }

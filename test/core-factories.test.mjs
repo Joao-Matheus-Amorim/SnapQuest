@@ -27,6 +27,7 @@ test('createFighter trims names, applies rarity bonus and preserves AI attack te
     photo: 'file://photo.jpg',
     attackName: '  Corte Final  ',
     missName: '  caiu sozinho  ',
+    description: '  Heroi guarda uma lenda propria escrita pela IA.  ',
   }));
 
   assert.equal(fighter.nome, 'Heroi');
@@ -38,6 +39,7 @@ test('createFighter trims names, applies rarity bonus and preserves AI attack te
   assert.equal(fighter.bonus_intensidade, 5);
   assert.equal(fighter.golpe, 'Corte Final');
   assert.equal(fighter.erro, 'caiu sozinho');
+  assert.equal(fighter.descricao, 'Heroi guarda uma lenda propria escrita pela IA.');
   assert.match(fighter.id, /\w+/);
 });
 
@@ -58,9 +60,28 @@ test('createEffectCard trims name and applies rolled effect metadata', () => {
   assert.equal(card.foto, 'file://card.jpg');
   assert.equal(card.foto_storage_path, null);
   assert.equal(card.polaridade, 'DEBUFF');
-  assert.equal(card.atributo, 'SPD');
+  assert.equal(card.atributo, 'HP');
   assert.equal(card.intensidade, 5);
   assert.equal(card.raridade, '🟡 Lendário');
+});
+
+test('createEffectCard preserves AI effect metadata when provided', () => {
+  const card = withRandomSequence([0.9, 0, 0], () => createEffectCard({
+    categoryKey: 'liquido',
+    name: '  Fonte no Copo  ',
+    photo: 'file://water.jpg',
+    polarity: 'BÔNUS',
+    attribute: 'HP',
+    intensity: 2,
+    description: 'Este copo d agua foi retirado da Fonte da Juventude; aumenta 2 de HP.',
+  }));
+
+  assert.equal(card.nome_efeito, 'Fonte no Copo');
+  assert.equal(card.categoria_key, 'liquido');
+  assert.equal(card.polaridade, 'BÔNUS');
+  assert.equal(card.atributo, 'HP');
+  assert.equal(card.intensidade, 2);
+  assert.equal(card.descricao, 'Este copo d agua foi retirado da Fonte da Juventude; aumenta 2 de HP.');
 });
 
 test('seed factories provide battle-ready minimum inventories', () => {

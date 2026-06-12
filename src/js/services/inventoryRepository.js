@@ -66,6 +66,9 @@ async function toDbFighter(client, fighter, userId) {
     class_key: fighter.class_key,
     class_name: fighter.classe,
     icon: fighter.icon,
+    description: fighter.descricao || null,
+    signature_move: fighter.golpe || null,
+    signature_miss: fighter.erro || null,
     hp: fighter.hp,
     atk: fighter.atk,
     def: fighter.def,
@@ -96,6 +99,9 @@ function fromDbFighter(row, photoUrls = new Map()) {
     spd: row.spd,
     bonus_atributo: row.bonus_attribute,
     bonus_intensidade: row.bonus_intensity,
+    golpe: row.signature_move || undefined,
+    erro: row.signature_miss || undefined,
+    descricao: row.description || null,
     criado_em: row.created_at,
   };
 }
@@ -120,6 +126,7 @@ async function toDbCard(client, card, userId) {
     category_key: card.categoria_key,
     category_name: card.categoria,
     icon: card.icon,
+    description: card.descricao || null,
     polarity: card.polaridade,
     attribute: card.atributo,
     intensity: card.intensidade,
@@ -144,6 +151,7 @@ function fromDbCard(row, photoUrls = new Map()) {
     atributo: row.attribute,
     intensidade: row.intensity,
     raridade: row.rarity,
+    descricao: row.description || null,
     criado_em: row.created_at,
   };
 }

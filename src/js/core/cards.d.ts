@@ -11,6 +11,7 @@ export type EffectCard = {
   atributo: 'ATK' | 'DEF' | 'LCK' | 'SPD' | string;
   intensidade: number;
   raridade: string;
+  descricao?: string | null;
   nome_efeito: string;
   criado_em: string;
 };
@@ -19,6 +20,10 @@ export type CreateEffectCardInput = {
   categoryKey: string;
   name: string;
   photo?: string | null;
+  polarity?: 'BÔNUS' | 'DEBUFF';
+  attribute?: 'ATK' | 'DEF' | 'LCK' | 'SPD' | 'HP' | string;
+  intensity?: number;
+  description?: string | null;
 };
 
 export function createEffectCard(input: CreateEffectCardInput): EffectCard;

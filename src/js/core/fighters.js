@@ -1,7 +1,7 @@
 import { CLASSES, rollFighterBonus, generateGolpe, generateMiss } from './balance.js';
 import { uid, pick, fakePhotos } from './utils.js';
 
-export function createFighter({ classKey, name, photo, attackName, missName }) {
+export function createFighter({ classKey, name, photo, attackName, missName, description }) {
   const cls = CLASSES.find(item => item.key === classKey);
   if (!cls) throw new Error('Classe inválida.');
   if (!name?.trim()) throw new Error('Nome do lutador é obrigatório.');
@@ -27,6 +27,7 @@ export function createFighter({ classKey, name, photo, attackName, missName }) {
     nome: cleanName,
     golpe: attackName?.trim() || generateGolpe(cleanName),
     erro: missName?.trim() || generateMiss(cleanName),
+    descricao: description?.trim() || null,
     criado_em: new Date().toISOString(),
   };
 

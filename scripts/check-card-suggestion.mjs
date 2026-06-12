@@ -34,7 +34,7 @@ if (!['BÔNUS', 'DEBUFF'].includes(suggestion.polarityHint)) {
   fail('card suggestion polarityHint must be valid.');
 }
 
-if (!['ATK', 'DEF', 'LCK', 'SPD'].includes(suggestion.attributeHint)) {
+if (!['ATK', 'DEF', 'LCK', 'SPD', 'HP'].includes(suggestion.attributeHint)) {
   fail('card suggestion attributeHint must be valid.');
 }
 

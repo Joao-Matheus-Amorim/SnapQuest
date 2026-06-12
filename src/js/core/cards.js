@@ -1,12 +1,27 @@
 import { EFFECT_CATEGORIES, rollEffect } from './balance.js';
 import { uid, pick, fakePhotos } from './utils.js';
 
-export function createEffectCard({ categoryKey, name, photo }) {
+const EFFECT_ATTRIBUTES = ['ATK', 'DEF', 'LCK', 'SPD', 'HP'];
+const EFFECT_POLARITIES = ['BÔNUS', 'DEBUFF'];
+
+function normalizeEffectOverride(effect, overrides = {}) {
+  const polaridade = EFFECT_POLARITIES.includes(overrides.polarity) ? overrides.polarity : effect.polaridade;
+  const atributo = EFFECT_ATTRIBUTES.includes(overrides.attribute) ? overrides.attribute : effect.atributo;
+  const rawIntensity = Number(overrides.intensity);
+  const intensidade = Number.isFinite(rawIntensity)
+    ? Math.max(1, Math.min(5, Math.round(rawIntensity)))
+    : effect.intensidade;
+
+  return { polaridade, atributo, intensidade };
+}
+
+export function createEffectCard({ categoryKey, name, photo, polarity, attribute, intensity, description }) {
   const category = EFFECT_CATEGORIES.find(item => item[0] === categoryKey);
   if (!category) throw new Error('Categoria inválida.');
   if (!name?.trim()) throw new Error('Nome do efeito é obrigatório.');
 
   const effect = rollEffect();
+  const resolvedEffect = normalizeEffectOverride(effect, { polarity, attribute, intensity });
 
   return {
     id: uid(),
@@ -17,10 +32,11 @@ export function createEffectCard({ categoryKey, name, photo }) {
     categoria_key: category[0],
     categoria: category[2],
     icon: category[1],
-    polaridade: effect.polaridade,
-    atributo: effect.atributo,
-    intensidade: effect.intensidade,
+    polaridade: resolvedEffect.polaridade,
+    atributo: resolvedEffect.atributo,
+    intensidade: resolvedEffect.intensidade,
     raridade: effect.raridade,
+    descricao: description?.trim() || null,
     nome_efeito: name.trim(),
     criado_em: new Date().toISOString(),
   };

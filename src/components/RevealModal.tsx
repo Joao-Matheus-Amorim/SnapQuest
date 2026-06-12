@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
@@ -13,6 +13,9 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { GameButton } from "./game/GameButton";
+import { GameCard } from "./cards/GameCard";
+import { fighterToCardData, effectCardToCardData } from "../utils/cardAdapters";
+import { CARD_ASPECT } from "../utils/cardMeta";
 import { fighterRarity, cardRarity, RARITY_COLORS, RARITY_LABELS, RARITY_ORDER, type Rarity } from "../lib/rarityConfig";
 import { fireHaptic, type HapticEvent } from "../lib/haptics";
 import { useReducedMotion } from "../lib/useReducedMotion";
@@ -26,8 +29,14 @@ export type RevealTarget =
   | null;
 
 const CARD_WIDTH = 208;
-const CARD_HEIGHT = Math.round(CARD_WIDTH * 1.6);
+const CARD_HEIGHT = Math.round(CARD_WIDTH * CARD_ASPECT);
 const RING_SIZE = 360;
+
+function revealToCardData(reveal: NonNullable<RevealTarget>) {
+  return reveal.kind === "fighter"
+    ? fighterToCardData(reveal.data)
+    : effectCardToCardData(reveal.data);
+}
 
 function rarityRank(rarity: Rarity) {
   return Math.max(0, RARITY_ORDER.indexOf(rarity));
@@ -42,113 +51,9 @@ function revealName(reveal: NonNullable<RevealTarget>) {
   return reveal.kind === "fighter" ? reveal.data.nome : reveal.data.nome_efeito;
 }
 
-function revealKindLabel(reveal: NonNullable<RevealTarget>) {
-  return reveal.kind === "fighter" ? "FIGHTER" : "CARTA";
-}
-
-function revealIcon(reveal: NonNullable<RevealTarget>) {
-  return reveal.kind === "fighter" ? reveal.data.icon ?? "F" : reveal.data.icon ?? "C";
-}
-
-function revealPhoto(reveal: NonNullable<RevealTarget>) {
-  return reveal.kind === "fighter" ? reveal.data.foto : reveal.data.foto;
-}
-
-function isRenderablePhoto(uri?: string | null) {
-  if (!uri) return false;
-  if (uri.includes("/var/mobile/Media/") || uri.includes("/DCIM/")) return false;
-  return uri.startsWith("file://") || uri.startsWith("http") || uri.startsWith("data:") || uri.startsWith("content://");
-}
-
 function revealDetail(reveal: NonNullable<RevealTarget>) {
   if (reveal.kind === "fighter") return reveal.data.golpe || reveal.data.classe || "Criatura revelada";
   return `${reveal.data.polaridade} | ${reveal.data.atributo} +${reveal.data.intensidade}`;
-}
-
-function PreviewCard({ reveal, rarity, color }: { reveal: NonNullable<RevealTarget>; rarity: Rarity; color: string }) {
-  const fighter = reveal.kind === "fighter" ? reveal.data : null;
-  const card = reveal.kind === "card" ? reveal.data : null;
-  const polarityColor = card?.polaridade === "DEBUFF" ? COLORS.red : COLORS.greenSoft;
-  const photoUri = revealPhoto(reveal);
-  const hasPhoto = isRenderablePhoto(photoUri);
-  const premium = rarityRank(rarity) >= 3;
-  const levelLabel = reveal.kind === "fighter" ? `HP ${reveal.data.hp}` : `${reveal.data.atributo} +${reveal.data.intensidade}`;
-
-  return (
-    <View style={[s.previewCard, { borderColor: color, shadowColor: color }, premium && s.previewCardPremium]}>
-      <LinearGradient colors={[color + "55", COLORS.panelGold, COLORS.cardSurfaceDeep, COLORS.bgNav]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-      <View style={[s.cardFoilBand, { backgroundColor: color }]} />
-      <View style={[s.cardFoilBandAlt, { backgroundColor: COLORS.accent }]} />
-
-      <View style={[s.cardHeader, { borderColor: color }]}>
-        <View style={[s.kindMedal, { borderColor: COLORS.gold, backgroundColor: color }]}>
-          <Text style={s.kindMedalText}>{revealIcon(reveal)}</Text>
-        </View>
-        <View style={s.headerTextWrap}>
-          <Text style={s.previewName} numberOfLines={1}>{revealName(reveal)}</Text>
-          <Text style={s.previewKind}>{revealKindLabel(reveal)} | {RARITY_LABELS[rarity]}</Text>
-        </View>
-        <View style={[s.powerSeal, { borderColor: color }]}>
-          <Text style={[s.powerSealText, { color }]}>{levelLabel}</Text>
-        </View>
-      </View>
-
-      <View style={[s.artFrame, { borderColor: color }]}>
-        <View style={s.artBevel}>
-          {hasPhoto ? (
-            <Image source={{ uri: photoUri ?? undefined }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          ) : (
-            <LinearGradient colors={[color + "66", COLORS.panelHero, COLORS.bgDeep]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={StyleSheet.absoluteFill} />
-          )}
-          <LinearGradient colors={["rgba(255,255,255,.2)", "transparent", "rgba(6,12,26,.62)"]} start={{ x: 0, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
-          {!hasPhoto ? (
-            <View style={[s.previewOrb, { borderColor: COLORS.gold, shadowColor: color }]}>
-              <Text style={s.previewIcon}>{revealIcon(reveal)}</Text>
-            </View>
-          ) : null}
-        </View>
-      </View>
-
-      <View style={[s.effectPanel, { borderColor: color }]}>
-        <Text style={s.previewDetail} numberOfLines={2}>{revealDetail(reveal)}</Text>
-
-        {fighter ? (
-          <View style={s.arenaStats}>
-            <View style={[s.arenaStat, { borderColor: COLORS.red }]}>
-              <Text style={[s.arenaStatValue, { color: COLORS.red }]}>{fighter.atk}</Text>
-              <Text style={s.arenaStatLabel}>ATK</Text>
-            </View>
-            <View style={[s.arenaStat, { borderColor: COLORS.accent }]}>
-              <Text style={[s.arenaStatValue, { color: COLORS.accent }]}>{fighter.def}</Text>
-              <Text style={s.arenaStatLabel}>DEF</Text>
-            </View>
-            <View style={[s.arenaStat, { borderColor: COLORS.gold }]}>
-              <Text style={[s.arenaStatValue, { color: COLORS.gold }]}>{fighter.lck}</Text>
-              <Text style={s.arenaStatLabel}>LCK</Text>
-            </View>
-            <View style={[s.arenaStat, { borderColor: COLORS.greenSoft }]}>
-              <Text style={[s.arenaStatValue, { color: COLORS.greenSoft }]}>{fighter.spd}</Text>
-              <Text style={s.arenaStatLabel}>SPD</Text>
-            </View>
-          </View>
-        ) : null}
-
-        {card ? (
-          <View style={[s.cardEffectArena, { borderColor: polarityColor, backgroundColor: polarityColor + "20" }]}>
-            <Text style={[s.cardEffectMain, { color: polarityColor }]}>{card.polaridade}</Text>
-            <Text style={s.cardEffectSub}>{card.atributo} +{card.intensidade}</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View pointerEvents="none" style={[s.cardInset, { borderColor: color + "77" }]} />
-      <View pointerEvents="none" style={s.cardTopLine} />
-      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemTl, { borderColor: color, backgroundColor: premium ? color : COLORS.cardSurfaceDeep }]} />
-      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemTr, { borderColor: color, backgroundColor: premium ? COLORS.gold : COLORS.cardSurfaceDeep }]} />
-      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemBl, { borderColor: color, backgroundColor: premium ? COLORS.accent : COLORS.cardSurfaceDeep }]} />
-      <View pointerEvents="none" style={[s.cornerGem, s.cornerGemBr, { borderColor: color, backgroundColor: premium ? color : COLORS.cardSurfaceDeep }]} />
-    </View>
-  );
 }
 
 export function RevealModal({ reveal, onClose }: { reveal: RevealTarget; onClose: () => void }) {
@@ -326,7 +231,7 @@ export function RevealModal({ reveal, onClose }: { reveal: RevealTarget; onClose
         <Animated.View pointerEvents="none" style={[s.cardAura, { borderColor: color, shadowColor: color }, cardAuraStyle]} />
         <View pointerEvents="none" style={[s.backLight, { borderColor: color, shadowColor: color }]} />
         <View style={s.previewClip}>
-          <PreviewCard reveal={reveal} rarity={rarity} color={color} />
+          <GameCard data={revealToCardData(reveal)} width={CARD_WIDTH} glow={false} />
           <Animated.View pointerEvents="none" style={[s.cardSweep, sweepStyle]}>
             <LinearGradient colors={["transparent", "rgba(255,255,255,.76)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
           </Animated.View>

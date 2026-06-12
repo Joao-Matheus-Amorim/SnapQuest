@@ -169,11 +169,13 @@ export default function InventoryScreen() {
 
   function makeFighter(item: CapturedPhoto) {
     setAiTried(false);
+    setAiLoading(false);
     setPendingCreate({ item, transform: mockTransform(item, "fighter"), kind: "fighter" });
   }
 
   function makeCard(item: CapturedPhoto) {
     setAiTried(false);
+    setAiLoading(false);
     setPendingCreate({ item, transform: mockTransform(item, "effect_card"), kind: "card" });
   }
 
@@ -192,11 +194,19 @@ export default function InventoryScreen() {
 
   async function finalizeCreate(name: string) {
     if (!pendingCreate) return;
-    const { item, transform, kind } = pendingCreate;
-    setPendingCreate(null);
+    const { item, kind } = pendingCreate;
+    const target = kind === "fighter" ? "fighter" : "effect_card";
+    let transform = pendingCreate.transform;
     console.log("[create] start kind=", kind, "source=", item.source, "owner=", ownerMode);
 
     try {
+      if (transform.provider !== "gemini-backend" || transform.name.trim() !== name.trim()) {
+        setAiLoading(true);
+        transform = await transformCapturedPhoto({ photo: item, target, nameHint: name.trim() });
+        setAiLoading(false);
+      }
+
+      setPendingCreate(null);
       const photoUri = await persistPhoto(item.uri, item.id);
       console.log("[create] persisted:", String(photoUri).slice(0, 60));
       const persistedItem = { ...item, uri: photoUri };
@@ -209,6 +219,7 @@ export default function InventoryScreen() {
             photo: photoUri,
             attackName: transform.target === "fighter" ? transform.attackName : undefined,
             missName: transform.target === "fighter" ? transform.missName : undefined,
+            description: transform.target === "fighter" ? transform.description : undefined,
           });
           await syncCatalogFighter(fighter, user.id);
           await raw.removeCapturedPhoto(item.id);
@@ -233,6 +244,10 @@ export default function InventoryScreen() {
             categoryKey: transform.target === "effect_card" ? transform.key : "criatura",
             name,
             photo: photoUri,
+            polarity: transform.target === "effect_card" ? transform.polarity : undefined,
+            attribute: transform.target === "effect_card" ? transform.attribute : undefined,
+            intensity: transform.target === "effect_card" ? transform.intensity : undefined,
+            description: transform.target === "effect_card" ? transform.description : undefined,
           });
           await syncCatalogCard(card, user.id);
           await raw.removeCapturedPhoto(item.id);
@@ -253,6 +268,7 @@ export default function InventoryScreen() {
         }
       }
     } catch (e) {
+      setAiLoading(false);
       console.warn("[finalizeCreate] falhou:", String(e));
       Alert.alert("Erro ao criar", "Nao consegui salvar a criatura. A foto continua na lista de pendentes - tente de novo.");
     }
@@ -391,9 +407,9 @@ export default function InventoryScreen() {
           aiLoading={aiLoading}
           aiNote={
             aiLoading
-              ? ""
+              ? "Analisando a foto com IA..."
               : aiTried && pendingCreate.transform.provider === "gemini-backend"
-                ? "Nome e golpe gerados pela IA."
+                ? "Nome, atributos e lore gerados pela IA."
                 : aiTried
                   ? "IA indisponivel agora. Usando nome offline."
                   : ""

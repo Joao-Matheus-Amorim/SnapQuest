@@ -17,6 +17,7 @@ export type Fighter = {
   nome: string;
   golpe: string;
   erro: string;
+  descricao?: string | null;
   criado_em: string;
 };
 
@@ -26,6 +27,7 @@ export type CreateFighterInput = {
   photo?: string | null;
   attackName?: string;
   missName?: string;
+  description?: string | null;
 };
 
 export function createFighter(input: CreateFighterInput): Fighter;

@@ -4,7 +4,7 @@ export const CARD_SUGGESTION_SCHEMA_VERSION = 'card-suggestion-v1';
 
 const CATEGORY_KEYS = EFFECT_CATEGORIES.map(category => category[0]);
 const POLARITIES = ['BÔNUS', 'DEBUFF'];
-const ATTRIBUTES = ['ATK', 'DEF', 'LCK', 'SPD'];
+const ATTRIBUTES = ['ATK', 'DEF', 'LCK', 'SPD', 'HP'];
 const RARITY_BY_INTENSITY = {
   1: '⚪ Comum',
   2: '🟢 Incomum',
@@ -61,7 +61,7 @@ export function normalizeCardSuggestion(suggestion = {}) {
 function inferCategoryKey(hint) {
   const value = hint.toLowerCase();
 
-  if (value.includes('agua') || value.includes('suco') || value.includes('garrafa')) return 'liquido';
+  if (value.includes('agua') || value.includes('copo') || value.includes('suco') || value.includes('garrafa')) return 'liquido';
   if (value.includes('livro') || value.includes('caderno') || value.includes('caneta')) return 'conhecimento';
   if (value.includes('roupa') || value.includes('camisa') || value.includes('sapato')) return 'vestimenta';
   if (value.includes('gato') || value.includes('cachorro') || value.includes('animal')) return 'criatura';
@@ -75,6 +75,7 @@ function inferCategoryKey(hint) {
 function inferAttribute(hint) {
   const value = hint.toLowerCase();
 
+  if (value.includes('agua') || value.includes('copo') || value.includes('suco') || value.includes('garrafa') || value.includes('comida')) return 'HP';
   if (value.includes('forte') || value.includes('ataque') || value.includes('espada')) return 'ATK';
   if (value.includes('escudo') || value.includes('protecao') || value.includes('parede')) return 'DEF';
   if (value.includes('rapido') || value.includes('veloz') || value.includes('vento')) return 'SPD';

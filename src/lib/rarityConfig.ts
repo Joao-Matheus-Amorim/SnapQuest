@@ -11,11 +11,11 @@ export const RARITY_LABELS: Record<Rarity, string> = {
 };
 
 export const RARITY_COLORS: Record<Rarity, string> = {
-  comum: "#9e9e9e",
-  incomum: "#4caf50",
-  raro: "#2196f3",
-  épico: "#9c27b0",
-  lendário: "#ff9800",
+  comum:    "#5a6a8a",
+  incomum:  "#22c55e",
+  raro:     "#34e1ff",
+  épico:    "#ff3db4",
+  lendário: "#f5c542",
 };
 
 export const RARITY_BORDER: Record<Rarity, number> = {
@@ -30,19 +30,19 @@ export function rarityGlow(rarity: Rarity) {
   const glows: Record<Rarity, object> = {
     comum: {},
     incomum: {
-      shadowColor: "#4caf50", shadowOpacity: 0.55,
+      shadowColor: "#22c55e", shadowOpacity: 0.55,
       shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 4,
     },
     raro: {
-      shadowColor: "#2196f3", shadowOpacity: 0.75,
+      shadowColor: "#34e1ff", shadowOpacity: 0.75,
       shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: 7,
     },
     épico: {
-      shadowColor: "#9c27b0", shadowOpacity: 0.9,
+      shadowColor: "#ff3db4", shadowOpacity: 0.9,
       shadowRadius: 14, shadowOffset: { width: 0, height: 0 }, elevation: 10,
     },
     lendário: {
-      shadowColor: "#ff9800", shadowOpacity: 1,
+      shadowColor: "#f5c542", shadowOpacity: 1,
       shadowRadius: 20, shadowOffset: { width: 0, height: 0 }, elevation: 14,
     },
   };

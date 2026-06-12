@@ -21,7 +21,7 @@ function critThreshold(lck) {
   return 20 - Math.min(3, Math.floor((lck || 0) / 3));
 }
 
-const BATTLE_STATS = ['atk', 'def', 'lck', 'spd'];
+const BATTLE_STATS = ['atk', 'def', 'lck', 'spd', 'hp'];
 
 export function effectiveStat(fighter, stat) {
   if (!BATTLE_STATS.includes(stat)) throw new Error('Atributo de batalha invalido.');
@@ -62,7 +62,7 @@ export function createBattle({ fighters, cards, playerName, player2Name }) {
       alive: true,
       active: fighterIndex < 2,
       reserve: fighterIndex === 2,
-      buffs: { atk: 0, def: 0, lck: 0, spd: 0 },
+      buffs: { atk: 0, def: 0, lck: 0, spd: 0, hp: 0 },
     }));
 
     return {
@@ -215,7 +215,13 @@ export function useSelectedCard(battle) {
 
   const attr = card.atributo.toLowerCase();
   const signal = isDebuff ? -1 : 1;
-  target.buffs[attr] = (target.buffs[attr] || 0) + signal * card.intensidade;
+  if (attr === 'hp') {
+    target.max_hp = Math.max(1, (target.max_hp || target.hp || 1) + signal * card.intensidade);
+    target.current_hp = Math.max(1, Math.min(target.max_hp, (target.current_hp || 1) + signal * card.intensidade));
+    target.buffs.hp = (target.buffs.hp || 0) + signal * card.intensidade;
+  } else {
+    target.buffs[attr] = (target.buffs[attr] || 0) + signal * card.intensidade;
+  }
   card.used = true;
 
   battle.log.push(`✨ ${player.name} usou ${card.nome_efeito}: ${signal > 0 ? '+' : '-'}${card.intensidade} ${card.atributo} em ${target.nome}.`);

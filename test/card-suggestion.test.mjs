@@ -54,3 +54,13 @@ test('normalizeCardSuggestion accepts backend source only for the expected provi
   assert.equal(normalizeCardSuggestion({ source: 'gemini-backend' }).source, 'gemini-backend');
   assert.equal(normalizeCardSuggestion({ source: 'gemini' }).source, 'mock');
 });
+
+test('suggestCardFromPhoto maps water-like hints to HP', async () => {
+  const suggestion = await suggestCardFromPhoto({
+    photoUri: 'file://water-cup.jpg',
+    visualHint: 'copo de agua',
+  });
+
+  assert.equal(suggestion.categoryKey, 'liquido');
+  assert.equal(suggestion.attributeHint, 'HP');
+});

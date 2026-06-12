@@ -4,7 +4,7 @@
     "slug": "snapquest",
     "scheme": "snapquest",
     "version": "0.1.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
@@ -22,7 +22,8 @@
         }
       ],
       "expo-router",
-      "expo-video"
+      "expo-video",
+      "expo-font"
     ]
   }
 }

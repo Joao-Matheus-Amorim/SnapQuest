@@ -81,11 +81,27 @@ export async function clearPlayerDeck() {
 
 export async function mergeDeckFromCloud(cloudFighters: Fighter[], cloudCards: EffectCard[]) {
   const local = await readPlayerDeck();
-  const cloudFighterIds = new Set(cloudFighters.map((f) => f.id));
-  const cloudCardIds = new Set(cloudCards.map((c) => c.id));
+  const localFightersById = new Map(local.fighters.map((f) => [f.id, f]));
+  const localCardsById = new Map(local.cards.map((c) => [c.id, c]));
+  const mergedCloudFighters = cloudFighters.map((fighter) => {
+    const localFighter = localFightersById.get(fighter.id);
+    return {
+      ...fighter,
+      descricao: fighter.descricao?.trim() || localFighter?.descricao?.trim() || null,
+    };
+  });
+  const mergedCloudCards = cloudCards.map((card) => {
+    const localCard = localCardsById.get(card.id);
+    return {
+      ...card,
+      descricao: card.descricao?.trim() || localCard?.descricao?.trim() || null,
+    };
+  });
+  const cloudFighterIds = new Set(mergedCloudFighters.map((f) => f.id));
+  const cloudCardIds = new Set(mergedCloudCards.map((c) => c.id));
   const merged: PlayerDeck = {
-    fighters: [...cloudFighters, ...local.fighters.filter((f) => !cloudFighterIds.has(f.id))],
-    cards: [...cloudCards, ...local.cards.filter((c) => !cloudCardIds.has(c.id))],
+    fighters: [...mergedCloudFighters, ...local.fighters.filter((f) => !cloudFighterIds.has(f.id))],
+    cards: [...mergedCloudCards, ...local.cards.filter((c) => !cloudCardIds.has(c.id))],
   };
   await writePlayerDeck(merged);
 }
@@ -118,6 +134,7 @@ export function usePlayerDeck() {
       photo: photo.uri,
       attackName: transform?.target === "fighter" ? transform.attackName : undefined,
       missName: transform?.target === "fighter" ? transform.missName : undefined,
+      description: transform?.target === "fighter" ? transform.description : undefined,
     });
     const nextDeck = {
       ...currentDeck,
@@ -135,6 +152,10 @@ export function usePlayerDeck() {
       categoryKey: transform?.target === "effect_card" ? transform.key : "criatura",
       name: nameOverride?.trim() || (transform?.target === "effect_card" ? transform.name : makeNameFromPhoto("Carta", photo)),
       photo: photo.uri,
+      polarity: transform?.target === "effect_card" ? transform.polarity : undefined,
+      attribute: transform?.target === "effect_card" ? transform.attribute : undefined,
+      intensity: transform?.target === "effect_card" ? transform.intensity : undefined,
+      description: transform?.target === "effect_card" ? transform.description : undefined,
     });
     const nextDeck = {
       ...currentDeck,

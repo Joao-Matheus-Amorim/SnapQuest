@@ -29,13 +29,16 @@ const required = [
   'src/services/geminiTransform.ts',
   'src/services/photoCloudStorage.ts',
   'src/components/game/PortalStageVideo.tsx',
-  'src/components/card/CardTemplate.tsx',
-  'src/components/card/cardFrameConfig.ts',
-  'assets/card-frames/common.png',
-  'assets/card-frames/uncommon.png',
-  'assets/card-frames/rare.png',
-  'assets/card-frames/epic.png',
-  'assets/card-frames/legendary.png',
+  'src/components/cards/GameCard.tsx',
+  'src/types/card.ts',
+  'src/utils/cardTheme.ts',
+  'src/utils/cardLayout.ts',
+  'src/app/card-sandbox.tsx',
+  'assets/cards/templates/common.png',
+  'assets/cards/templates/uncommon.png',
+  'assets/cards/templates/rare.png',
+  'assets/cards/templates/epic.png',
+  'assets/cards/templates/legendary.png',
   'scripts/validate-catalog-rls.mjs',
   'test/core-balance.test.mjs',
   'test/core-battle.test.mjs',
@@ -227,20 +230,25 @@ if (!inventoryScreen.includes('removeCapturedPhoto')) {
 
 const fighterCard = fs.readFileSync('src/components/FighterCard.tsx', 'utf8');
 const effectCard = fs.readFileSync('src/components/CardItem.tsx', 'utf8');
-const cardTemplate = fs.readFileSync('src/components/card/CardTemplate.tsx', 'utf8');
-const cardFrameConfig = fs.readFileSync('src/components/card/cardFrameConfig.ts', 'utf8');
+const gameCard = fs.readFileSync('src/components/cards/GameCard.tsx', 'utf8');
+const cardArt = fs.readFileSync('src/components/cards/CardArt.tsx', 'utf8');
+const cardTheme = fs.readFileSync('src/utils/cardTheme.ts', 'utf8');
 
-if (!fighterCard.includes('CardTemplate') || !effectCard.includes('CardTemplate')) {
-  fail('FighterCard and CardItem must stay as thin adapters over the shared CardTemplate.');
+if (!fighterCard.includes('GameCard') || !effectCard.includes('GameCard')) {
+  fail('FighterCard and CardItem must stay as thin adapters over the shared GameCard.');
 }
 
-if (!cardTemplate.includes('imageUri') || !cardTemplate.includes('isRenderableCardPhoto')) {
-  fail('CardTemplate must render real card photos through the shared photo safety guard.');
+if (!gameCard.includes('theme.template') || !gameCard.includes('CardArt')) {
+  fail('GameCard must layer dynamic content over the rarity template PNG.');
+}
+
+if (!cardArt.includes('image') || !cardArt.includes('isRenderableCardPhoto')) {
+  fail('CardArt must render real card photos through the shared photo safety guard.');
 }
 
 for (const frameName of ['common.png', 'uncommon.png', 'rare.png', 'epic.png', 'legendary.png']) {
-  if (!cardFrameConfig.includes(frameName)) {
-    fail(`cardFrameConfig must register the ${frameName} rarity frame template.`);
+  if (!cardTheme.includes(frameName)) {
+    fail(`cardTheme must register the ${frameName} rarity template.`);
   }
 }
 
@@ -313,7 +321,7 @@ if (!['BÔNUS', 'DEBUFF'].includes(suggestion.polarityHint)) {
   fail('card suggestion polarityHint must be valid.');
 }
 
-if (!['ATK', 'DEF', 'LCK', 'SPD'].includes(suggestion.attributeHint)) {
+if (!['ATK', 'DEF', 'LCK', 'SPD', 'HP'].includes(suggestion.attributeHint)) {
   fail('card suggestion attributeHint must be valid.');
 }
 

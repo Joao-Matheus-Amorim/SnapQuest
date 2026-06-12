@@ -49,7 +49,7 @@ test('rollEffect normalizes polarity, attribute, intensity and rarity', () => {
 
   assert.deepEqual(rollEffect(sequenceRandom([0.9, 0.99, 0.99])), {
     polaridade: 'BÔNUS',
-    atributo: 'SPD',
+    atributo: 'HP',
     intensidade: 5,
     raridade: '🟡 Lendário',
   });

@@ -16,7 +16,7 @@ export function NameInputModal({
   suggestedName: string;
   aiLoading: boolean;
   aiNote: string;
-  onRequestAI: () => void;
+  onRequestAI: (currentName: string) => void;
   onConfirm: (name: string) => void;
   onCancel: () => void;
 }) {
@@ -53,7 +53,7 @@ export function NameInputModal({
             onSubmitEditing={() => canCreate && onConfirm(name.trim())}
           />
 
-          <Pressable style={[s.aiBtn, aiLoading && s.disabled]} disabled={aiLoading} onPress={onRequestAI}>
+          <Pressable style={[s.aiBtn, aiLoading && s.disabled]} disabled={aiLoading} onPress={() => onRequestAI(name.trim())}>
             {aiLoading ? (
               <View style={s.aiLoadingRow}>
                 <ActivityIndicator size="small" color="#14b8a6" />
