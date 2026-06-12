@@ -111,4 +111,4 @@ Para producao:
 - Design visual da cerimonia.
 - Supabase Storage.
 - RLS de catalogo.
-- Regras de batalha de LCK/SPD; fonte atual: `battle-rules.md`.
+- Regras de atributos e batalha; fonte atual: `battle-rules.md`. Nesta versao, LCK/SPD podem aparecer como atributos, mas efeitos especiais de iniciativa/critico ficam para futuro.

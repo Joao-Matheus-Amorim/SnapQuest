@@ -9,13 +9,13 @@ O repositorio mantem duas frentes:
 
 ## Estado atual
 
-Data de referencia: 2026-06-10.
+Data de referencia: 2026-06-12.
 
 | Area | Status | Observacao |
 |---|---|---|
 | MVP web | Implementado | Valida o loop base e preserva a entrada `index.html`. |
-| Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; LCK e SPD tem efeito completo na batalha local. |
-| Mobile Expo | Implementado em MVP | Home gamificada, login, portal de captura, inventario, filtros, exclusao, revelacao e batalha local. |
+| Core de jogo | Implementado | Regras puras em `src/js/core/`, reutilizadas pelo mobile; batalha local usa energia, compra automatica, buffs/debuffs, habilidades passivas e dano por ATK/DEF/classe. |
+| Mobile Expo | Implementado em MVP | Home gamificada, login, portal de captura, inventario, filtros, exclusao, revelacao e batalha local com toque/arrasto direto. |
 | Supabase Auth | Implementado no mobile | Login/cadastro com perfil garantido, provider unico de sessao, guest mode e status de sync/confirmacao. |
 | Supabase DB | Implementado como schema inicial | Tabelas com RLS por usuario; catalogo versionado com `is_catalog`, controle por `can_manage_catalog`, leitura publica anonima e validacao real via `test:rls:catalog`. |
 | Persistencia local mobile | Implementada | Deck e capturas usam adapter local; logout limpa o deck local. |

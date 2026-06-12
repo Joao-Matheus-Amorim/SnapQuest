@@ -1,6 +1,6 @@
 # Regras de Batalha
 
-Data de referencia: 2026-06-10.
+Data de referencia: 2026-06-12.
 
 Este documento registra o contrato atual da batalha local. A fonte executavel fica em `src/js/core/battle.js`; este documento serve para produto, QA e rastreabilidade.
 
@@ -8,19 +8,33 @@ Este documento registra o contrato atual da batalha local. A fonte executavel fi
 
 - A batalha exige no minimo 6 Fighters e 6 Cartas.
 - O setup divide 3 Fighters e 3 Cartas para cada jogador.
-- Os 2 primeiros Fighters de cada time entram ativos; o terceiro fica como reserva.
-- O time com maior soma de SPD efetivo inicia. Empate inicia com Jogador 1.
+- Cada jogador entra com 3 Fighters em campo.
+- O turno inicial e fixo no Jogador 1.
+- SPD e LCK ficam reservados para uma versao futura e nao controlam iniciativa, critico ou dano nesta versao.
 
 ## Turno
 
-1. O jogador compra no maximo 1 carta por turno.
-2. O jogador pode selecionar uma carta e aplicar em aliado ou inimigo, conforme polaridade.
-3. O jogador seleciona atacante e alvo.
-4. O ataque rola d20, calcula dano, aplica queda/reserva e passa o turno se nao houver vencedor.
+1. No inicio do turno, o jogador recebe +1 de energia ate o maximo de 5.
+2. A carta do turno e comprada automaticamente e entra na mao.
+3. O jogador pode tocar em uma carta da mao e tocar no alvo correto, ou arrastar a carta ate o alvo.
+4. Cartas de buff sao usadas em aliados; cartas de debuff sao usadas em inimigos.
+5. Para atacar, o jogador toca em um Fighter do proprio campo e depois toca em um Fighter inimigo. Tambem pode arrastar o Fighter ate o inimigo.
+6. O turno so troca quando o jogador toca em `Encerrar Turno`.
+
+## Energia
+
+- Energia inicial efetiva no primeiro turno: 2/5, porque o jogador comeca com 1 e recebe +1 no inicio do turno.
+- Cada carta tem custo calculado por raridade:
+  - comum: 1 a 2;
+  - incomum: 2;
+  - raro: 3;
+  - lendario/epico: 4.
+- Carta sem energia suficiente fica indisponivel na UI.
+- Usar carta consome energia imediatamente.
 
 ## Stats efetivos
 
-ATK, DEF, LCK e SPD usam o valor base do Fighter somado aos buffs/debuffs de cartas.
+ATK, DEF, LCK, SPD e HP usam o valor base do Fighter somado aos buffs/debuffs de cartas quando aplicavel.
 
 O valor efetivo nunca fica abaixo de zero.
 
@@ -28,45 +42,25 @@ O valor efetivo nunca fica abaixo de zero.
 stat efetivo = max(0, stat base + buffs[stat])
 ```
 
-## LCK
+Na regra de dano atual, apenas ATK e DEF entram no calculo direto.
 
-LCK controla a faixa de critico.
+## Dano
 
-```txt
-limiar critico = 20 - min(3, floor(LCK efetivo / 3))
-```
-
-Efeito atual:
-
-- LCK 0 a 2: critico apenas no 20.
-- LCK 3 a 5: critico em 19 ou 20.
-- LCK 6 a 8: critico em 18, 19 ou 20.
-- LCK 9 ou mais: critico em 17, 18, 19 ou 20.
-
-Critico dobra o dano antes do multiplicador de classe.
-
-## SPD
-
-SPD tem dois efeitos:
-
-- iniciativa inicial do time;
-- pressao de ataque contra o alvo.
-
-No ataque, a diferenca entre SPD efetivo do atacante e SPD efetivo do defensor gera um modificador de dano antes do multiplicador de classe.
+O ataque usa faixa de dano calculada pelo core:
 
 ```txt
-modificador SPD = clamp(trunc((SPD atacante - SPD defensor) / 3), -3, 3)
-dano base = max(1, ATK atacante + d20 + modificador SPD - DEF defensor)
+base = max(1, ATK atacante - floor(DEF defensor / 2))
+min = max(1, round(base * multiplicador de classe))
+max = max(2, round((base + 4) * multiplicador de classe))
+dano = valor aleatorio entre min e max
 ```
-
-O limite de -3 a +3 evita que SPD domine ATK, DEF, LCK e vantagem de classe.
 
 ## Classe
 
-Vantagem de classe aplica multiplicador final:
+Vantagem de classe aplica multiplicador:
 
-- vantagem: 1.3x;
-- desvantagem: 0.75x;
+- vantagem: 1.25x;
+- desvantagem: 0.85x;
 - neutro: 1x.
 
 Ciclo atual:
@@ -78,17 +72,39 @@ mago vence paladino
 paladino vence guerreiro
 ```
 
-## Falha critica
+## Vacilo
 
-d20 igual a 1 causa falha critica.
+Existe uma chance minima de vacilo no ataque.
 
-Efeito:
+Efeito atual:
 
-- dano final fixo em 1;
-- ignora critico e vantagem de classe.
+- dano 0;
+- o nome do vacilo do Fighter e retornado para a UI;
+- a UI mostra o vacilo como evento cinematografico, sem expor mecanica de dado.
 
-## Reserva e vitoria
+## Habilidades passivas
 
-- Fighter com HP zero fica derrotado e sai do campo ativo.
-- Se houver reserva viva, ela entra automaticamente.
-- A batalha termina quando apenas um time tem Fighters vivos.
+### Provocar
+
+Enquanto existir um Fighter inimigo vivo com `provocar`, ataques precisam mirar nele primeiro.
+
+### Escudo
+
+Bloqueia o primeiro ataque recebido e consome o escudo.
+
+### Veneno
+
+Quando um Fighter com `veneno` acerta um ataque, o alvo recebe 1 de dano no inicio de cada turno afetado por 3 turnos.
+
+## Queda e vitoria
+
+- Fighter com HP zero fica marcado como derrotado e permanece visualmente no slot ate o fim do turno.
+- No fim do turno, Fighters derrotados sao removidos do campo.
+- A batalha termina quando apenas um jogador possui Fighters vivos.
+
+## Fora de escopo atual
+
+- Iniciativa por SPD.
+- Critico por LCK.
+- Economia, XP, moedas ou recompensas.
+- Multiplayer online.

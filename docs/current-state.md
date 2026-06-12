@@ -1,6 +1,6 @@
 # Estado Atual do SnapQuest
 
-Ultima atualizacao: 2026-06-10.
+Ultima atualizacao: 2026-06-12.
 
 ## Resumo executivo
 
@@ -30,10 +30,12 @@ O repositorio possui:
 - Criacao de Fighters e Cartas.
 - Batalha local por turnos.
 - Vantagem/desvantagem de classe.
-- LCK com faixa de critico.
-- SPD com iniciativa e modificador de ataque capado.
+- Energia por turno e compra automatica.
 - Stats efetivos de batalha com buffs/debuffs.
-- Compra, uso de carta, ataque, fim de turno e vencedor.
+- Dano por ATK/DEF e vantagem/desvantagem de classe.
+- Habilidades passivas de provocar, escudo e veneno.
+- Uso de carta, ataque direto por toque/arrasto, fim de turno e vencedor.
+- SPD e LCK preservados como atributos de carta/Fighter, mas sem efeito especial de iniciativa/critico nesta versao.
 - Tipos `.d.ts` para consumo TypeScript.
 
 ### Mobile
@@ -62,7 +64,7 @@ O repositorio possui:
 - Filtros por tipo e raridade.
 - Navegacao inferior e cartoes mobile com tratamento visual mais consistente, em estilo HUD/deck, sem dependencia de emoji em labels operacionais.
 - Exclusao de itens permitidos.
-- Batalha mobile local completa com dois jogadores passando o celular.
+- Batalha mobile local completa com dois jogadores passando o celular, mao de cartas, energia, ataques diretos e feedback visual de golpe/vacilo.
 
 ### Supabase
 
@@ -111,13 +113,14 @@ O repositorio possui:
 | GAP-002 | Gemini rodava no app com env publica. | Chave ficava exposta em bundle mobile. | Fechado em codigo; rollout operacional depende apenas do ambiente alvo. |
 | GAP-003 | Fotos ainda nao usavam Storage remoto. | Peso no banco e risco de escalabilidade. | Fechado em codigo/schema; aplicar `supabase/schema.sql` no Supabase alvo e validar upload/leitura real. |
 | GAP-004 | Cobertura automatizada de comportamento era inicial. | Regressao podia passar em cenarios de core nao cobertos. | Fechado: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada. |
-| GAP-005 | LCK/SPD nao tinham efeito completo. | Atributos pareciam mais ricos que a regra real. | Fechado: regra definida em `docs/battle-rules.md`, implementada no core e coberta por `npm run test:core`. |
+| GAP-005 | LCK/SPD ainda nao participam da mecanica especial de iniciativa/critico. | Atributos existem, mas a regra atual prioriza clareza de turno, energia, ATK/DEF, classe e habilidades. | Aceito para versao futura; regra atual registrada em `docs/battle-rules.md` e coberta por `npm run test:core`. |
 | GAP-006 | RLS de catalogo ainda nao tinha prova real com usuario comum e usuario dono. | Risco fechado com evidencia funcional registrada. | Fechado: `npm run test:rls:catalog` passou no Supabase real em 2026-06-10. |
 
 ## Decisao atual
 
 A prioridade tecnica recomendada agora e:
 
-1. Cerimonia visual final;
-2. smoke test mobile/web;
-3. validar fluxo completo local/cloud em dispositivo apos rollout final de schema/storage.
+1. Validar a batalha em dispositivo real com toque/arrasto;
+2. Cerimonia visual final;
+3. smoke test mobile/web;
+4. validar fluxo completo local/cloud em dispositivo apos rollout final de schema/storage.

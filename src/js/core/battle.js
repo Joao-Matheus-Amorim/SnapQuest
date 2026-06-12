@@ -1,7 +1,5 @@
 import { clamp, clone, rand } from './utils.js';
 
-// Triângulo de vantagem entre classes (cada um vence o próximo, em ciclo).
-// guerreiro → arqueiro → mago → paladino → guerreiro
 const CLASS_ADVANTAGE = {
   guerreiro: 'arqueiro',
   arqueiro: 'mago',
@@ -9,19 +7,41 @@ const CLASS_ADVANTAGE = {
   paladino: 'guerreiro',
 };
 
-// Retorna o efeito da matchup do atacante contra o defensor.
+const BATTLE_STATS = ['atk', 'def', 'lck', 'spd', 'hp'];
+const ENERGY_MAX = 5;
+const START_ENERGY = 1;
+
+export const ABILITIES = {
+  TAUNT: 'provocar',
+  SHIELD: 'escudo',
+  POISON: 'veneno',
+};
+
 function classMatchup(attacker, defender) {
-  if (CLASS_ADVANTAGE[attacker.class_key] === defender.class_key) return { mult: 1.3, label: 'vantagem' };
-  if (CLASS_ADVANTAGE[defender.class_key] === attacker.class_key) return { mult: 0.75, label: 'desvantagem' };
+  if (CLASS_ADVANTAGE[attacker.class_key] === defender.class_key) return { mult: 1.25, label: 'vantagem' };
+  if (CLASS_ADVANTAGE[defender.class_key] === attacker.class_key) return { mult: 0.85, label: 'desvantagem' };
   return { mult: 1, label: null };
 }
 
-// LCK amplia a faixa de crítico. Sorte 0-2: crítico só no 20. Sorte alta: até 17-20.
-function critThreshold(lck) {
-  return 20 - Math.min(3, Math.floor((lck || 0) / 3));
+function abilityForFighter(fighter) {
+  if (fighter.ability) return fighter.ability;
+  if (fighter.habilidade) return fighter.habilidade;
+  if (fighter.class_key === 'paladino') return ABILITIES.SHIELD;
+  if (fighter.class_key === 'guerreiro') return ABILITIES.TAUNT;
+  return ABILITIES.POISON;
 }
 
-const BATTLE_STATS = ['atk', 'def', 'lck', 'spd', 'hp'];
+export function cardEnergyCost(card) {
+  const rarity = String(card?.raridade || '').toLowerCase();
+  if (rarity.includes('lend') || rarity.includes('epic') || rarity.includes('pic')) return 4;
+  if (rarity.includes('raro') || rarity.includes('rare')) return 3;
+  if (rarity.includes('incomum') || rarity.includes('uncommon')) return 2;
+  return Math.min(2, Math.max(1, Number(card?.intensidade || 1)));
+}
+
+export function canAffordCard(player, card) {
+  return Number(player?.energy || 0) >= cardEnergyCost(card);
+}
 
 export function effectiveStat(fighter, stat) {
   if (!BATTLE_STATS.includes(stat)) throw new Error('Atributo de batalha invalido.');
@@ -37,13 +57,64 @@ export function effectiveBattleStats(fighter) {
   };
 }
 
-function speedDamageModifier(attacker, defender) {
-  const speedDelta = effectiveStat(attacker, 'spd') - effectiveStat(defender, 'spd');
-  return clamp(Math.trunc(speedDelta / 3), -3, 3);
-}
-
 export function canStartBattle(fighters, cards) {
   return fighters.length >= 6 && cards.length >= 6;
+}
+
+function battleLog(battle, text) {
+  const entry = { id: `${Date.now()}-${battle.history.length}`, text, createdAt: Date.now() };
+  battle.history.push(entry);
+  battle.log.push(text);
+}
+
+function activeFighters(player) {
+  return player.fighters.filter(fighter => fighter.alive);
+}
+
+function normalizeCard(card) {
+  return { ...card, used: false, cost: cardEnergyCost(card) };
+}
+
+function normalizeFighter(fighter, fighterIndex) {
+  const ability = abilityForFighter(fighter);
+  return {
+    ...fighter,
+    ability,
+    max_hp: fighter.hp,
+    current_hp: fighter.hp,
+    alive: true,
+    eliminated: false,
+    active: fighterIndex < 2,
+    reserve: fighterIndex === 2,
+    buffs: { atk: 0, def: 0, lck: 0, spd: 0, hp: 0 },
+    shield_active: ability === ABILITIES.SHIELD,
+    poison: null,
+  };
+}
+
+function applyPoisonStart(battle, player) {
+  for (const fighter of player.fighters) {
+    if (!fighter.alive || !fighter.poison?.turns) continue;
+    fighter.current_hp = Math.max(0, fighter.current_hp - fighter.poison.damage);
+    fighter.poison.turns -= 1;
+    battleLog(battle, `${fighter.nome} sofreu ${fighter.poison.damage} de veneno`);
+    if (fighter.current_hp <= 0) {
+      fighter.alive = false;
+      fighter.eliminated = true;
+      battle.stats.cardsEliminated += 1;
+      battleLog(battle, `${fighter.nome} caiu pelo veneno`);
+    }
+    if (fighter.poison.turns <= 0) fighter.poison = null;
+  }
+}
+
+function startTurn(battle, playerIndex) {
+  const player = battle.players[playerIndex];
+  player.energy = Math.min(player.max_energy, (player.energy || 0) + 1);
+  player.drawn_this_turn = false;
+  applyPoisonStart(battle, player);
+  battleLog(battle, `${player.name} iniciou o turno com energia ${player.energy}/${player.max_energy}`);
+  drawCard(battle);
 }
 
 export function createBattle({ fighters, cards, playerName, player2Name }) {
@@ -54,38 +125,31 @@ export function createBattle({ fighters, cards, playerName, player2Name }) {
   const shuffledFighters = [...fighters].sort(() => Math.random() - 0.5).slice(0, 6).map(clone);
   const shuffledCards = [...cards].sort(() => Math.random() - 0.5).slice(0, 6).map(clone);
 
-  const players = [0, 1].map(index => {
-    const team = shuffledFighters.slice(index * 3, index * 3 + 3).map((fighter, fighterIndex) => ({
-      ...fighter,
-      max_hp: fighter.hp,
-      current_hp: fighter.hp,
-      alive: true,
-      active: fighterIndex < 2,
-      reserve: fighterIndex === 2,
-      buffs: { atk: 0, def: 0, lck: 0, spd: 0, hp: 0 },
-    }));
+  const players = [0, 1].map(index => ({
+    name: index === 0 ? (playerName || 'Jogador 1') : (player2Name || 'Jogador 2'),
+    fighters: shuffledFighters.slice(index * 3, index * 3 + 3).map(normalizeFighter),
+    deck: shuffledCards.slice(index * 3, index * 3 + 3).map(normalizeCard),
+    hand: [],
+    drawn_this_turn: false,
+    energy: START_ENERGY,
+    max_energy: ENERGY_MAX,
+  }));
 
-    return {
-      name: index === 0 ? (playerName || 'Jogador 1') : (player2Name || 'Jogador 2'),
-      fighters: team,
-      deck: shuffledCards.slice(index * 3, index * 3 + 3).map(card => ({ ...card, used: false })),
-      hand: [],
-      drawn_this_turn: false,
-    };
-  });
-
-  // Iniciativa: o time mais rápido (maior SPD total) começa. Empate → Jogador 1.
-  const teamSpd = (p) => p.fighters.reduce((total, f) => total + effectiveStat(f, 'spd'), 0);
-  const turn = teamSpd(players[1]) > teamSpd(players[0]) ? 1 : 0;
-
-  return {
+  const battle = {
     players,
-    turn,
+    turn: 0,
     selectedOwnId: null,
     selectedEnemyId: null,
     selectedCardId: null,
-    log: [`⚡ ${players[turn].name} é mais rápido e começa!`],
+    log: [],
+    history: [],
+    startedAt: Date.now(),
+    stats: { damageByPlayer: [0, 0], cardsEliminated: 0 },
   };
+
+  startTurn(battle, 0);
+  battleLog(battle, `${players[0].name} começa o duelo`);
+  return battle;
 }
 
 export function currentPlayer(battle) {
@@ -102,108 +166,54 @@ export function totalHp(player) {
 
 export function getTurnGuidance(battle) {
   const player = currentPlayer(battle);
-
-  if (!player.drawn_this_turn) {
-    return {
-      phase: 'Comprar carta',
-      hint: 'Toque em Comprar para iniciar o turno. Depois escolha atacante e alvo.',
-      nextAction: 'draw',
-    };
-  }
-
-  if (battle.selectedCardId) {
-    const card = player.hand.find(item => item.id === battle.selectedCardId && !item.used);
-    if (card?.polaridade === 'DEBUFF' && !battle.selectedEnemyId) {
-      return {
-        phase: 'Escolher alvo da carta',
-        hint: 'Essa carta é debuff. Toque em um inimigo para aplicar o efeito.',
-        nextAction: 'select-enemy-card-target',
-      };
-    }
-
-    if (card?.polaridade !== 'DEBUFF' && !battle.selectedOwnId) {
-      return {
-        phase: 'Escolher aliado da carta',
-        hint: 'Essa carta é bônus. Toque em um lutador do seu time para aplicar o efeito.',
-        nextAction: 'select-own-card-target',
-      };
-    }
-
-    return {
-      phase: 'Usar carta ou atacar',
-      hint: 'Você pode usar a carta selecionada ou partir para o ataque.',
-      nextAction: 'use-card',
-    };
-  }
-
-  if (!battle.selectedOwnId) {
-    return {
-      phase: 'Escolher atacante',
-      hint: 'Toque em um lutador do seu time para escolher quem vai atacar.',
-      nextAction: 'select-attacker',
-    };
-  }
-
-  if (!battle.selectedEnemyId) {
-    return {
-      phase: 'Escolher alvo',
-      hint: 'Agora toque em um lutador inimigo para mirar o ataque.',
-      nextAction: 'select-target',
-    };
-  }
-
-  return {
-    phase: 'Pronto para atacar',
-    hint: 'Tudo pronto. Toque em ATACAR para rolar o d20.',
-    nextAction: 'attack',
-  };
+  const playable = player.hand.filter(card => !card.used && canAffordCard(player, card));
+  if (!player.drawn_this_turn) return { phase: 'Comprar carta', hint: 'A compra acontece automaticamente no inicio do turno.', nextAction: 'draw' };
+  if (playable.length) return { phase: 'Jogar ou atacar', hint: 'Arraste uma carta para um alvo ou toque em atacante e alvo para prever o ataque.', nextAction: 'act' };
+  return { phase: 'Encerrar turno', hint: 'Sem energia para cartas. Ataque ou encerre o turno.', nextAction: 'end-turn' };
 }
 
-// Mostra ao jogador se o atacante selecionado tem vantagem/desvantagem contra o alvo.
 export function getMatchupHint(battle) {
   const own = currentPlayer(battle).fighters.find(f => f.id === battle.selectedOwnId && f.alive);
   const foe = enemyPlayer(battle).fighters.find(f => f.id === battle.selectedEnemyId && f.alive);
   if (!own || !foe) return null;
-  return classMatchup(own, foe).label; // 'vantagem' | 'desvantagem' | null
+  return classMatchup(own, foe).label;
 }
 
 export function canUseSelectedCard(battle) {
   const player = currentPlayer(battle);
   const card = player.hand.find(item => item.id === battle.selectedCardId && !item.used);
-  if (!card) return false;
-
+  if (!card || !canAffordCard(player, card)) return false;
   if (card.polaridade === 'DEBUFF') return Boolean(battle.selectedEnemyId);
   return Boolean(battle.selectedOwnId);
 }
 
 export function canAttackSelectedTarget(battle) {
-  const player = currentPlayer(battle);
-  return Boolean(player.drawn_this_turn && battle.selectedOwnId && battle.selectedEnemyId);
+  return Boolean(battle.selectedOwnId && battle.selectedEnemyId);
 }
 
 export function drawCard(battle) {
   const player = currentPlayer(battle);
-  if (player.drawn_this_turn) return { ok: false, message: 'Você já comprou neste turno.' };
-
+  if (player.drawn_this_turn) return { ok: false, message: 'Voce ja comprou neste turno.' };
   player.drawn_this_turn = true;
   battle.selectedCardId = null;
 
   if (!player.deck.length) {
-    battle.log.push(`🃏 ${player.name} tentou comprar, mas o deck está vazio.`);
+    battleLog(battle, `${player.name} tentou comprar, mas o deck esta vazio`);
     return { ok: true };
   }
 
   const card = player.deck.shift();
   player.hand.push(card);
-  battle.log.push(`🃏 ${player.name} comprou ${card.nome_efeito}.`);
-  return { ok: true };
+  battleLog(battle, `${player.name} comprou ${card.nome_efeito}`);
+  return { ok: true, cardId: card.id };
 }
 
 export function useSelectedCard(battle) {
   const player = currentPlayer(battle);
   const enemy = enemyPlayer(battle);
   const card = player.hand.find(item => item.id === battle.selectedCardId && !item.used);
-  if (!card) return { ok: false, message: 'Escolha uma carta válida.' };
+  if (!card) return { ok: false, message: 'Escolha uma carta valida.' };
+  if (!canAffordCard(player, card)) return { ok: false, message: 'Energia insuficiente.' };
 
   const isDebuff = card.polaridade === 'DEBUFF';
   const targetPlayer = isDebuff ? enemy : player;
@@ -211,9 +221,9 @@ export function useSelectedCard(battle) {
   if (!targetId) return { ok: false, message: isDebuff ? 'Escolha um inimigo.' : 'Escolha um aliado.' };
 
   const target = targetPlayer.fighters.find(fighter => fighter.id === targetId && fighter.alive);
-  if (!target) return { ok: false, message: 'Alvo inválido.' };
+  if (!target) return { ok: false, message: 'Alvo invalido.' };
 
-  const attr = card.atributo.toLowerCase();
+  const attr = String(card.atributo).toLowerCase();
   const signal = isDebuff ? -1 : 1;
   if (attr === 'hp') {
     target.max_hp = Math.max(1, (target.max_hp || target.hp || 1) + signal * card.intensidade);
@@ -223,106 +233,133 @@ export function useSelectedCard(battle) {
     target.buffs[attr] = (target.buffs[attr] || 0) + signal * card.intensidade;
   }
   card.used = true;
+  player.energy = Math.max(0, player.energy - cardEnergyCost(card));
 
-  battle.log.push(`✨ ${player.name} usou ${card.nome_efeito}: ${signal > 0 ? '+' : '-'}${card.intensidade} ${card.atributo} em ${target.nome}.`);
+  battleLog(battle, `${player.name} jogou ${card.nome_efeito}`);
+  battleLog(battle, `${target.nome} recebeu ${signal > 0 ? '+' : ''}${signal * card.intensidade} ${card.atributo}`);
   battle.selectedCardId = null;
 
-  return { ok: true };
+  return {
+    ok: true,
+    effectName: card.nome_efeito,
+    targetId: target.id,
+    targetName: target.nome,
+    attr: card.atributo,
+    value: signal * card.intensidade,
+    isDebuff,
+    energyCost: cardEnergyCost(card),
+  };
+}
+
+export function previewAttack(battle, attackerId = battle.selectedOwnId, defenderId = battle.selectedEnemyId) {
+  const attacker = currentPlayer(battle).fighters.find(fighter => fighter.id === attackerId && fighter.alive);
+  const defender = enemyPlayer(battle).fighters.find(fighter => fighter.id === defenderId && fighter.alive);
+  if (!attacker || !defender) return null;
+  const matchup = classMatchup(attacker, defender);
+  const base = Math.max(1, effectiveStat(attacker, 'atk') - Math.floor(effectiveStat(defender, 'def') / 2));
+  return {
+    attackerName: attacker.nome,
+    defenderName: defender.nome,
+    min: Math.max(1, Math.round(base * matchup.mult)),
+    max: Math.max(2, Math.round((base + 4) * matchup.mult)),
+  };
+}
+
+function forcedTauntTarget(enemy) {
+  return activeFighters(enemy).find(fighter => fighter.ability === ABILITIES.TAUNT);
 }
 
 export function attackSelectedTarget(battle) {
   const player = currentPlayer(battle);
   const enemy = enemyPlayer(battle);
 
-  if (!player.drawn_this_turn) return { ok: false, message: 'Compre uma carta antes de atacar.' };
   if (!battle.selectedOwnId) return { ok: false, message: 'Escolha seu atacante.' };
   if (!battle.selectedEnemyId) return { ok: false, message: 'Escolha o alvo inimigo.' };
 
   const attacker = player.fighters.find(fighter => fighter.id === battle.selectedOwnId && fighter.alive);
   const defender = enemy.fighters.find(fighter => fighter.id === battle.selectedEnemyId && fighter.alive);
+  if (!attacker || !defender) return { ok: false, message: 'Atacante ou alvo invalido.' };
 
-  if (!attacker || !defender) return { ok: false, message: 'Atacante ou alvo inválido.' };
-
-  const d20 = rand(1, 20);
-  const atk = effectiveStat(attacker, 'atk');
-  const def = effectiveStat(defender, 'def');
-  const lck = effectiveStat(attacker, 'lck');
-  const speedModifier = speedDamageModifier(attacker, defender);
-  const matchup = classMatchup(attacker, defender);
-
-  // Texto da matchup pro log.
-  const advText = matchup.label === 'vantagem'
-    ? ' 🔥 vantagem de classe!'
-    : matchup.label === 'desvantagem'
-      ? ' 🛡️ resistido (desvantagem)'
-      : '';
-
-  const speedText = speedModifier > 0
-    ? ` velocidade +${speedModifier}`
-    : speedModifier < 0
-      ? ` alvo mais rapido ${speedModifier}`
-      : '';
-
-  let damage = Math.max(1, atk + d20 + speedModifier - def);
-
-  if (d20 === 1) {
-    // Falha crítica — usa o "vacilo" do fighter (ignora vantagem).
-    damage = 1;
-    const erro = attacker.erro || 'errou feio';
-    battle.log.push(`🎲 d20=1. 💫 FALHA! ${attacker.nome} ${erro} e causou só ${damage}.`);
-  } else {
-    const isCrit = d20 >= critThreshold(lck);
-    if (isCrit) damage *= 2;
-    // Vantagem/desvantagem de classe ajusta o dano final.
-    damage = Math.max(1, Math.round(damage * matchup.mult));
-    const golpe = attacker.golpe || 'um golpe';
-    const critText = isCrit ? '💥 CRÍTICO! ' : '';
-    battle.log.push(`🎲 d20=${d20}. ${critText}${attacker.nome} usou ${golpe}${advText}${speedText} e causou ${damage} em ${defender.nome}.`);
+  const taunt = forcedTauntTarget(enemy);
+  if (taunt && taunt.id !== defender.id) {
+    return { ok: false, message: `${taunt.nome} esta provocando. Ataque ele primeiro.` };
   }
 
-  defender.current_hp = Math.max(0, defender.current_hp - damage);
+  const preview = previewAttack(battle, attacker.id, defender.id);
+  const missRoll = rand(1, 20);
+  if (missRoll === 1) {
+    const missName = attacker.erro || 'Vacilo';
+    battleLog(battle, `${attacker.nome} vacilou: ${missName}`);
+    return {
+      ok: true,
+      damage: 0,
+      miss: true,
+      targetId: defender.id,
+      attackerId: attacker.id,
+      targetName: defender.nome,
+      moveName: attacker.golpe || 'Ataque',
+      missName,
+      needsPass: true,
+    };
+  }
+  let damage = rand(preview.min, preview.max);
+  const blocked = Boolean(defender.shield_active);
+  if (blocked) {
+    defender.shield_active = false;
+    damage = 0;
+    battleLog(battle, `${defender.nome} bloqueou com Escudo`);
+  } else {
+    defender.current_hp = Math.max(0, defender.current_hp - damage);
+    battle.stats.damageByPlayer[battle.turn] += damage;
+    battleLog(battle, `${attacker.nome} causou ${damage} de dano em ${defender.nome}`);
+  }
 
-  if (defender.current_hp <= 0) {
+  if (!blocked && damage > 0 && attacker.ability === ABILITIES.POISON) {
+    defender.poison = { turns: 3, damage: 1, sourceId: attacker.id };
+    battleLog(battle, `${defender.nome} foi envenenado`);
+  }
+
+  if (defender.current_hp <= 0 && defender.alive) {
     defender.alive = false;
-    defender.active = false;
-    battle.log.push(`💀 ${defender.nome} caiu.`);
-    bringReserve(enemy, battle);
+    defender.eliminated = true;
+    battle.stats.cardsEliminated += 1;
+    battleLog(battle, `${defender.nome} caiu`);
   }
 
   const winner = getWinner(battle);
-  if (winner) return { ok: true, winner, damage, d20, speedModifier };
-
-  passTurn(battle);
-  return { ok: true, damage, d20, speedModifier };
-}
-
-function bringReserve(player, battle) {
-  const reserve = player.fighters.find(fighter => fighter.reserve && fighter.alive && !fighter.active);
-  if (!reserve) return;
-
-  reserve.reserve = false;
-  reserve.active = true;
-  battle.log.push(`🛡️ ${player.name} colocou ${reserve.nome} em campo.`);
+  return {
+    ok: true,
+    winner,
+    damage,
+    blocked,
+    targetId: defender.id,
+    attackerId: attacker.id,
+    targetName: defender.nome,
+    moveName: attacker.golpe || 'Ataque',
+    missName: attacker.erro || 'Vacilo',
+    needsPass: !winner,
+  };
 }
 
 export function passTurn(battle) {
   const player = currentPlayer(battle);
-  player.drawn_this_turn = false;
   player.hand = player.hand.filter(card => !card.used);
+  for (const item of battle.players) {
+    item.fighters = item.fighters.filter(fighter => fighter.alive);
+  }
 
   battle.selectedOwnId = null;
   battle.selectedEnemyId = null;
   battle.selectedCardId = null;
   battle.turn = battle.turn === 0 ? 1 : 0;
-  battle.log.push(`📱 Passe o celular para ${currentPlayer(battle).name}.`);
+  startTurn(battle, battle.turn);
 }
 
 export function getWinner(battle) {
   const alive0 = battle.players[0].fighters.some(fighter => fighter.alive);
   const alive1 = battle.players[1].fighters.some(fighter => fighter.alive);
-
   if (alive0 && alive1) return null;
   if (alive0) return battle.players[0];
   if (alive1) return battle.players[1];
-  return { name: 'Empate técnico' };
+  return { name: 'Empate tecnico' };
 }

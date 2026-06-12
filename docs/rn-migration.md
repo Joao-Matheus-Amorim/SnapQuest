@@ -1,6 +1,6 @@
 # Migracao React Native + Expo
 
-Ultima atualizacao: 2026-06-10.
+Ultima atualizacao: 2026-06-12.
 
 ## Status atual
 
@@ -24,6 +24,7 @@ A migracao para React Native + Expo saiu do bootstrap e chegou a um MVP mobile f
 - Login/cadastro Supabase com confirmacao de email e guest mode.
 - Perfil `snapquest_profiles` garantido no primeiro login.
 - Batalha local completa usando o core.
+- Testes automatizados do core de batalha via `npm run test:core`.
 - TypeScript estrito via `expo/tsconfig.base`.
 
 ## Decisoes preservadas
@@ -46,7 +47,7 @@ O projeto esta alinhado ao Expo SDK 54 para compatibilidade com o dispositivo de
 - `npm run test:rls:catalog` passou com usuario comum e usuario dono no Supabase real em 2026-06-10.
 - Validar rollout final de fotos em Supabase Storage no ambiente alvo.
 - Validar comportamento real da edge Gemini no fluxo operacional.
-- Adicionar testes automatizados de batalha.
+- Validar batalha atual em dispositivo fisico com toque/arrasto.
 
 ## Comandos uteis
 

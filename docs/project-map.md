@@ -1,6 +1,6 @@
 # Mapa do Projeto SnapQuest
 
-Data de referencia: 2026-06-10.
+Data de referencia: 2026-06-12.
 
 Este documento descreve onde cada parte do SnapQuest vive e qual responsabilidade cada area possui.
 
@@ -28,7 +28,7 @@ Local: `src/app/`
 | `index.tsx` | Home mobile gamificada: Mesa de Batalha, progresso de deck, quests, colecao e status de conta/sync. |
 | `camera.tsx` | Portal de captura, camera, galeria no modo admin de catalogo, permissoes e orquestracao do salvamento de captura bruta. Helpers de URI/copia ficam em `src/lib/capturePhotoSource.ts`. |
 | `inventory.tsx` | Camara do Grimorio: pendentes, transformacao, IA opcional, criacao, filtros, exclusao, revelacao e colecao visual por raridade. |
-| `battle.tsx` | Batalha local completa, setup, turnos, selecao, cartas, ataques e vencedor. |
+| `battle.tsx` | Batalha local completa, setup, energia, mao de cartas, toque/arrasto, ataques, habilidades, log recolhivel e vencedor. |
 | `login.tsx` | Login/cadastro Supabase com guest mode e mensagens de confirmacao. |
 
 ## Componentes mobile

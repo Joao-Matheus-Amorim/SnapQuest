@@ -1,12 +1,12 @@
 # Registro de Divida Tecnica
 
-Ultima atualizacao: 2026-06-10.
+Ultima atualizacao: 2026-06-12.
 
 | ID | Item | Motivo | Impacto | Plano | Status |
 |---|---|---|---:|---|---|
 | TD-001 | Fotos em `photo_data_url` no banco | MVP sem Storage remoto | Alto | Fechado em codigo/schema: `photo_storage_path`, bucket privado `snapquest-photos`, signed URLs e fallback legado de leitura | Fechado |
 | TD-002 | Testes automatizados ainda minimos | Fase de validacao rapida | Alto | Fechado com `npm run test:core`: balance, factories, sugestao de carta e batalha avancada | Fechado |
-| TD-003 | LCK e SPD sem efeito completo | Regra de batalha ainda simples | Medio | Fechado: LCK define faixa de critico; SPD define iniciativa e modificador de ataque capado; stats efetivos documentados e testados | Fechado |
+| TD-003 | LCK e SPD sem efeito especial no combate atual | Regra atual prioriza clareza de turno, energia, ATK/DEF, classe e habilidades; SPD/LCK ficam para versao futura | Medio | Planejar regra especifica de SPD/LCK depois do playtest da batalha atual, sem misturar com estabilizacao de toque/arrasto | Aberto |
 | TD-004 | Auth/conta com UX de MVP | Validacao antes de polimento | Medio | Fechado: sessao agora garante `snapquest_profiles`, login/cadastro distinguem confirmacao de email, home exibe estado de conta/sync e modo admin deriva do perfil | Fechado |
 | TD-005 | `App.tsx` legado ainda no repo | Entry atual usa Expo Router | Baixo | Fechado: `App.tsx` foi removido e o entry mobile ficou consolidado em `expo-router/entry` | Fechado |
 | TD-006 | Gemini chamado diretamente do app | Prototipo rapido de IA | Alto | Fechado: app chama `gemini-transform` via Supabase Edge Function, com secrets privados no backend e fallback offline preservado | Fechado |

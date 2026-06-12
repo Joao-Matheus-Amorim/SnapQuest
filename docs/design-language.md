@@ -157,7 +157,7 @@ No-op em web e quando desligado. Nunca lanca.
 | Camera/Portal (`camera.tsx`) | **Premium aplicado**: portal com video de cena, runa/sigilo, raios por camada, haptics e fluxo de captura limpo |
 | Grimorio/Deck (`inventory.tsx`) | **Premium aplicado em primeira passada**: Camara do Grimorio, HUD de prontidao, filtros magicos e cards com `CardTemplate` unico por raridade |
 | Reveal (`RevealModal.tsx`) | **Premium cinematografico** (cerimonia full-screen, sigilo, feixes, shockwave, carta 3D, haptics, CTA 3D) |
-| Batalha (`battle.tsx`) | Pendente — arena/HUD de turno premium |
+| Batalha (`battle.tsx`) | **Em refinamento**: arena vertical, mao de cartas, energia, toque/arrasto direto, golpes/vacilos e log recolhivel; precisa de validacao visual em Android real |
 | BottomNav (`BottomNav.tsx`) | **Premium aplicado**: HUD inferior com runas, gemas, pedestal, halos e estados ativos |
 
 ---

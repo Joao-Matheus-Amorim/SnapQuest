@@ -114,8 +114,8 @@ function RarityPill({ label, color, active, onPress }: {
 export default function InventoryScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const horizontalPadding = 18;
-  const gridGap = 12;
+  const horizontalPadding = 14;
+  const gridGap = 10;
   const cardWidth = Math.min(164, Math.floor((screenWidth - horizontalPadding * 2 - gridGap) / 2));
 
   const inv = useInventory();
@@ -293,7 +293,7 @@ export default function InventoryScreen() {
       <GrimorioBackdrop />
       <ScrollView
         style={s.scroll}
-        contentContainerStyle={[s.container, { paddingTop: insets.top + 18 }]}
+        contentContainerStyle={[s.container, { paddingTop: insets.top + 10 }]}
         showsVerticalScrollIndicator={false}
       >
       <Animated.View entering={FadeInDown.duration(420).springify().damping(16)} style={s.titleRow}>
@@ -396,9 +396,8 @@ export default function InventoryScreen() {
           ))}
         </View>
       )}
-
-      <BottomNav />
       </ScrollView>
+      <BottomNav />
       {pendingCreate !== null ? (
         <NameInputModal
           visible
@@ -433,8 +432,8 @@ const s = StyleSheet.create({
     flex: 1,
   },
   container: {
-    paddingHorizontal: 18,
-    paddingBottom: BOTTOM_NAV_HEIGHT + 18,
+    paddingHorizontal: 14,
+    paddingBottom: BOTTOM_NAV_HEIGHT + 22,
   },
   backGlowMagenta: {
     position: "absolute",
@@ -468,15 +467,15 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     overflow: "hidden",
-    minHeight: 78,
-    borderRadius: 18,
+    minHeight: 58,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "rgba(245,197,66,.34)",
     backgroundColor: "rgba(6,12,26,.86)",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginTop: 8,
-    marginBottom: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 4,
+    marginBottom: 10,
     shadowColor: COLORS.accent,
     shadowOpacity: 0.24,
     shadowRadius: 18,
@@ -492,8 +491,8 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
   },
   hudCrest: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: RADIUS.round,
@@ -506,31 +505,31 @@ const s = StyleSheet.create({
   },
   hudCrestText: {
     color: COLORS.gold,
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "900",
   },
   hudLabel: {
     color: COLORS.cream,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "900",
-    letterSpacing: 1.2,
+    letterSpacing: 0.8,
   },
   hudValue: {
     color: COLORS.accent,
-    fontSize: 21,
+    fontSize: 17,
     fontWeight: "900",
-    marginTop: 3,
+    marginTop: 1,
     textShadowColor: "rgba(52,225,255,.55)",
     textShadowRadius: 10,
   },
   hudDivider: {
-    width: 50,
+    width: 30,
     alignItems: "center",
     justifyContent: "center",
   },
   hudDividerText: {
     color: COLORS.accent,
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: "900",
     textShadowColor: COLORS.accent,
     textShadowRadius: 12,
@@ -555,12 +554,12 @@ const s = StyleSheet.create({
   },
   subtitle: { color: COLORS.textMuted, fontSize: 13, marginTop: 7, lineHeight: 19 },
   editBtn: {
-    minWidth: 46,
-    height: 34,
+    minWidth: 40,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(234,242,255,.24)",
     backgroundColor: "rgba(6,12,26,.66)",
@@ -569,7 +568,7 @@ const s = StyleSheet.create({
     shadowRadius: 10,
   },
   editBtnActive: { backgroundColor: COLORS.green, borderColor: COLORS.greenSoft, shadowColor: COLORS.green },
-  editBtnText: { color: COLORS.gold, fontSize: 12, fontWeight: "900", letterSpacing: 0.6 },
+  editBtnText: { color: COLORS.gold, fontSize: 10.5, fontWeight: "900", letterSpacing: 0.5 },
   editBtnTextActive: { color: "#06140b" },
   cardSlot: {
     position: "relative",
@@ -636,51 +635,51 @@ const s = StyleSheet.create({
     shadowRadius: 14,
   },
   pendingBadgeText: { color: COLORS.bgNav, fontSize: 15, fontWeight: "900" },
-  section: { marginBottom: 20 },
+  section: { marginBottom: 14 },
   sectionTitle: {
     color: COLORS.gold,
-    fontSize: 24,
+    fontSize: 17,
     fontWeight: "900",
-    marginBottom: 12,
+    marginBottom: 5,
     textTransform: "uppercase",
-    letterSpacing: 3,
+    letterSpacing: 1.5,
     textAlign: "center",
     textShadowColor: "rgba(245,197,66,.38)",
     textShadowRadius: 10,
   },
   minorSectionTitle: {
     color: COLORS.gold,
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: "900",
-    marginBottom: 12,
+    marginBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 1.3,
+    letterSpacing: 0.9,
     textShadowColor: "rgba(245,197,66,.38)",
     textShadowRadius: 10,
   },
   sectionHeader: {
     alignItems: "center",
-    marginBottom: 18,
+    marginBottom: 10,
   },
   sectionMeta: {
     color: COLORS.textMuted,
-    fontSize: 14,
-    marginTop: -4,
-    marginBottom: 7,
+    fontSize: 11,
+    marginTop: -2,
+    marginBottom: 5,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
   titleFlourish: {
-    width: 110,
+    width: 74,
     height: 1,
-    marginBottom: 8,
+    marginBottom: 5,
     borderRadius: RADIUS.round,
     backgroundColor: "rgba(245,197,66,.38)",
   },
   viewTabs: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 22,
+    gap: 7,
+    marginBottom: 10,
   },
   catalogNotice: {
     borderWidth: 1,
@@ -696,15 +695,15 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(244,63,94,.1)",
   },
   catalogNoticeText: { color: COLORS.cream, fontSize: 12, lineHeight: 17 },
-  typeTabs: { flexDirection: "row", gap: 8, marginBottom: 14 },
+  typeTabs: { flexDirection: "row", gap: 7, marginBottom: 9 },
   typeTab: {
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderRadius: 14,
+    minHeight: 34,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(52,225,255,.26)",
     backgroundColor: "rgba(18,33,66,.7)",
@@ -717,25 +716,25 @@ const s = StyleSheet.create({
     borderColor: COLORS.cream,
     shadowOpacity: 0.58,
   },
-  typeTabText: { color: COLORS.accent, fontSize: 13, fontWeight: "900", letterSpacing: 0.6, textTransform: "uppercase", textAlign: "center" },
+  typeTabText: { color: COLORS.accent, fontSize: 10.5, fontWeight: "900", letterSpacing: 0.4, textTransform: "uppercase", textAlign: "center" },
   typeTabTextActive: { color: COLORS.bgNav },
-  rarityRow: { marginBottom: 16 },
-  rarityContent: { gap: 8, paddingRight: 8 },
+  rarityRow: { marginBottom: 11 },
+  rarityContent: { gap: 7, paddingRight: 8 },
   rarityPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: RADIUS.round,
     borderWidth: 1.5,
     backgroundColor: "rgba(6,12,26,.52)",
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
-  rarityPillText: { fontSize: 12, fontWeight: "900", letterSpacing: 0.3 },
+  rarityPillText: { fontSize: 10.5, fontWeight: "900", letterSpacing: 0.2 },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
-    paddingTop: 4,
+    gap: 10,
+    paddingTop: 2,
     paddingBottom: 8,
     alignItems: "flex-start",
     justifyContent: "center",
@@ -757,22 +756,22 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: "rgba(245,197,66,.28)",
-    marginBottom: 10,
+    marginBottom: 8,
     overflow: "hidden",
     shadowColor: COLORS.primary,
     shadowOpacity: 0.18,
     shadowRadius: 12,
   },
-  pendingPhoto: { width: 90, height: 90 },
-  pendingInfo: { flex: 1, padding: 10, justifyContent: "space-between" },
+  pendingPhoto: { width: 72, height: 72 },
+  pendingInfo: { flex: 1, padding: 8, justifyContent: "space-between" },
   pendingLabelRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 },
-  pendingLabel: { color: COLORS.gold, fontSize: 12, fontWeight: "900" },
+  pendingLabel: { color: COLORS.gold, fontSize: 11, fontWeight: "900" },
   catalogBadge: { backgroundColor: COLORS.primary, borderRadius: RADIUS.sm, paddingHorizontal: 5, paddingVertical: 1 },
   catalogBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 },
-  pendingDate: { color: COLORS.textMuted, fontSize: 11 },
-  pendingActions: { flexDirection: "row", gap: 8 },
-  btnFighter: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 7 },
-  btnFighterText: { color: COLORS.cream, fontSize: 12, fontWeight: "900" },
-  btnCard: { borderColor: COLORS.gold, borderWidth: 1, borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: "rgba(245,197,66,.08)" },
-  btnCardText: { color: COLORS.gold, fontSize: 12, fontWeight: "900" },
+  pendingDate: { color: COLORS.textMuted, fontSize: 10 },
+  pendingActions: { flexDirection: "row", gap: 6 },
+  btnFighter: { backgroundColor: COLORS.primary, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  btnFighterText: { color: COLORS.cream, fontSize: 10.5, fontWeight: "900" },
+  btnCard: { borderColor: COLORS.gold, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: "rgba(245,197,66,.08)" },
+  btnCardText: { color: COLORS.gold, fontSize: 10.5, fontWeight: "900" },
 });

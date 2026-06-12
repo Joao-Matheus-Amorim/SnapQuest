@@ -1,6 +1,6 @@
 # Indice de Documentacao
 
-Data de referencia: 2026-06-10.
+Data de referencia: 2026-06-12.
 
 Este indice e a porta de entrada oficial para a documentacao do SnapQuest.
 
@@ -26,7 +26,7 @@ Este indice e a porta de entrada oficial para a documentacao do SnapQuest.
 - `catalog-rls-validation.md`: roteiro executavel para validar RLS do catalogo com usuario comum e dono.
 - `deploy-vercel.md`: deploy web.
 - `rn-migration.md`: historico e status da migracao React Native + Expo.
-- `battle-rules.md`: contrato de regras de batalha, LCK, SPD, critico, classe e reserva.
+- `battle-rules.md`: contrato de regras de batalha, energia, compra automatica, cartas, dano, classe, habilidades, vacilo e vencedor.
 - `gemini-transform-flow.md`: fluxo foto -> IA -> item jogavel.
 - `gemini-card-suggestions.md`: contrato de sugestao de cartas.
 

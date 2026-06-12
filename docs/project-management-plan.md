@@ -150,4 +150,4 @@ O projeto e considerado tecnicamente rastreavel quando:
 | GAP-002 | Gemini rodava no app com chave publica. | Fechado em codigo; rollout operacional depende apenas do ambiente alvo. |
 | GAP-003 | Fotos ainda podiam ir como `photo_data_url`. | Fechado em codigo/schema; validar rollout completo no Supabase alvo. |
 | GAP-004 | Poucos testes automatizados de comportamento. | Fechado para core: `npm run test:core` cobre balance, factories, sugestao de carta e batalha avancada; smoke mobile/web segue como melhoria. |
-| GAP-005 | LCK e SPD nao tinham efeito completo na batalha. | Fechado: regra documentada em `battle-rules.md`, implementada no core e coberta por testes. |
+| GAP-005 | LCK e SPD nao tem efeito especial na batalha atual. | Aceito como escopo futuro; a regra atual prioriza energia, ATK/DEF, classe e habilidades passivas e esta documentada em `battle-rules.md`. |

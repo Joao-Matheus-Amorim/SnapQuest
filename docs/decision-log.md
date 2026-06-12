@@ -151,3 +151,13 @@ Decisao: adotar formalmente duas ideias validadas em dispositivo como contrato d
 Motivo: a UI mobile passou por refinamentos ate validar um padrao premium coeso; sem travar paleta e linguagem, cada tela divergia e o resultado parecia dashboard. As duas direcoes anteriores haviam sido recusadas por ficarem amadoras ou administrativas.
 
 Consequencia: `src/theme/tokens.ts` e a fonte unica de cores/molas. Toda tela nova ou refino segue `docs/design-language.md`. Home e Conta/Login ja estao no padrao; Camera, Grimorio, Reveal, Batalha e BottomNav devem ser migrados sem misturar com banco/RLS/Storage/Gemini/regra de batalha.
+
+## D-016 - Simplificar o duelo atual antes de reintroduzir SPD/LCK
+
+Data: 2026-06-12
+
+Decisao: a batalha mobile atual prioriza clareza operacional: energia por turno, compra automatica, cartas por toque/arrasto, ataque direto, ATK/DEF, classe, vacilo e habilidades passivas. SPD e LCK permanecem como atributos, mas nao controlam iniciativa, critico ou dano nesta versao.
+
+Motivo: o fluxo anterior ficou confuso para jogar no celular, com preview/confirmacao e sinais pouco claros sobre quem ataca, quem recebe buff/debuff e quando o dano acontece.
+
+Consequencia: `docs/battle-rules.md`, testes do core e UI de `battle.tsx` passam a refletir o contrato simples atual. SPD/LCK voltam como refinamento futuro apos playtest real da batalha estabilizada.

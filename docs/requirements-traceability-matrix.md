@@ -1,6 +1,6 @@
 # Matriz de Rastreabilidade de Requisitos
 
-Data de referencia: 2026-06-11.
+Data de referencia: 2026-06-12.
 
 Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atualizada quando o produto ganhar ou perder comportamento.
 
@@ -10,7 +10,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-002 | Manter core de jogo separado da UI. | `src/js/core/` | `scripts/check.mjs` verifica arquivos core | Implementado |
 | REQ-003 | Criar Fighters por regra pura. | `src/js/core/fighters.js` | `npm run test:core` e uso em mobile/web | Implementado |
 | REQ-004 | Criar Cartas por regra pura. | `src/js/core/cards.js` | `npm run test:core` e uso em mobile/web | Implementado |
-| REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx`, `docs/battle-rules.md` | `npm run test:core` cobre turnos, cartas, dano, classe, LCK, SPD, critico, falha, reserva e vencedor; TypeScript | Implementado |
+| REQ-005 | Executar batalha local. | `src/js/core/battle.js`, `src/hooks/useBattle.ts`, `src/app/battle.tsx`, `docs/battle-rules.md` | `npm run test:core` cobre turnos, energia, compra automatica, cartas, dano, classe, habilidades passivas, vacilo, queda e vencedor; TypeScript | Implementado |
 | REQ-006 | Bloquear batalha sem inventario minimo. | `src/hooks/useInventory.ts`, `src/app/battle.tsx` | `npm run test:core`; regra lida via `canStartBattle` | Implementado |
 | REQ-007 | Capturar foto no mobile. | `src/app/camera.tsx`, `expo-image-picker`, `expo-media-library` | TypeScript; check de `getAssetInfoAsync` | Implementado |
 | REQ-008 | Guardar capturas brutas separadas do deck. | `src/hooks/useCapturedPhotos.ts` | `npm run check` verifica contrato | Implementado |
@@ -33,7 +33,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-025 | CI minima. | `.github/workflows/ci.yml` | GitHub Actions com Expo check, test:core, typecheck, static check e build | Implementado |
 | REQ-026 | Documentacao de governanca e estado. | `docs/` | Revisao documental | Implementado |
 | REQ-027 | Apresentar a experiencia mobile com linguagem visual de jogo, nao dashboard generico. | `src/app/index.tsx`, `src/app/camera.tsx`, `src/components/BottomNav.tsx`, `src/components/FighterCard.tsx`, `src/components/CardItem.tsx`, `src/components/card/CardTemplate.tsx`, `src/components/NameInputModal.tsx` | `npx tsc --noEmit`, `npm run check`, validacao visual manual em dispositivo | Implementado em primeira passada |
-| REQ-028 | Aplicar sistema de design premium "Arena + Arcano Petroleo & Magenta" com profundidade, movimento e haptics, respeitando acessibilidade. | `docs/design-language.md`, `src/theme/tokens.ts`, `src/lib/haptics.ts`, `src/lib/useReducedMotion.ts`, `src/components/game/*`, `src/components/motion/*`, `src/app/index.tsx`, `src/app/login.tsx`, `src/app/camera.tsx`, `src/app/inventory.tsx`, `src/components/BottomNav.tsx`, `src/components/FighterCard.tsx`, `src/components/CardItem.tsx`, `src/components/card/CardTemplate.tsx`, `src/components/card/cardFrameConfig.ts`, `assets/card-frames/*`, `babel.config.cjs` | `npx tsc --noEmit`, `npm run check`, `npm run build`, validacao visual em dispositivo (Home, Login, BottomNav, Portal e Deck/Grimorio) | Implementado em Home/Login, BottomNav, Reveal, Portal e Deck/Grimorio; Batalha segue pendente de refinamento premium |
+| REQ-028 | Aplicar sistema de design premium "Arena + Arcano Petroleo & Magenta" com profundidade, movimento e haptics, respeitando acessibilidade. | `docs/design-language.md`, `src/theme/tokens.ts`, `src/lib/haptics.ts`, `src/lib/useReducedMotion.ts`, `src/components/game/*`, `src/components/motion/*`, `src/app/index.tsx`, `src/app/login.tsx`, `src/app/camera.tsx`, `src/app/inventory.tsx`, `src/app/battle.tsx`, `src/components/BottomNav.tsx`, `src/components/FighterCard.tsx`, `src/components/CardItem.tsx`, `src/components/card/CardTemplate.tsx`, `src/components/card/cardFrameConfig.ts`, `assets/card-frames/*`, `babel.config.cjs` | `npx tsc --noEmit`, `npm run check`, `npm run build`, validacao visual em dispositivo (Home, Login, BottomNav, Portal e Deck/Grimorio; Batalha ainda exige playtest real) | Implementado em Home/Login, BottomNav, Reveal, Portal e Deck/Grimorio; Batalha em refinamento funcional/visual |
 
 ## Gaps por requisito
 
@@ -43,7 +43,7 @@ Esta matriz liga requisito, implementacao, validacao e status. Ela deve ser atua
 | REQ-019 | Catalogo precisa de validacao de leitura no fluxo app completo. | Validar leitura/cloud, seed por vazio/incompleto e seed por erro no app, alem do teste RLS direto. |
 | REQ-025 | CI ainda nao cobre RLS real. | Manter `test:rls:catalog` como gate manual/local porque depende de usuarios reais. |
 | REQ-027 | UI/UX gamificada ainda precisa de validacao visual em celular e refinamento de inventario/batalha. | Testar no dispositivo e continuar por telas, sem misturar banco/regra. |
-| REQ-028 | Sistema premium ainda nao esta completo em todas as quatro areas: Base, Portal e Deck/Grimorio estao no padrao; Duelo segue pendente de refinamento visual. Skia reservado para futuro dev build. | Propagar `docs/design-language.md` para Duelo; avaliar dev build quando quiser efeitos Skia. |
+| REQ-028 | Sistema premium ainda nao esta completo em todas as quatro areas: Base, Portal e Deck/Grimorio estao no padrao; Duelo esta em refinamento e precisa de validacao em Android real. Skia reservado para futuro dev build. | Validar Duelo em dispositivo, ajustar legibilidade/toque/arrasto e avaliar dev build quando quiser efeitos Skia. |
 
 ## Regra de manutencao
 

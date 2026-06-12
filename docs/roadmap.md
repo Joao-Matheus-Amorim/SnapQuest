@@ -1,6 +1,6 @@
 # Roadmap do SnapQuest
 
-Ultima atualizacao: 2026-06-10.
+Ultima atualizacao: 2026-06-12.
 
 Este roadmap registra fases, status e proximas entregas. Ele deve refletir codigo real, nao intencao.
 
@@ -75,9 +75,12 @@ Entregas:
 - `useBattle` encapsulando o core.
 - Setup de dois jogadores.
 - Passar celular entre turnos.
-- Compra, carta, ataque e vencedor.
-- UI com HP, selecao e log.
-- LCK com faixa de critico e SPD com iniciativa/modificador de ataque.
+- Energia por turno.
+- Compra automatica de carta no inicio do turno.
+- Uso de cartas por toque/arrasto.
+- Ataque direto por toque/arrasto.
+- Habilidades passivas: provocar, escudo e veneno.
+- UI com HP por carta, mao de cartas, indicador de turno, log recolhivel e vencedor.
 
 Divida:
 
@@ -87,7 +90,7 @@ Divida:
 - TD-004 fechado: conta mobile agora garante perfil, diferencia confirmacao de email, mostra estado de sync e usa permissao real de catalogo.
 - Base UX de conta/catalogo reforcada: `AuthProvider` unico no layout e fallback de catalogo visivel para a UI.
 - TD-002 fechado: cobertura automatizada do core MVP esta completa para balance, factories, sugestao de cartas e batalha local.
-- TD-003 fechado: regras de LCK/SPD estao documentadas em `battle-rules.md`, implementadas no core e expostas na UI.
+- TD-003 reaberto como escopo futuro: LCK/SPD existem como atributos, mas nao controlam iniciativa/critico nesta versao.
 
 ## Fase 5 - Cerimonia de criacao e IA
 
@@ -138,8 +141,20 @@ Possiveis entregas:
 - Multiplayer online.
 - Publicacao mobile.
 
+## Fase futura - Refinos avancados de combate
+
+Status: futuro.
+
+Possiveis entregas:
+
+- Iniciativa ou ordem por SPD.
+- Critico, esquiva ou sorte por LCK.
+- Balanceamento por raridade e custo apos telemetria/manual playtest.
+- Animacoes finais de batalha validadas em Android real.
+
 ## Prioridade imediata recomendada
 
-1. Refinar cerimonia visual.
-2. Criar smoke test mobile/web.
-3. Validar fluxo local/cloud em dispositivo sem misturar escopos.
+1. Validar batalha em dispositivo real com toque/arrasto.
+2. Refinar cerimonia visual.
+3. Criar smoke test mobile/web.
+4. Validar fluxo local/cloud em dispositivo sem misturar escopos.

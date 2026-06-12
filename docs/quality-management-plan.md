@@ -1,6 +1,6 @@
 # Plano de Gerenciamento da Qualidade
 
-Data de referencia: 2026-06-10.
+Data de referencia: 2026-06-12.
 
 Este plano define como o SnapQuest previne falso verde, regressao e documentacao enganosa.
 
@@ -32,7 +32,7 @@ Este plano define como o SnapQuest previne falso verde, regressao e documentacao
 | Area | Cobertura | Lacuna |
 |---|---|---|
 | Presenca de arquivos criticos | `scripts/check.mjs` | Nao valida comportamento real completo. |
-| Core de jogo | `npm run test:core` cobre balanceamento, factories, sugestao de cartas, compra, cartas, dano, turno, vencedor, critico, falha critica, matchup e reserva | Nao substitui E2E mobile nem validacao RLS real. |
+| Core de jogo | `npm run test:core` cobre balanceamento, factories, sugestao de cartas, energia, compra automatica, cartas, dano, turno, vencedor, vacilo, habilidades passivas e matchup | Nao substitui E2E mobile nem validacao RLS real. |
 | RLS basica | `scripts/check.mjs` busca RLS e `auth.uid()`; `npm run test:rls:catalog` passou no Supabase real em 2026-06-10 | Rerodar quando catalogo/RLS mudar. |
 | Mobile storage | `scripts/check.mjs` verifica fallback web/native | Nao testa falhas reais de plataforma. |
 | Gemini/mock | `scripts/check.mjs` verifica invoke da edge function e fallback mock | Nao testa API real nem cota. |
