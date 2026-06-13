@@ -1321,7 +1321,7 @@ export default function BattleScreen() {
           <HpBar current={totalHp(cur)} max={cur.fighters.reduce((sum, fighter) => sum + fighter.max_hp, 0)} tall color={COLORS.red} />
         </View>
         <View style={arenaStyles.phasePill}>
-          <Text style={arenaStyles.phaseText}>{guidance?.phase ?? "Arena"}</Text>
+          <Text style={arenaStyles.phaseText} numberOfLines={1} adjustsFontSizeToFit>{guidance?.phase ?? "Arena"}</Text>
           <Text style={arenaStyles.phaseHint} numberOfLines={2}>{battleHint}</Text>
         </View>
         <View style={[arenaStyles.playerScore, arenaStyles.enemyScore, { borderColor: foeTone.border, backgroundColor: foeTone.panel, shadowColor: foeTone.accent }]}>
@@ -1924,7 +1924,9 @@ const arenaStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.bgDeep, padding: 6, gap: 5 },
   topHud: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 42 },
   playerScore: {
-    width: 160,
+    flex: 1,
+    minWidth: 0,
+    maxWidth: 160,
     padding: 6,
     borderRadius: RADIUS.md,
     borderWidth: 1,

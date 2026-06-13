@@ -1,30 +1,35 @@
 /**
- * Cena de fundo "Arena de batalha" (Expo Go safe): ceu petroleo, glow radial
- * real do portal (SVG), runa magica girando, raios de energia e relampagos
- * crepitando. Da sensacao de combate arcano. Sem Skia.
+ * Cena de fundo "Arena de batalha" (Expo Go safe): usa a ARTE como base
+ * (assets/arena/arena-bg.png) encaixada INTEIRA (contain) e centralizada, com
+ * fundo escuro nas bordas. Anima por cima — brilho pulsante no circulo magico,
+ * shimmer girando sobre as runas e faiscas subindo dos 4 cristais (magenta no
+ * topo = inimigo, ciano embaixo = jogador). Sem Skia. Overlays ancorados no
+ * retangulo real da imagem para baterem com a arte em qualquer tela.
  */
 import { useEffect } from "react";
-import { useWindowDimensions, StyleSheet, View } from "react-native";
+import { useWindowDimensions, StyleSheet, View, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Circle, Line, Polyline, Defs, RadialGradient as SvgRadial, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, RadialGradient as SvgRadial, Stop } from "react-native-svg";
 import Animated, {
-  useAnimatedStyle, useSharedValue, withRepeat, withTiming, withDelay, withSequence, Easing,
+  useAnimatedStyle, useSharedValue, withRepeat, withTiming, withDelay, Easing,
 } from "react-native-reanimated";
 import { useReducedMotion } from "../../lib/useReducedMotion";
 
-const SPARKS = [
-  { x: 0.18, size: 3, delay: 0, dur: 6200, color: "#34e1ff" },
-  { x: 0.32, size: 2, delay: 1800, dur: 7400, color: "#ff3db4" },
-  { x: 0.46, size: 4, delay: 600, dur: 5600, color: "#f5c542" },
-  { x: 0.6, size: 2, delay: 2600, dur: 8000, color: "#6c8cff" },
-  { x: 0.72, size: 3, delay: 1200, dur: 6800, color: "#34e1ff" },
-  { x: 0.84, size: 2, delay: 3200, dur: 7000, color: "#ff3db4" },
-  { x: 0.26, size: 2, delay: 4000, dur: 7600, color: "#f5c542" },
-  { x: 0.66, size: 3, delay: 5000, dur: 6000, color: "#34e1ff" },
+const ARENA_IMG = require("../../../assets/arena/arena-bg.png");
+const IMG_W = 941;
+const IMG_H = 1672;
+
+// Posicoes na ARTE (proporcao da imagem, nao da tela).
+const CORE = { x: 0.5, y: 0.45 };
+const CRYSTALS = [
+  { x: 0.10, y: 0.17, color: "#ff3db4" },
+  { x: 0.90, y: 0.17, color: "#ff3db4" },
+  { x: 0.10, y: 0.80, color: "#34e1ff" },
+  { x: 0.90, y: 0.80, color: "#34e1ff" },
 ];
 
-function Spark({ x, size, delay, dur, color, width, height }: {
-  x: number; size: number; delay: number; dur: number; color: string; width: number; height: number;
+function Spark({ left, top, size, delay, dur, color, rise, drift }: {
+  left: number; top: number; size: number; delay: number; dur: number; color: string; rise: number; drift: number;
 }) {
   const p = useSharedValue(0);
   useEffect(() => {
@@ -32,69 +37,35 @@ function Spark({ x, size, delay, dur, color, width, height }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: -p.value * height * 0.85 }],
+    transform: [{ translateY: -p.value * rise }, { translateX: Math.sin(p.value * Math.PI * 2) * drift }],
     opacity: Math.sin(p.value * Math.PI) * 0.9,
   }));
   return (
     <Animated.View
       pointerEvents="none"
       style={[
-        { position: "absolute", left: x * width, bottom: height * 0.08, width: size, height: size, borderRadius: size, backgroundColor: color, shadowColor: color, shadowOpacity: 0.9, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } },
+        { position: "absolute", left, top, width: size, height: size, borderRadius: size, backgroundColor: color, shadowColor: color, shadowOpacity: 0.95, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } },
         style,
       ]}
     />
   );
 }
 
-/** Gera os pontos de um relampago jagged entre dois pontos. */
-function bolt(x1: number, y1: number, x2: number, y2: number, segs: number, jitter: number) {
-  const pts: string[] = [];
-  for (let i = 0; i <= segs; i++) {
-    const tt = i / segs;
-    const x = x1 + (x2 - x1) * tt + (i === 0 || i === segs ? 0 : (Math.random() - 0.5) * jitter);
-    const y = y1 + (y2 - y1) * tt;
-    pts.push(`${x.toFixed(0)},${y.toFixed(0)}`);
-  }
-  return pts.join(" ");
-}
-
-function Lightning({ points, color, delay, width, height }: {
-  points: string; color: string; delay: number; width: number; height: number;
-}) {
-  const o = useSharedValue(0);
-  useEffect(() => {
-    o.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(0, { duration: 2600 }),
-          withTiming(1, { duration: 70 }),
-          withTiming(0.2, { duration: 80 }),
-          withTiming(0.9, { duration: 60 }),
-          withTiming(0, { duration: 220 })
-        ),
-        -1,
-        false
-      )
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const style = useAnimatedStyle(() => ({ opacity: o.value }));
-  return (
-    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, style]}>
-      <Svg width={width} height={height}>
-        <Polyline points={points} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" opacity={0.9} />
-        <Polyline points={points} fill="none" stroke="#ffffff" strokeWidth={1} strokeLinejoin="round" strokeLinecap="round" opacity={0.7} />
-      </Svg>
-    </Animated.View>
-  );
-}
-
 export function ArenaBackground() {
   const { width, height } = useWindowDimensions();
   const reduced = useReducedMotion();
-  const cx = width / 2;
-  const cy = height * 0.38;
+
+  // CONTAIN: maior escala que cabe inteiro, centralizado.
+  const scale = Math.min(width / IMG_W, height / IMG_H);
+  const imgW = IMG_W * scale;
+  const imgH = IMG_H * scale;
+  const imgLeft = (width - imgW) / 2;
+  const imgTop = (height - imgH) / 2;
+  const sx = (ix: number) => imgLeft + ix * imgW;
+  const sy = (iy: number) => imgTop + iy * imgH;
+
+  const cx = sx(CORE.x);
+  const cy = sy(CORE.y);
 
   const pulse = useSharedValue(0.5);
   const spin = useSharedValue(0);
@@ -105,98 +76,67 @@ export function ArenaBackground() {
       spin.value = 0;
       return;
     }
-    pulse.value = withRepeat(withTiming(1, { duration: 3600, easing: Easing.inOut(Easing.sin) }), -1, true);
-    spin.value = withRepeat(withTiming(1, { duration: 38000, easing: Easing.linear }), -1, false);
+    pulse.value = withRepeat(withTiming(1, { duration: 3400, easing: Easing.inOut(Easing.sin) }), -1, true);
+    spin.value = withRepeat(withTiming(1, { duration: 46000, easing: Easing.linear }), -1, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced]);
 
-  const glowStyle = useAnimatedStyle(() => ({ opacity: 0.55 + pulse.value * 0.35, transform: [{ scale: 0.94 + pulse.value * 0.1 }] }));
-  const runeStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value * 360}deg` }] }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: 0.4 + pulse.value * 0.45, transform: [{ scale: 0.92 + pulse.value * 0.12 }] }));
+  const shimmerStyle = useAnimatedStyle(() => ({ opacity: 0.22 + pulse.value * 0.18, transform: [{ rotate: `${spin.value * 360}deg` }] }));
 
-  // rune ring
-  const D = width * 1.0;
+  // Anel de shimmer sobre as runas, do tamanho do circulo na arte.
+  const D = imgW * 0.86;
   const rr = D / 2 - 6;
-  const ticks = Array.from({ length: 16 }, (_, i) => i);
 
-  // rays
-  const rays = Array.from({ length: 18 }, (_, i) => {
-    const a = (i / 18) * Math.PI * 2;
-    const r0 = width * 0.32;
-    const r1 = width * 0.62;
-    return {
-      x1: cx + Math.cos(a) * r0, y1: cy + Math.sin(a) * r0,
-      x2: cx + Math.cos(a) * r1, y2: cy + Math.sin(a) * r1,
-    };
-  });
+  const sparks = CRYSTALS.flatMap((c, ci) =>
+    [0, 1, 2].map((j) => ({
+      key: `${ci}-${j}`,
+      left: sx(c.x) + (j - 1) * (imgW * 0.014),
+      top: sy(c.y),
+      color: c.color,
+      size: 2 + (j % 2),
+      delay: ci * 650 + j * 900,
+      dur: 4200 + j * 700,
+      rise: imgH * 0.12,
+      drift: 5 + j * 2,
+    }))
+  );
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* ceu */}
-      <LinearGradient colors={["#0c1630", "#122142", "#0a1226", "#060c1a"]} locations={[0, 0.42, 0.78, 1]} style={StyleSheet.absoluteFill} />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: "#070b18" }]} pointerEvents="none">
+      {/* base: a arte inteira, centralizada */}
+      <Image source={ARENA_IMG} style={{ position: "absolute", left: imgLeft, top: imgTop, width: imgW, height: imgH }} resizeMode="cover" />
 
-      {/* glow radial real (SVG) */}
+      {/* brilho pulsante no circulo magico central */}
       <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
         <Svg width={width} height={height}>
           <Defs>
-            <SvgRadial id="halo" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor="#ff3db4" stopOpacity="0.55" />
-              <Stop offset="0.45" stopColor="#8b5cf6" stopOpacity="0.22" />
-              <Stop offset="1" stopColor="#0a1226" stopOpacity="0" />
-            </SvgRadial>
-            <SvgRadial id="core" cx="50%" cy="50%" r="50%">
+            <SvgRadial id="arenaCore" cx={cx} cy={cy} r={imgW * 0.5} gradientUnits="userSpaceOnUse">
               <Stop offset="0" stopColor="#34e1ff" stopOpacity="0.5" />
+              <Stop offset="0.55" stopColor="#3aa0ff" stopOpacity="0.18" />
               <Stop offset="1" stopColor="#34e1ff" stopOpacity="0" />
             </SvgRadial>
           </Defs>
-          <Circle cx={cx} cy={cy} r={width * 0.72} fill="url(#halo)" />
-          <Circle cx={cx} cy={cy} r={width * 0.34} fill="url(#core)" />
+          <Circle cx={cx} cy={cy} r={imgW * 0.5} fill="url(#arenaCore)" />
         </Svg>
       </Animated.View>
 
-      {/* raios de energia (estaticos, faint) */}
-      <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
-        {rays.map((r, i) => (
-          <Line key={i} x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} stroke="rgba(245,197,66,.12)" strokeWidth={1} />
-        ))}
-      </Svg>
-
-      {/* runa magica girando */}
-      <Animated.View style={[{ position: "absolute", left: cx - D / 2, top: cy - D / 2, width: D, height: D }, runeStyle]}>
-        <Svg width={D} height={D}>
-          <Circle cx={D / 2} cy={D / 2} r={rr} stroke="rgba(245,197,66,.4)" strokeWidth={1.5} fill="none" />
-          <Circle cx={D / 2} cy={D / 2} r={rr - 16} stroke="rgba(52,225,255,.3)" strokeWidth={1} fill="none" strokeDasharray="6 10" />
-          <Circle cx={D / 2} cy={D / 2} r={rr * 0.62} stroke="rgba(255,61,180,.25)" strokeWidth={1} fill="none" strokeDasharray="2 14" />
-          {ticks.map((i) => {
-            const a = (i / ticks.length) * Math.PI * 2;
-            const inR = rr - 4;
-            const outR = rr + 6;
-            return (
-              <Line
-                key={i}
-                x1={D / 2 + Math.cos(a) * inR} y1={D / 2 + Math.sin(a) * inR}
-                x2={D / 2 + Math.cos(a) * outR} y2={D / 2 + Math.sin(a) * outR}
-                stroke="rgba(245,197,66,.45)" strokeWidth={1.5}
-              />
-            );
-          })}
-        </Svg>
-      </Animated.View>
-
-      {/* relampagos */}
+      {/* shimmer de runa girando sobre o circulo */}
       {!reduced ? (
-        <>
-          <Lightning points={bolt(cx - width * 0.28, cy - height * 0.22, cx - width * 0.08, cy, 6, 26)} color="#34e1ff" delay={500} width={width} height={height} />
-          <Lightning points={bolt(cx + width * 0.3, cy - height * 0.16, cx + width * 0.06, cy + height * 0.04, 6, 28)} color="#ff3db4" delay={1900} width={width} height={height} />
-          <Lightning points={bolt(cx + width * 0.02, cy - height * 0.3, cx - width * 0.02, cy - height * 0.02, 7, 22)} color="#f5c542" delay={3400} width={width} height={height} />
-        </>
+        <Animated.View style={[{ position: "absolute", left: cx - D / 2, top: cy - D / 2, width: D, height: D }, shimmerStyle]}>
+          <Svg width={D} height={D}>
+            <Circle cx={D / 2} cy={D / 2} r={rr} stroke="rgba(52,225,255,.5)" strokeWidth={1.5} fill="none" strokeDasharray="3 16" />
+            <Circle cx={D / 2} cy={D / 2} r={rr * 0.72} stroke="rgba(120,180,255,.4)" strokeWidth={1} fill="none" strokeDasharray="2 18" />
+          </Svg>
+        </Animated.View>
       ) : null}
 
-      {/* faiscas */}
-      {!reduced ? SPARKS.map((sp, i) => <Spark key={i} {...sp} width={width} height={height} />) : null}
+      {/* faiscas dos cristais */}
+      {!reduced ? sparks.map(({ key, ...sp }) => <Spark key={key} {...sp} />) : null}
 
-      {/* vinheta */}
-      <LinearGradient colors={["rgba(6,12,26,.82)", "rgba(6,12,26,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: height * 0.26 }} />
-      <LinearGradient colors={["rgba(6,12,26,0)", "rgba(6,12,26,.96)"]} style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: height * 0.46 }} />
+      {/* leve scrim para assentar a UI sem apagar a arte */}
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(6,12,26,.12)" }]} />
+      <LinearGradient colors={["rgba(6,12,26,0)", "rgba(7,11,24,.65)"]} style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: height * 0.22 }} />
     </View>
   );
 }
