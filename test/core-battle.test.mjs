@@ -152,18 +152,28 @@ test('previewAttack returns a visible damage range', () => {
   assert.equal(preview.max > preview.min, true);
 });
 
-test('shield blocks first attack and is consumed', () => {
+test('shield is a luck-based block, not consumed, and can fail', () => {
   const battle = makeBattle();
-  battle.players[1].fighters[1].alive = false;
+  battle.players[1].fighters[1].alive = false; // remove o taunt p2-b
   drawCard(battle);
+
+  // rolagem baixa (0.05 -> escudo rola 6, dentro dos 30%) bloqueia
   battle.selectedOwnId = 'p1-b';
   battle.selectedEnemyId = 'p2-a';
+  const blocked = withRandom(0.05, () => attackSelectedTarget(battle));
+  assert.equal(blocked.ok, true);
+  assert.equal(blocked.blocked, true);
+  assert.equal(blocked.damage, 0);
+  // NAO consome: o escudo continua ativo
+  assert.equal(battle.players[1].fighters[0].shield_active, true);
 
-  const result = withRandom(0.5, () => attackSelectedTarget(battle));
-  assert.equal(result.ok, true);
-  assert.equal(result.blocked, true);
-  assert.equal(result.damage, 0);
-  assert.equal(battle.players[1].fighters[0].shield_active, false);
+  // rolagem alta (0.9 -> escudo rola 91, fora dos 30%) NAO bloqueia
+  battle.players[0].attacked_this_turn = false;
+  battle.selectedOwnId = 'p1-b';
+  battle.selectedEnemyId = 'p2-a';
+  const landed = withRandom(0.9, () => attackSelectedTarget(battle));
+  assert.equal(landed.ok, true);
+  assert.equal(landed.blocked, false);
 });
 
 test('taunt forces attacks into provoking fighter first', () => {
@@ -223,6 +233,21 @@ test('defeated cards stay until end turn then are removed', () => {
   assert.equal(battle.players[1].fighters.some((fighter) => fighter.id === defender.id), true);
   passTurn(battle);
   assert.equal(battle.players[1].fighters.some((fighter) => fighter.id === defender.id), false);
+});
+
+test('class luck: guerreiro lands a critical (x2) and reports it', () => {
+  const battle = makeBattle();
+  battle.players[1].fighters[1].alive = false; // remove o taunt p2-b para mirar livre
+  drawCard(battle);
+  battle.selectedOwnId = 'p1-a'; // guerreiro
+  battle.selectedEnemyId = 'p2-c'; // arqueiro, sem escudo
+
+  // 0.1 -> proc de classe rola 11 (<=30, ativa) e nao da vacilo
+  const result = withRandom(0.1, () => attackSelectedTarget(battle));
+  assert.equal(result.ok, true);
+  assert.equal(result.blocked, false);
+  assert.equal(result.critical, true);
+  assert.equal(result.procName, 'Critico');
 });
 
 test('only one attack per turn is allowed and selection clears after attacking', () => {

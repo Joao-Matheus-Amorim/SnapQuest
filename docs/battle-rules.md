@@ -83,6 +83,17 @@ Efeito atual:
 - o nome do vacilo do Fighter e retornado para a UI;
 - a UI mostra o vacilo como evento cinematografico, sem expor mecanica de dado.
 
+## Sorte de classe (proc de 30%)
+
+Cada ataque tem 30% de chance de ativar o proc da classe do ATACANTE (puro dado):
+
+- Guerreiro — Critico: dano x2.
+- Arqueiro — Certeiro: ignora a DEF do alvo (recalcula o dano como dano cheio).
+- Mago — Arcano: dano x1.6 e atravessa o escudo do alvo.
+- Paladino — Escudo: e a sorte defensiva (ver abaixo), 30% de bloquear o golpe recebido.
+
+So um proc por golpe, definido pela classe do atacante. O resultado retorna `critical` e `procName` para a UI.
+
 ## Habilidades passivas
 
 ### Provocar
@@ -91,7 +102,7 @@ Enquanto existir um Fighter inimigo vivo com `provocar`, ataques precisam mirar 
 
 ### Escudo
 
-Bloqueia o primeiro ataque recebido e consome o escudo.
+Cada ataque recebido tem 30% de chance de ser bloqueado (dano 0). E pura sorte: o escudo nao e consumido e a chance vale para todo ataque enquanto o fighter viver.
 
 ### Veneno
 

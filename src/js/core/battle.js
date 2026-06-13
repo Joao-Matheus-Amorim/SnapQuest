@@ -10,6 +10,8 @@ const CLASS_ADVANTAGE = {
 const BATTLE_STATS = ['atk', 'def', 'lck', 'spd', 'hp'];
 const ENERGY_MAX = 5;
 const START_ENERGY = 1;
+const SHIELD_BLOCK_CHANCE = 30; // % de chance do escudo bloquear cada golpe (puro dado)
+const CLASS_LUCK_CHANCE = 30; // % de chance do proc de classe do atacante (critico/certeiro/arcano)
 
 export const ABILITIES = {
   TAUNT: 'provocar',
@@ -317,16 +319,36 @@ export function attackSelectedTarget(battle) {
       needsPass: true,
     };
   }
-  let damage = rand(preview.min, preview.max);
-  const blocked = Boolean(defender.shield_active);
+  // Sorte de classe do ATACANTE (CLASS_LUCK_CHANCE%): efeito proprio por classe.
+  // guerreiro = critico (x2); arqueiro = certeiro (ignora a DEF do alvo);
+  // mago = arcano (x1.6 e atravessa o escudo). So um aplica (o fighter e de uma classe).
+  const classLucky = rand(1, 100) <= CLASS_LUCK_CHANCE;
+  const crit = classLucky && attacker.class_key === 'guerreiro';
+  const pierce = classLucky && attacker.class_key === 'arqueiro';
+  const arcane = classLucky && attacker.class_key === 'mago';
+
+  let damage;
+  if (pierce) {
+    // Certeiro: recalcula a faixa ignorando a DEF do alvo (dano cheio).
+    const matchup = classMatchup(attacker, defender);
+    const base = Math.max(1, effectiveStat(attacker, 'atk'));
+    damage = rand(Math.max(1, Math.round(base * matchup.mult)), Math.max(2, Math.round((base + 4) * matchup.mult)));
+  } else {
+    damage = rand(preview.min, preview.max);
+  }
+  if (crit) damage = Math.round(damage * 2);
+  if (arcane) damage = Math.round(damage * 1.6);
+
+  // Escudo bloqueia 30% (puro dado, sem consumir). O ARCANO do mago atravessa.
+  const blocked = !arcane && Boolean(defender.shield_active) && rand(1, 100) <= SHIELD_BLOCK_CHANCE;
+  const procName = blocked ? null : crit ? 'Critico' : pierce ? 'Certeiro' : arcane ? 'Arcano' : null;
   if (blocked) {
-    defender.shield_active = false;
     damage = 0;
     battleLog(battle, `${defender.nome} bloqueou com Escudo`);
   } else {
     defender.current_hp = Math.max(0, defender.current_hp - damage);
     battle.stats.damageByPlayer[battle.turn] += damage;
-    battleLog(battle, `${attacker.nome} causou ${damage} de dano em ${defender.nome}`);
+    battleLog(battle, `${attacker.nome} causou ${damage} de dano em ${defender.nome}${procName ? ` (${procName})` : ''}`);
   }
 
   if (!blocked && damage > 0 && attacker.ability === ABILITIES.POISON) {
@@ -352,6 +374,8 @@ export function attackSelectedTarget(battle) {
     targetName: defender.nome,
     moveName: attacker.golpe || 'Ataque',
     missName: attacker.erro || 'Vacilo',
+    critical: Boolean(procName),
+    procName: procName || undefined,
     needsPass: !winner,
   };
 }

@@ -14,6 +14,7 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  type SharedValue,
 } from "react-native-reanimated";
 import { useInventory } from "../hooks/useInventory";
 import { useBattle } from "../hooks/useBattle";
@@ -240,13 +241,9 @@ function FighterTile({
   const effectBadges = activeEffectBadges(fighter);
   const hasBuff = effectBadges.some((badge) => !badge.debuff);
   const hasDebuff = effectBadges.some((badge) => badge.debuff);
-  const hitText = damageEvent?.targetId === fighter.id
-    ? damageEvent.blocked
-      ? "ESCUDO"
-      : damageEvent.damage
-        ? `-${damageEvent.damage}`
-        : "0"
-    : "HIT";
+  // Texto da tirinha de impacto so para o caso qualitativo (escudo). O numero
+  // de dano fica por conta do damageNumber, sem "-X" duplicado no mesmo card.
+  const hitText = damageEvent?.targetId === fighter.id && damageEvent?.blocked ? "ESCUDO" : "";
   const life = useSharedValue(hpPct);
   const damageRise = useSharedValue(0);
   const rarePulse = useSharedValue(0);
@@ -418,7 +415,7 @@ function FighterTile({
           <Text style={fighterStyles.attackLiftText}>GOLPE</Text>
         </Animated.View>
         <Animated.View pointerEvents="none" style={[fighterStyles.hitFlash, hitFlashStyle]}>
-          <Text style={fighterStyles.hitFlashText}>{hitText}</Text>
+          {hitText ? <Text style={fighterStyles.hitFlashText}>{hitText}</Text> : null}
         </Animated.View>
         {effectBadges.length ? (
           <View pointerEvents="none" style={fighterStyles.effectBadges}>
@@ -600,31 +597,46 @@ function TurnIndicator({
 function FanCard({
   index,
   count,
+  cardId,
   selected,
   disabled,
   playable,
   cost,
   onPress,
   onDrop,
+  onMeasure,
   children,
 }: {
   index: number;
   count: number;
+  cardId: string;
   selected: boolean;
   disabled?: boolean;
   playable: boolean;
   cost: number;
   onPress: () => void;
   onDrop: (point: DropPoint) => void;
+  onMeasure?: (id: string, rect: { x: number; y: number; width: number; height: number }) => void;
   children: React.ReactNode;
 }) {
   const center = (count - 1) / 2;
   const offset = index - center;
   const rotate = selected ? 0 : offset * 5;
   const translateY = Math.abs(offset) * 5 - (selected ? 34 : 0);
+  const cardRef = useRef<any>(null);
+
+  function measureCard() {
+    cardRef.current?.measureInWindow?.((x: number, y: number, width: number, height: number) => onMeasure?.(cardId, { x, y, width, height }));
+  }
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 35).springify().damping(15)} style={[{ marginLeft: index === 0 ? 0 : -18 }, selected && { zIndex: 40 }]}>
+    <Animated.View
+      ref={cardRef}
+      collapsable={false}
+      onLayout={measureCard}
+      entering={FadeInDown.delay(index * 35).springify().damping(15)}
+      style={[{ marginLeft: index === 0 ? 0 : -18 }, selected && { zIndex: 40 }]}
+    >
       <DraggableAction
         disabled={disabled}
         onTap={onPress}
@@ -652,6 +664,7 @@ function HandFan({
   selectedCardId,
   onSelectCard,
   onUseCard,
+  onMeasureCard,
   player,
 }: {
   cards: BattleCard[];
@@ -659,13 +672,16 @@ function HandFan({
   selectedCardId: string | null;
   onSelectCard: (id: string) => void;
   onUseCard: (id: string, point: DropPoint) => void;
+  onMeasureCard?: (id: string, rect: { x: number; y: number; width: number; height: number }) => void;
   player: BattlePlayer;
 }) {
-  const count = cards.length;
+  // Cartas usadas somem da mao (a animacao de desintegracao representa a saida).
+  const hand = cards.filter((card) => !card.used);
+  const count = hand.length;
   return (
     <View style={handStyles.fanWrap}>
       <View style={handStyles.fanRow}>
-        {cards.map((card, index) => (
+        {hand.map((card, index) => (
           (() => {
             const playable = !card.used && canAffordCard(player, card);
             return (
@@ -673,12 +689,14 @@ function HandFan({
             key={card.id}
             index={index}
             count={count}
+            cardId={card.id}
             selected={selectedCardId === card.id}
             disabled={!playable}
             playable={playable}
             cost={card.cost ?? cardEnergyCost(card)}
             onPress={() => onSelectCard(card.id)}
             onDrop={(point) => onUseCard(card.id, point)}
+            onMeasure={onMeasureCard}
           >
             <GameCard data={effectCardToCardData(card)} width={cardWidth} glow={false} />
             <View
@@ -745,86 +763,195 @@ function ActionButton({
   );
 }
 
+// Feedback de tela MINIMO: so um flash sutil + um anel unico no ataque.
+// O protagonismo do feedback fica no card alvo (numero de dano + HP) e no
+// banner de texto (FloatingEvent). Sem slash/shockwave/cinema/sweep poluindo.
 function ImpactOverlay({ event }: { event: BattleAction | null }) {
   const progress = useSharedValue(0);
-  const drift = useSharedValue(0);
 
   useEffect(() => {
     if (!event) return;
     progress.value = 0;
-    drift.value = 0;
     progress.value = withSequence(
-      withTiming(1, { duration: event.type === "attack" ? 720 : 420, easing: Easing.out(Easing.cubic) }),
-      withDelay(event.type === "attack" ? 420 : 0, withTiming(0, { duration: event.type === "attack" ? 760 : 360, easing: Easing.in(Easing.cubic) }))
+      withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
+      withTiming(0, { duration: 460, easing: Easing.in(Easing.cubic) })
     );
-    drift.value = withTiming(1, { duration: event.type === "attack" ? 1350 : 760, easing: Easing.out(Easing.cubic) });
-  }, [drift, event, progress]);
-
-  const ring = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [{ scale: 0.35 + progress.value * 2.4 }],
-  }));
+  }, [event, progress]);
 
   const flash = useAnimatedStyle(() => ({
-    opacity: progress.value * (event?.type === "attack" ? 0.14 : 0.12),
+    opacity: progress.value * (event?.type === "attack" ? 0.12 : 0.1),
   }));
 
-  const cinema = useAnimatedStyle(() => ({
-    opacity: event?.type === "attack" ? progress.value : 0,
-    transform: [{ scaleY: 0.72 + progress.value * 0.28 }],
-  }));
-
-  const slash = useAnimatedStyle(() => ({
-    opacity: event?.type === "attack" ? progress.value : 0,
-    transform: [
-      { rotate: "-18deg" },
-      { scaleX: 0.16 + drift.value * 1.72 },
-      { translateX: -120 + drift.value * 240 },
-    ],
-  }));
-
-  const shockwave = useAnimatedStyle(() => ({
-    opacity: event?.type === "attack" ? progress.value * 0.82 : 0,
-    transform: [{ scale: 0.26 + drift.value * 3.1 }, { rotate: `${drift.value * 28}deg` }],
-  }));
-
-  const cardBurst = useAnimatedStyle(() => ({
-    opacity: event?.type === "card" || event?.type === "draw" ? progress.value : 0,
-    transform: [
-      { translateY: 28 - drift.value * 62 },
-      { scale: 0.72 + progress.value * 0.5 },
-      { rotate: `${-8 + drift.value * 16}deg` },
-    ],
-  }));
-
-  const turnSweep = useAnimatedStyle(() => ({
-    opacity: event?.type === "pass" ? progress.value : 0,
-    transform: [{ translateX: -220 + drift.value * 440 }],
-  }));
-
-  const selectPing = useAnimatedStyle(() => ({
-    opacity: event?.type === "select" ? progress.value : 0,
-    transform: [{ scale: 0.55 + drift.value * 1.6 }],
+  const ring = useAnimatedStyle(() => ({
+    opacity: event?.type === "attack" ? progress.value * 0.8 : 0,
+    transform: [{ scale: 0.4 + progress.value * 2.2 }],
   }));
 
   if (!event || (event.type !== "attack" && event.type !== "card")) return null;
 
-  const color = event.type === "attack" ? COLORS.red : event.type === "card" ? COLORS.accent : COLORS.gold;
+  const color = event.type === "attack" ? COLORS.red : COLORS.accent;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: color }, flash]} />
-      <Animated.View style={[arenaStyles.cinemaBarTop, cinema]} />
-      <Animated.View style={[arenaStyles.cinemaBarBottom, cinema]} />
-      <Animated.View style={[arenaStyles.impactRing, { borderColor: color, shadowColor: color }, ring]} />
-      <Animated.View style={[arenaStyles.attackShockwave, { borderColor: COLORS.gold, shadowColor: COLORS.red }, shockwave]} />
-      <Animated.View style={[arenaStyles.attackSlash, { backgroundColor: COLORS.red, shadowColor: COLORS.red }, slash]} />
-      <Animated.View style={[arenaStyles.attackSlash, arenaStyles.attackSlashThin, { backgroundColor: COLORS.gold, shadowColor: COLORS.gold }, slash]} />
-      <Animated.View style={[arenaStyles.cardBurst, { borderColor: color, shadowColor: color }, cardBurst]}>
-        <Text style={[arenaStyles.cardBurstText, { color }]}>ARC</Text>
-      </Animated.View>
-      <Animated.View style={[arenaStyles.turnSweep, { backgroundColor: color, shadowColor: color }, turnSweep]} />
-      <Animated.View style={[arenaStyles.selectPing, { borderColor: color, shadowColor: color }, selectPing]} />
+      {event.type === "attack" ? (
+        <Animated.View style={[arenaStyles.impactRing, { borderColor: color, shadowColor: color }, ring]} />
+      ) : null}
+    </View>
+  );
+}
+
+// FX de carta: a carta usada se desintegra em particulas que voam e se integram
+// no card alvo (buff = verde no aliado / debuff = vermelho no inimigo).
+type CastFx = {
+  key: number;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  color: string;
+  debuff: boolean;
+};
+
+const CAST_PARTICLES = 32;
+const CAST_DURATION = 2000;
+
+function CastParticle({ index, fx, progress }: { index: number; fx: CastFx; progress: SharedValue<number> }) {
+  const angle = (index / CAST_PARTICLES) * Math.PI * 2 + (index % 3) * 0.4;
+  const radius = 18 + (index % 6) * 11;
+  const delay = (index % 6) * 0.05;
+  const lift = 22 + (index % 4) * 14;
+  const size = 5 + (index % 4) * 3;
+  // ~1/3 das particulas sao nucleos brancos quentes (mais luz).
+  const hot = index % 3 === 0;
+  const aStyle = useAnimatedStyle(() => {
+    const raw = (progress.value - delay) / (1 - delay);
+    const p = Math.max(0, Math.min(1, raw));
+    const spread = Math.sin(p * Math.PI) * radius;
+    const x = fx.fromX + (fx.toX - fx.fromX) * p + Math.cos(angle) * spread;
+    const y = fx.fromY + (fx.toY - fx.fromY) * p + Math.sin(angle) * spread - Math.sin(p * Math.PI) * lift;
+    const opacity = p <= 0 ? 0 : p < 0.1 ? p / 0.1 : p > 0.9 ? (1 - p) / 0.1 : 1;
+    return { opacity, transform: [{ translateX: x }, { translateY: y }, { scale: 0.5 + (1 - p) * 1.1 }] };
+  });
+  return (
+    <Animated.View
+      style={[
+        {
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: size,
+          height: size,
+          borderRadius: size,
+          backgroundColor: hot ? "#ffffff" : fx.color,
+          shadowColor: fx.color,
+          shadowOpacity: 1,
+          shadowRadius: hot ? 16 : 12,
+          shadowOffset: { width: 0, height: 0 },
+        },
+        aStyle,
+      ]}
+    />
+  );
+}
+
+function SourceShatter({ fx, progress }: { fx: CastFx; progress: SharedValue<number> }) {
+  const cardStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    return {
+      opacity: p < 0.45 ? 1 - (p / 0.45) * 0.92 : 0,
+      transform: [
+        { translateX: fx.fromX - 18 },
+        { translateY: fx.fromY - 26 },
+        { scale: 1 - p * 0.5 },
+        { rotate: `${p * 16}deg` },
+      ],
+    };
+  });
+  // Clarao de luz no ponto da carta quando ela se desintegra.
+  const flashStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const a = p < 0.3 ? p / 0.3 : Math.max(0, 1 - (p - 0.3) / 0.3);
+    return { opacity: a * 0.95, transform: [{ translateX: fx.fromX - 55 }, { translateY: fx.fromY - 55 }, { scale: 0.5 + p * 1.4 }] };
+  });
+  return (
+    <>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          { position: "absolute", left: 0, top: 0, width: 110, height: 110, borderRadius: 55, backgroundColor: fx.color, shadowColor: fx.color, shadowOpacity: 1, shadowRadius: 26, shadowOffset: { width: 0, height: 0 } },
+          flashStyle,
+        ]}
+      />
+      <Animated.View
+        style={[
+          { position: "absolute", left: 0, top: 0, width: 36, height: 52, borderRadius: 6, borderWidth: 1.5, borderColor: fx.color, backgroundColor: "rgba(6,12,26,.82)", shadowColor: fx.color, shadowOpacity: 1, shadowRadius: 18, shadowOffset: { width: 0, height: 0 } },
+          cardStyle,
+        ]}
+      />
+    </>
+  );
+}
+
+function TargetBurst({ fx, progress }: { fx: CastFx; progress: SharedValue<number> }) {
+  const ringStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const arrive = p < 0.58 ? 0 : (p - 0.58) / 0.42;
+    return {
+      opacity: arrive <= 0 ? 0 : arrive < 0.5 ? arrive * 2 : (1 - arrive) * 2,
+      transform: [{ translateX: fx.toX - 56 }, { translateY: fx.toY - 56 }, { scale: 0.4 + arrive * 1.3 }],
+    };
+  });
+  const coreStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const arrive = p < 0.62 ? 0 : (p - 0.62) / 0.38;
+    return {
+      opacity: arrive <= 0 ? 0 : arrive < 0.45 ? arrive * 2.2 : (1 - arrive) * 1.8,
+      transform: [{ translateX: fx.toX - 46 }, { translateY: fx.toY - 46 }, { scale: 0.3 + arrive * 1.1 }],
+    };
+  });
+  return (
+    <>
+      <Animated.View
+        style={[
+          { position: "absolute", left: 0, top: 0, width: 112, height: 112, borderRadius: 56, borderWidth: 2.5, borderColor: fx.color, shadowColor: fx.color, shadowOpacity: 1, shadowRadius: 28, shadowOffset: { width: 0, height: 0 } },
+          ringStyle,
+        ]}
+      />
+      <Animated.View
+        style={[
+          { position: "absolute", left: 0, top: 0, width: 92, height: 92, borderRadius: 46, backgroundColor: fx.color, shadowColor: "#ffffff", shadowOpacity: 1, shadowRadius: 30, shadowOffset: { width: 0, height: 0 } },
+          coreStyle,
+        ]}
+      />
+    </>
+  );
+}
+
+function CardCastFx({ fx }: { fx: CastFx | null }) {
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    if (!fx) return;
+    progress.value = 0;
+    progress.value = withTiming(1, { duration: CAST_DURATION, easing: Easing.inOut(Easing.cubic) });
+  }, [fx?.key, progress]);
+
+  // Wash de luz ambiente na cor do efeito (mais luz na tela durante o cast).
+  const ambient = useAnimatedStyle(() => {
+    const p = progress.value;
+    const a = p < 0.35 ? p / 0.35 : Math.max(0, 1 - (p - 0.35) / 0.65);
+    return { opacity: a * 0.1 };
+  });
+
+  if (!fx) return null;
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: fx.color }, ambient]} />
+      <SourceShatter fx={fx} progress={progress} />
+      {Array.from({ length: CAST_PARTICLES }).map((_, i) => (
+        <CastParticle key={`${fx.key}-${i}`} index={i} fx={fx} progress={progress} />
+      ))}
+      <TargetBurst fx={fx} progress={progress} />
     </View>
   );
 }
@@ -903,13 +1030,19 @@ export default function BattleScreen() {
   const [p1, setP1] = useState("Jogador 1");
   const [p2, setP2] = useState("Jogador 2");
   const [event, setEvent] = useState<BattleAction | null>(null);
+  const [castFx, setCastFx] = useState<CastFx | null>(null);
   const [logExpanded, setLogExpanded] = useState(false);
   const dropTargets = useRef<Record<string, FighterDropTarget>>({});
+  const handCardTargets = useRef<Record<string, { x: number; y: number; width: number; height: number }>>({});
 
   const latestLog = b.battle?.log?.[b.battle.log.length - 1] ?? "";
 
   function rememberDropTarget(target: FighterDropTarget) {
     dropTargets.current[target.id] = target;
+  }
+
+  function rememberHandCard(id: string, rect: { x: number; y: number; width: number; height: number }) {
+    handCardTargets.current[id] = rect;
   }
 
   function targetAt(point: DropPoint, side?: "own" | "enemy") {
@@ -936,7 +1069,12 @@ export default function BattleScreen() {
       });
       return;
     }
-    markEvent("attack", result.blocked ? "Escudo ativado" : result.moveName ?? "Ataque certeiro", result.blocked ? "Ataque bloqueado" : `${result.damage ?? 0} de dano em ${result.targetName ?? "alvo"}`, false, {
+    const attackTitle = result.blocked
+      ? "Escudo ativado"
+      : result.procName
+        ? `${result.procName.toUpperCase()}!`
+        : result.moveName ?? "Ataque certeiro";
+    markEvent("attack", attackTitle, result.blocked ? "Ataque bloqueado" : `${result.damage ?? 0} de dano em ${result.targetName ?? "alvo"}`, false, {
       targetId: result.targetId,
       attackerId: result.attackerId,
       damage: result.damage,
@@ -944,7 +1082,7 @@ export default function BattleScreen() {
     });
   }
 
-  function markCardEvent(result?: ActionResult) {
+  function markCardEvent(result?: ActionResult, cardId?: string) {
     if (!result?.ok) {
       markEvent("card", "CARTA NAO USADA", result?.message ?? "Escolha uma carta e um alvo", true);
       return;
@@ -953,6 +1091,21 @@ export default function BattleScreen() {
     const sign = value > 0 ? "+" : "";
     const attr = (result.attr ?? "EFEITO").toUpperCase();
     markEvent("card", result.isDebuff ? "DEBUFF!" : "BUFF!", `${sign}${value} ${attr} em ${result.targetName ?? "alvo"}`, Boolean(result.isDebuff));
+
+    // Desintegracao da carta -> particulas -> integracao no alvo.
+    const src = cardId ? handCardTargets.current[cardId] : null;
+    const dst = result.targetId ? dropTargets.current[result.targetId] : null;
+    if (src && dst) {
+      setCastFx({
+        key: Date.now(),
+        fromX: src.x + src.width / 2,
+        fromY: src.y + src.height / 2,
+        toX: dst.x + dst.width / 2,
+        toY: dst.y + dst.height / 2,
+        color: result.isDebuff ? COLORS.red : COLORS.greenSoft,
+        debuff: Boolean(result.isDebuff),
+      });
+    }
   }
 
   if (!battleRequirements.canBattle) {
@@ -1051,6 +1204,7 @@ export default function BattleScreen() {
       <StatusBar hidden />
       <ArenaBackground />
       <ImpactOverlay event={event} />
+      <CardCastFx fx={castFx} />
       <FloatingEvent event={event} latestLog={latestLog} />
 
       <Animated.View entering={FadeInDown.duration(260)} style={[arenaStyles.topHud, { height: layout.topH }]}>
@@ -1096,7 +1250,7 @@ export default function BattleScreen() {
                 return;
               }
               const result = b.useCardFrom(selectedCard.id, id);
-              markCardEvent(result);
+              markCardEvent(result, selectedCard.id);
               return;
             }
             const selectedOwnId = b.battle?.selectedOwnId;
@@ -1138,7 +1292,7 @@ export default function BattleScreen() {
                 return;
               }
               const result = b.useCardFrom(selectedCard.id, id);
-              markCardEvent(result);
+              markCardEvent(result, selectedCard.id);
               return;
             }
             if (hasAttacked) {
@@ -1172,6 +1326,7 @@ export default function BattleScreen() {
             cardWidth={layout.handCardW}
             selectedCardId={b.battle.selectedCardId}
             player={cur}
+            onMeasureCard={rememberHandCard}
             onSelectCard={(id) => {
               b.selectCard(id);
             }}
@@ -1184,7 +1339,7 @@ export default function BattleScreen() {
                 return;
               }
               const result = b.useCardFrom(id, target.id);
-              markCardEvent(result);
+              markCardEvent(result, id);
             }}
           />
         </View>
@@ -1936,103 +2091,6 @@ const arenaStyles = StyleSheet.create({
     borderRadius: 75,
     borderWidth: 2,
     shadowRadius: 26,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  cinemaBarTop: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    height: "12%",
-    backgroundColor: "rgba(2,4,10,.82)",
-  },
-  cinemaBarBottom: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "12%",
-    backgroundColor: "rgba(2,4,10,.82)",
-  },
-  attackShockwave: {
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    width: 116,
-    height: 116,
-    marginLeft: -58,
-    marginTop: -58,
-    borderRadius: RADIUS.md,
-    borderWidth: 2,
-    backgroundColor: "rgba(255,77,109,.06)",
-    shadowOpacity: 0.9,
-    shadowRadius: 30,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  attackSlash: {
-    position: "absolute",
-    left: "12%",
-    right: "12%",
-    top: "47%",
-    height: 18,
-    borderRadius: RADIUS.round,
-    shadowOpacity: 0.9,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  attackSlashThin: {
-    top: "52%",
-    height: 4,
-    left: "27%",
-    right: "27%",
-  },
-  cardBurst: {
-    position: "absolute",
-    left: "50%",
-    bottom: "22%",
-    width: 62,
-    height: 82,
-    marginLeft: -31,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    backgroundColor: "rgba(6,12,26,.72)",
-    shadowOpacity: 0.75,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  cardBurstText: {
-    fontSize: 16,
-    lineHeight: 18,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
-  turnSweep: {
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    width: 240,
-    height: 3,
-    marginLeft: -120,
-    borderRadius: RADIUS.round,
-    opacity: 0.8,
-    shadowOpacity: 0.8,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  selectPing: {
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    width: 88,
-    height: 88,
-    marginLeft: -44,
-    marginTop: -44,
-    borderRadius: RADIUS.round,
-    borderWidth: 2,
-    shadowOpacity: 0.7,
-    shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
   },
   floatingEvent: {

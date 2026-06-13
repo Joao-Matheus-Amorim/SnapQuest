@@ -53,6 +53,7 @@ export interface ActionResult {
   moveName?: string;
   missName?: string;
   critical?: boolean;
+  procName?: string;
   miss?: boolean;
   effectName?: string;
   targetId?: string;
