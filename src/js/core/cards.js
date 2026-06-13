@@ -1,4 +1,4 @@
-import { EFFECT_CATEGORIES, rollEffect } from './balance.js';
+import { EFFECT_CATEGORIES, rollEffect, RARITY_TIER_LABELS } from './balance.js';
 import { uid, pick, fakePhotos } from './utils.js';
 
 const EFFECT_ATTRIBUTES = ['ATK', 'DEF', 'LCK', 'SPD', 'HP'];
@@ -22,6 +22,10 @@ export function createEffectCard({ categoryKey, name, photo, polarity, attribute
 
   const effect = rollEffect();
   const resolvedEffect = normalizeEffectOverride(effect, { polarity, attribute, intensity });
+  // Raridade SEMPRE deriva da intensidade final (tier == intensidade), senao o
+  // custo de energia (por raridade) descola do beneficio (intensidade): uma carta
+  // "rara" custaria 3 mas daria +1 igual a uma comum. Aqui custo e ganho andam juntos.
+  const raridade = RARITY_TIER_LABELS[resolvedEffect.intensidade];
 
   return {
     id: uid(),
@@ -35,7 +39,7 @@ export function createEffectCard({ categoryKey, name, photo, polarity, attribute
     polaridade: resolvedEffect.polaridade,
     atributo: resolvedEffect.atributo,
     intensidade: resolvedEffect.intensidade,
-    raridade: effect.raridade,
+    raridade,
     descricao: description?.trim() || null,
     nome_efeito: name.trim(),
     criado_em: new Date().toISOString(),

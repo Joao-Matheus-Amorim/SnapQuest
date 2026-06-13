@@ -81,6 +81,9 @@ test('createEffectCard preserves AI effect metadata when provided', () => {
   assert.equal(card.polaridade, 'BÔNUS');
   assert.equal(card.atributo, 'HP');
   assert.equal(card.intensidade, 2);
+  // Raridade deriva da intensidade final (custo acompanha o beneficio), mesmo com
+  // a intensidade vindo da IA e o sorteio interno tendo dado outro tier.
+  assert.equal(card.raridade, '🟢 Incomum');
   assert.equal(card.descricao, 'Este copo d agua foi retirado da Fonte da Juventude; aumenta 2 de HP.');
 });
 

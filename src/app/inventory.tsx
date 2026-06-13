@@ -17,7 +17,7 @@ import { FighterCard } from "../components/FighterCard";
 import { CardItem } from "../components/CardItem";
 import { RevealModal, type RevealTarget } from "../components/RevealModal";
 import { NameInputModal } from "../components/NameInputModal";
-import { fighterRarity, cardRarity, RARITY_ORDER, RARITY_LABELS, RARITY_COLORS, type Rarity } from "../lib/rarityConfig";
+import { fighterRarity, tierRarity, RARITY_ORDER, RARITY_LABELS, RARITY_COLORS, type Rarity } from "../lib/rarityConfig";
 import { createFighter } from "../js/core/fighters.js";
 import { createEffectCard } from "../js/core/cards.js";
 import type { Fighter } from "../js/core/fighters.js";
@@ -281,7 +281,7 @@ export default function InventoryScreen() {
     rarityFilter === "all" ? list : list.filter((f) => fighterRarity(f.bonus_intensidade ?? 1) === rarityFilter);
 
   const filterCards = (list: EffectCard[]) =>
-    rarityFilter === "all" ? list : list.filter((c) => cardRarity(c.raridade ?? "") === rarityFilter);
+    rarityFilter === "all" ? list : list.filter((c) => tierRarity(Number(c.intensidade) || 1) === rarityFilter);
 
   const visibleFighters = typeFilter !== "cards" ? filterFighters(allFighters) : [];
   const visibleCards = typeFilter !== "fighters" ? filterCards(allCards) : [];

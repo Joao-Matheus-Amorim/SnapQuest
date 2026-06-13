@@ -7,7 +7,7 @@
  */
 import type { Fighter } from "../js/core/fighters.js";
 import type { EffectCard } from "../js/core/cards.js";
-import { fighterRarity, cardRarity } from "../lib/rarityConfig";
+import { fighterRarity, tierRarity } from "../lib/rarityConfig";
 import { COLORS } from "../theme/tokens";
 import type { CardIconName, GameCardData } from "../types/card";
 import { rarityToCardRarity } from "./cardTheme";
@@ -99,7 +99,7 @@ export function effectCardToCardData(c: EffectCard): GameCardData {
     id: c.id,
     name: c.nome_efeito,
     type: isDebuff ? "trap" : "aura",
-    rarity: rarityToCardRarity(cardRarity(c.raridade ?? "")),
+    rarity: rarityToCardRarity(tierRarity(Number(c.intensidade) || 1)),
     image: c.foto,
     placeholderIcon: "aura",
     stats: [

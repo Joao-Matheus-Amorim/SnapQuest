@@ -35,12 +35,12 @@ function abilityForFighter(fighter) {
   return ABILITIES.POISON;
 }
 
+// Custo = tier (intensidade), capado em 4. Fonte unica: a intensidade. Assim o
+// custo nunca descola do poder, e cartas antigas com raridade errada se corrigem.
+// tier 1->1, 2->2, 3->3, 4->4, 5->4 (lendario um pouco mais eficiente).
 export function cardEnergyCost(card) {
-  const rarity = String(card?.raridade || '').toLowerCase();
-  if (rarity.includes('lend') || rarity.includes('epic') || rarity.includes('pic')) return 4;
-  if (rarity.includes('raro') || rarity.includes('rare')) return 3;
-  if (rarity.includes('incomum') || rarity.includes('uncommon')) return 2;
-  return Math.min(2, Math.max(1, Number(card?.intensidade || 1)));
+  const tier = Math.max(1, Math.min(5, Math.round(Number(card?.intensidade) || 1)));
+  return Math.min(4, tier);
 }
 
 export function canAffordCard(player, card) {

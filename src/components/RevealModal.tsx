@@ -16,7 +16,7 @@ import { GameButton } from "./game/GameButton";
 import { GameCard } from "./cards/GameCard";
 import { fighterToCardData, effectCardToCardData } from "../utils/cardAdapters";
 import { CARD_ASPECT } from "../utils/cardMeta";
-import { fighterRarity, cardRarity, RARITY_COLORS, RARITY_LABELS, RARITY_ORDER, type Rarity } from "../lib/rarityConfig";
+import { fighterRarity, tierRarity, RARITY_COLORS, RARITY_LABELS, RARITY_ORDER, type Rarity } from "../lib/rarityConfig";
 import { fireHaptic, type HapticEvent } from "../lib/haptics";
 import { useReducedMotion } from "../lib/useReducedMotion";
 import { COLORS, RADIUS, SPRING } from "../theme/tokens";
@@ -64,7 +64,7 @@ export function RevealModal({ reveal, onClose }: { reveal: RevealTarget; onClose
   const rarity: Rarity = reveal
     ? reveal.kind === "fighter"
       ? fighterRarity(reveal.data.bonus_intensidade ?? 1)
-      : cardRarity(reveal.data.raridade ?? "")
+      : tierRarity(Number(reveal.data.intensidade) || 1)
     : "comum";
   const rank = rarityRank(rarity);
   const color = RARITY_COLORS[rarity];

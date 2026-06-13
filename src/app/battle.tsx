@@ -930,6 +930,47 @@ type AttackCine = {
   targetName: string;
 };
 
+// Fundo "runa eletrica / ataque mistico": aneis girando em sentidos opostos,
+// brilho pulsante e faiscas que piscam. Vive so na fase de foco (0.06 -> 0.7).
+function MysticBackdrop({ t, color }: { t: SharedValue<number>; color: string }) {
+  const flicker = useSharedValue(0);
+  useEffect(() => {
+    flicker.value = withRepeat(withTiming(1, { duration: 120, easing: Easing.linear }), -1, true);
+  }, [flicker]);
+
+  const focus = [0, 0.06, 0.66, 0.78] as const;
+
+  const glow = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, focus, [0, 0.55, 0.55, 0], Extrapolation.CLAMP) * (0.7 + flicker.value * 0.3),
+    transform: [{ scale: 0.8 + Math.sin(t.value * Math.PI * 2) * 0.16 }],
+  }));
+  const ringA = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, focus, [0, 0.9, 0.9, 0], Extrapolation.CLAMP),
+    transform: [{ rotate: `${t.value * 540}deg` }, { scale: 1 + Math.sin(t.value * Math.PI) * 0.06 }],
+  }));
+  const ringB = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, focus, [0, 0.8, 0.8, 0], Extrapolation.CLAMP),
+    transform: [{ rotate: `${-t.value * 760}deg` }],
+  }));
+  const sparks = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, focus, [0, 0.85, 0.85, 0], Extrapolation.CLAMP) * (0.25 + flicker.value * 0.75),
+    transform: [{ rotate: `${t.value * 300}deg` }],
+  }));
+
+  return (
+    <View pointerEvents="none" style={mysticStyles.center}>
+      <Animated.View style={[mysticStyles.glow, { backgroundColor: color, shadowColor: color }, glow]} />
+      <Animated.View style={[mysticStyles.ringA, { borderColor: color, shadowColor: color }, ringA]} />
+      <Animated.View style={[mysticStyles.ringB, { borderColor: color, shadowColor: color }, ringB]} />
+      <Animated.View style={[mysticStyles.sparkWrap, sparks]}>
+        {[0, 45, 90, 135].map((a) => (
+          <View key={a} style={[mysticStyles.spark, { backgroundColor: color, shadowColor: color, transform: [{ rotate: `${a}deg` }] }]} />
+        ))}
+      </Animated.View>
+    </View>
+  );
+}
+
 function AttackCinematic({ cine }: { cine: AttackCine | null }) {
   const t = useSharedValue(0);
   useEffect(() => {
@@ -944,23 +985,23 @@ function AttackCinematic({ cine }: { cine: AttackCine | null }) {
     opacity: interpolate(t.value, [0, 0.1, 0.7, 0.78], [0, 1, 1, 0], Extrapolation.CLAMP),
   }));
 
-  // 1) entra girando e crescendo  2) segura (le o nome)  3) golpe 3D no impacto
-  // (pitch + avanco para o inimigo)  4) a carta voa e some, revelando o golpe.
+  // 1) a carta SOBE e CRESCE materializando aos poucos (opacidade pisca como se
+  // estivesse se formando)  2) segura (le o nome)  3) golpe 3D no impacto (avanca
+  // para o inimigo)  4) a carta voa e some, revelando o golpe.
   const cardStyle = useAnimatedStyle(() => {
-    const scale = interpolate(t.value, [0, 0.28, 0.66, 0.77, 0.9, 1], [0.1, 1, 1, 1.45, 0.7, 0.5], Extrapolation.CLAMP);
-    const rotateY = interpolate(t.value, [0, 0.28], [0, 720], Extrapolation.CLAMP);
-    const rotateX = interpolate(t.value, [0.66, 0.77, 0.88], [0, 36, 0], Extrapolation.CLAMP);
-    const translateY = interpolate(t.value, [0.66, 0.77, 1], [0, -30, -110], Extrapolation.CLAMP);
-    const opacity = interpolate(t.value, [0, 0.08, 0.82, 0.92], [0, 1, 1, 0], Extrapolation.CLAMP);
+    const scale = interpolate(t.value, [0, 0.3, 0.66, 0.77, 0.9, 1], [0.35, 1, 1, 1.42, 0.7, 0.5], Extrapolation.CLAMP);
+    const rotateX = interpolate(t.value, [0.66, 0.77, 0.88], [0, 30, 0], Extrapolation.CLAMP);
+    const translateY = interpolate(t.value, [0, 0.3, 0.66, 0.77, 1], [130, 0, 0, -28, -110], Extrapolation.CLAMP);
+    // Materializacao: pisca subindo/descendo a opacidade antes de firmar em 1.
+    const opacity = interpolate(
+      t.value,
+      [0, 0.05, 0.09, 0.13, 0.17, 0.24, 0.82, 0.92],
+      [0, 0.5, 0.18, 0.72, 0.38, 1, 1, 0],
+      Extrapolation.CLAMP
+    );
     return {
       opacity,
-      transform: [
-        { perspective: 1000 },
-        { rotateY: `${rotateY}deg` },
-        { rotateX: `${rotateX}deg` },
-        { translateY },
-        { scale },
-      ],
+      transform: [{ perspective: 1000 }, { rotateX: `${rotateX}deg` }, { translateY }, { scale }],
     };
   });
 
@@ -982,6 +1023,7 @@ function AttackCinematic({ cine }: { cine: AttackCine | null }) {
   return (
     <View pointerEvents="none" style={cineStyles.root}>
       <Animated.View style={[StyleSheet.absoluteFill, cineStyles.backdrop, backdrop]} />
+      <MysticBackdrop t={t} color={accent} />
       <Animated.View style={[cineStyles.card, cardStyle]}>
         <GameCard data={cine.card} width={140} glow />
       </Animated.View>
@@ -2194,6 +2236,51 @@ const arenaStyles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1,
     marginTop: 2,
+  },
+});
+
+const mysticStyles = StyleSheet.create({
+  center: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
+  glow: {
+    position: "absolute",
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    shadowOpacity: 0.95,
+    shadowRadius: 55,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  ringA: {
+    position: "absolute",
+    width: 270,
+    height: 270,
+    borderRadius: 135,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    shadowOpacity: 0.8,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  ringB: {
+    position: "absolute",
+    width: 188,
+    height: 188,
+    borderRadius: 94,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    shadowOpacity: 0.8,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  sparkWrap: { position: "absolute", width: 320, height: 320, alignItems: "center", justifyContent: "center" },
+  spark: {
+    position: "absolute",
+    width: 320,
+    height: 2,
+    borderRadius: 1,
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
 });
 

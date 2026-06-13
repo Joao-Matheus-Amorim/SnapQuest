@@ -25,11 +25,8 @@ Este documento registra o contrato atual da batalha local. A fonte executavel fi
 ## Energia
 
 - Energia inicial efetiva no primeiro turno: 2/5, porque o jogador comeca com 1 e recebe +1 no inicio do turno.
-- Cada carta tem custo calculado por raridade:
-  - comum: 1 a 2;
-  - incomum: 2;
-  - raro: 3;
-  - lendario/epico: 4.
+- O custo da carta = o tier (intensidade), capado em 4: tier 1->1, 2->2, 3->3, 4->4, 5->4.
+- Raridade e custo SEMPRE derivam da intensidade (fonte unica), igual ao bonus do fighter. Nao ha campo de raridade independente para divergir.
 - Carta sem energia suficiente fica indisponivel na UI.
 - Usar carta consome energia imediatamente.
 

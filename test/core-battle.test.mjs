@@ -110,14 +110,16 @@ test('createBattle starts fixed on player 1 with energy and typed cards', () => 
   assert.equal(battle.players[1].fighters[0].shield_active, true);
 });
 
-test('card energy cost follows rarity and blocks unaffordable cards', () => {
-  assert.equal(cardEnergyCost(card({ raridade: 'Comum', intensidade: 1 })), 1);
-  assert.equal(cardEnergyCost(card({ raridade: 'Incomum' })), 2);
-  assert.equal(cardEnergyCost(card({ raridade: 'Raro' })), 3);
+test('card energy cost follows tier (intensidade) and blocks unaffordable cards', () => {
+  assert.equal(cardEnergyCost(card({ intensidade: 1 })), 1);
+  assert.equal(cardEnergyCost(card({ intensidade: 2 })), 2);
+  assert.equal(cardEnergyCost(card({ intensidade: 3 })), 3);
+  assert.equal(cardEnergyCost(card({ intensidade: 4 })), 4);
+  assert.equal(cardEnergyCost(card({ intensidade: 5 })), 4); // lendario capa em 4
   const battle = makeBattle();
-  const rare = card({ id: 'rare', raridade: 'Raro' });
-  rare.cost = cardEnergyCost(rare);
-  assert.equal(canAffordCard(battle.players[0], rare), false);
+  const epic = card({ id: 'epic', intensidade: 4 });
+  epic.cost = cardEnergyCost(epic);
+  assert.equal(canAffordCard(battle.players[0], epic), false); // energia 2 < custo 4
 });
 
 test('drawCard adds one card to hand once per turn', () => {

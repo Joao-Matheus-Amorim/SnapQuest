@@ -49,12 +49,18 @@ export function rarityGlow(rarity: Rarity) {
   return glows[rarity];
 }
 
-export function fighterRarity(bonusIntensidade: number): Rarity {
-  if (bonusIntensidade >= 5) return "lendário";
-  if (bonusIntensidade >= 4) return "épico";
-  if (bonusIntensidade >= 3) return "raro";
-  if (bonusIntensidade >= 2) return "incomum";
+// Fonte unica: o tier 1..5 manda na raridade (e, por consequencia, no custo/poder).
+// Fighters e cartas usam o MESMO mapeamento — raridade e sempre derivada do tier.
+export function tierRarity(tier: number): Rarity {
+  if (tier >= 5) return "lendário";
+  if (tier >= 4) return "épico";
+  if (tier >= 3) return "raro";
+  if (tier >= 2) return "incomum";
   return "comum";
+}
+
+export function fighterRarity(bonusIntensidade: number): Rarity {
+  return tierRarity(bonusIntensidade);
 }
 
 export function cardRarity(raridade: string): Rarity {
