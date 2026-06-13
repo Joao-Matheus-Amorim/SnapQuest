@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   createBattle,
   drawCard,
@@ -24,75 +24,102 @@ function deepClone<T>(obj: T): T {
 }
 
 export function useBattle() {
+  // battleRef e a UNICA fonte da verdade mutavel. As acoes do core mutam ela
+  // no lugar. O estado React abaixo guarda apenas um CLONE imutavel para render.
+  // Isso evita stale closure (a ref e sempre a ultima) e divergencia de objeto
+  // (a coisa mutada e exatamente a coisa que vira o proximo estado).
+  const battleRef = useRef<Battle | null>(null);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [winner, setWinner] = useState<BattlePlayer | { name: string } | null>(null);
   const [waitingPass, setWaitingPass] = useState(false);
   const [resolvingAttack, setResolvingAttack] = useState(false);
+  const resolvingRef = useRef(false);
+  const waitingRef = useRef(false);
 
-  function refresh(b: Battle) {
-    setBattle(deepClone(b));
+  function sync() {
+    setBattle(battleRef.current ? deepClone(battleRef.current) : null);
+  }
+
+  function setResolving(value: boolean) {
+    resolvingRef.current = value;
+    setResolvingAttack(value);
+  }
+
+  function setWaiting(value: boolean) {
+    waitingRef.current = value;
+    setWaitingPass(value);
+  }
+
+  function blocked() {
+    return !battleRef.current || waitingRef.current || resolvingRef.current;
   }
 
   function start(fighters: unknown[], cards: unknown[], p1 = "Jogador 1", p2 = "Jogador 2") {
     const b = createBattle({ fighters, cards, playerName: p1, player2Name: p2 });
+    battleRef.current = b;
     setWinner(null);
-    setWaitingPass(false);
-    setResolvingAttack(false);
-    setBattle(deepClone(b));
+    setWaiting(false);
+    setResolving(false);
+    sync();
   }
 
   function draw() {
-    if (!battle || waitingPass || resolvingAttack) return;
-    drawCard(battle);
-    refresh(battle);
+    if (blocked()) return;
+    drawCard(battleRef.current!);
+    sync();
   }
 
   function selectOwn(id: string) {
-    if (!battle || waitingPass || resolvingAttack) return;
-    battle.selectedOwnId = battle.selectedOwnId === id ? null : id;
-    refresh(battle);
+    if (blocked()) return;
+    const b = battleRef.current!;
+    b.selectedOwnId = b.selectedOwnId === id ? null : id;
+    sync();
   }
 
   function selectEnemy(id: string) {
-    if (!battle || waitingPass || resolvingAttack) return;
-    battle.selectedEnemyId = battle.selectedEnemyId === id ? null : id;
-    refresh(battle);
+    if (blocked()) return;
+    const b = battleRef.current!;
+    b.selectedEnemyId = b.selectedEnemyId === id ? null : id;
+    sync();
   }
 
   function selectCard(id: string) {
-    if (!battle || waitingPass || resolvingAttack) return;
-    battle.selectedCardId = battle.selectedCardId === id ? null : id;
-    refresh(battle);
+    if (blocked()) return;
+    const b = battleRef.current!;
+    b.selectedCardId = b.selectedCardId === id ? null : id;
+    sync();
   }
 
   function useCard() {
-    if (!battle || waitingPass || resolvingAttack) return undefined;
-    const result = useSelectedCard(battle);
-    refresh(battle);
+    if (blocked()) return undefined;
+    const result = useSelectedCard(battleRef.current!);
+    sync();
     return result;
   }
 
   function useCardFrom(id: string, targetId?: string | null) {
-    if (!battle || waitingPass || resolvingAttack) return undefined;
-    const card = battle.players[battle.turn].hand.find((item) => item.id === id && !item.used);
-    battle.selectedCardId = id;
+    if (blocked()) return undefined;
+    const b = battleRef.current!;
+    const card = b.players[b.turn].hand.find((item) => item.id === id && !item.used);
+    b.selectedCardId = id;
     if (targetId) {
-      if (card?.polaridade === "DEBUFF") battle.selectedEnemyId = targetId;
-      else battle.selectedOwnId = targetId;
+      if (card?.polaridade === "DEBUFF") b.selectedEnemyId = targetId;
+      else b.selectedOwnId = targetId;
     }
-    const result = useSelectedCard(battle);
-    refresh(battle);
+    const result = useSelectedCard(b);
+    sync();
     return result;
   }
 
   function resolveAttack(): ActionResult | undefined {
-    if (!battle) return undefined;
-    const result = attackSelectedTarget(battle);
-    refresh(battle);
+    const b = battleRef.current;
+    if (!b) return undefined;
+    const result = attackSelectedTarget(b);
+    sync();
     if (result.ok) {
-      setResolvingAttack(true);
+      setResolving(true);
       setTimeout(() => {
-        setResolvingAttack(false);
+        setResolving(false);
         if (result.winner) setWinner(result.winner ?? null);
       }, ATTACK_RESOLUTION_MS);
     }
@@ -100,33 +127,35 @@ export function useBattle() {
   }
 
   function attack() {
-    if (!battle || waitingPass || resolvingAttack) return undefined;
+    if (blocked()) return undefined;
     return resolveAttack();
   }
 
   function attackFrom(id: string, targetId?: string | null) {
-    if (!battle || waitingPass || resolvingAttack) return undefined;
-    battle.selectedOwnId = id;
-    if (targetId) battle.selectedEnemyId = targetId;
+    if (blocked()) return undefined;
+    const b = battleRef.current!;
+    b.selectedOwnId = id;
+    if (targetId) b.selectedEnemyId = targetId;
     return resolveAttack();
   }
 
   function endTurn() {
-    if (!battle || waitingPass || resolvingAttack) return;
-    passTurn(battle);
-    refresh(battle);
-    setWaitingPass(true);
+    if (blocked()) return;
+    passTurn(battleRef.current!);
+    sync();
+    setWaiting(true);
   }
 
   function confirmPass() {
-    setWaitingPass(false);
+    setWaiting(false);
   }
 
   function reset() {
+    battleRef.current = null;
     setBattle(null);
     setWinner(null);
-    setWaitingPass(false);
-    setResolvingAttack(false);
+    setWaiting(false);
+    setResolving(false);
   }
 
   const curPlayer = battle ? currentPlayer(battle) : null;

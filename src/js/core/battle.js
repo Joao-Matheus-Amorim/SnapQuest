@@ -89,6 +89,7 @@ function normalizeFighter(fighter, fighterIndex) {
     buffs: { atk: 0, def: 0, lck: 0, spd: 0, hp: 0 },
     shield_active: ability === ABILITIES.SHIELD,
     poison: null,
+    attacked: false,
   };
 }
 
@@ -112,6 +113,8 @@ function startTurn(battle, playerIndex) {
   const player = battle.players[playerIndex];
   player.energy = Math.min(player.max_energy, (player.energy || 0) + 1);
   player.drawn_this_turn = false;
+  player.attacked_this_turn = false;
+  for (const fighter of player.fighters) fighter.attacked = false;
   applyPoisonStart(battle, player);
   battleLog(battle, `${player.name} iniciou o turno com energia ${player.energy}/${player.max_energy}`);
   drawCard(battle);
@@ -131,6 +134,7 @@ export function createBattle({ fighters, cards, playerName, player2Name }) {
     deck: shuffledCards.slice(index * 3, index * 3 + 3).map(normalizeCard),
     hand: [],
     drawn_this_turn: false,
+    attacked_this_turn: false,
     energy: START_ENERGY,
     max_energy: ENERGY_MAX,
   }));
@@ -168,7 +172,7 @@ export function getTurnGuidance(battle) {
   const player = currentPlayer(battle);
   const playable = player.hand.filter(card => !card.used && canAffordCard(player, card));
   if (!player.drawn_this_turn) return { phase: 'Comprar carta', hint: 'A compra acontece automaticamente no inicio do turno.', nextAction: 'draw' };
-  if (playable.length) return { phase: 'Jogar ou atacar', hint: 'Arraste uma carta para um alvo ou toque em atacante e alvo para prever o ataque.', nextAction: 'act' };
+  if (playable.length) return { phase: 'Jogar ou atacar', hint: 'Arraste uma carta no alvo, ou toque no seu fighter e depois no inimigo para atacar.', nextAction: 'act' };
   return { phase: 'Encerrar turno', hint: 'Sem energia para cartas. Ataque ou encerre o turno.', nextAction: 'end-turn' };
 }
 
@@ -284,6 +288,17 @@ export function attackSelectedTarget(battle) {
   if (taunt && taunt.id !== defender.id) {
     return { ok: false, message: `${taunt.nome} esta provocando. Ataque ele primeiro.` };
   }
+
+  if (player.attacked_this_turn) {
+    return { ok: false, message: 'Voce ja atacou neste turno. Encerre o turno.' };
+  }
+
+  // O ataque resolve a partir daqui: consome a unica acao de ataque do turno e
+  // limpa a selecao (atacante e alvo) para nao deixar o fighter brilhando depois.
+  player.attacked_this_turn = true;
+  attacker.attacked = true;
+  battle.selectedOwnId = null;
+  battle.selectedEnemyId = null;
 
   const preview = previewAttack(battle, attacker.id, defender.id);
   const missRoll = rand(1, 20);

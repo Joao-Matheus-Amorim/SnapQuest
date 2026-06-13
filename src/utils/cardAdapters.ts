@@ -56,6 +56,20 @@ export function fighterToCardData(f: Fighter): GameCardData {
     },
   ];
 
+  // Em batalha o fighter ganha current_hp/buffs. Quando presentes, o card precisa
+  // refletir o estado vivo (HP atual e stats com buff) para o dano aparecer.
+  // No inventario/deck esses campos nao existem e caimos no valor base.
+  const live = f as Fighter & {
+    current_hp?: number;
+    buffs?: { atk?: number; def?: number; lck?: number; spd?: number };
+  };
+  const buffs = live.buffs;
+  const hpValue = typeof live.current_hp === "number" ? live.current_hp : f.hp;
+  const atkValue = f.atk + (buffs?.atk ?? 0);
+  const defValue = f.def + (buffs?.def ?? 0);
+  const lckValue = f.lck + (buffs?.lck ?? 0);
+  const spdValue = f.spd + (buffs?.spd ?? 0);
+
   return {
     id: f.id,
     name: f.nome,
@@ -64,11 +78,11 @@ export function fighterToCardData(f: Fighter): GameCardData {
     image: f.foto,
     placeholderIcon: "atk",
     stats: [
-      { icon: "atk", label: "ATK", value: f.atk, color: COLORS.primary },
-      { icon: "def", label: "DEF", value: f.def, color: COLORS.accent },
-      { icon: "lck", label: "LCK", value: f.lck, color: COLORS.gold },
-      { icon: "spd", label: "SPD", value: f.spd, color: COLORS.greenSoft },
-      { icon: "hp", label: "HP", value: f.hp, color: tint },
+      { icon: "atk", label: "ATK", value: atkValue, color: COLORS.primary },
+      { icon: "def", label: "DEF", value: defValue, color: COLORS.accent },
+      { icon: "lck", label: "LCK", value: lckValue, color: COLORS.gold },
+      { icon: "spd", label: "SPD", value: spdValue, color: COLORS.greenSoft },
+      { icon: "hp", label: "HP", value: hpValue, color: tint },
     ],
     textBlocks: blocks,
   };

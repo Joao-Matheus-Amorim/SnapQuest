@@ -14,6 +14,7 @@ export type BattleFighter = Fighter & {
   buffs: { atk: number; def: number; lck: number; spd: number; hp?: number };
   shield_active?: boolean;
   poison?: { turns: number; damage: number; sourceId?: string } | null;
+  attacked?: boolean;
 };
 
 export type BattleCard = EffectCard & { used: boolean; cost: number };
@@ -24,6 +25,7 @@ export interface BattlePlayer {
   deck: BattleCard[];
   hand: BattleCard[];
   drawn_this_turn: boolean;
+  attacked_this_turn: boolean;
   energy: number;
   max_energy: number;
 }

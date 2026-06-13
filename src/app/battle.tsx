@@ -200,6 +200,10 @@ function FighterTile({
   selected,
   side,
   layout,
+  spent,
+  dimmed,
+  taunting,
+  lockedByTaunt,
   impactRole,
   impactKey,
   targetState,
@@ -212,6 +216,10 @@ function FighterTile({
   selected: boolean;
   side: "own" | "enemy";
   layout: BattleLayout;
+  spent?: boolean;
+  dimmed?: boolean;
+  taunting?: boolean;
+  lockedByTaunt?: boolean;
   impactRole?: "attacker" | "receiver" | null;
   impactKey?: number | null;
   targetState?: "valid" | "invalid" | null;
@@ -226,9 +234,12 @@ function FighterTile({
   const rarityColor = RARITY_COLORS[rarity];
   const pulse = useSharedValue(0);
   const hit = useSharedValue(0);
+  const tauntPulse = useSharedValue(0);
   const cardH = Math.round(layout.fieldCardW * CARD_ASPECT);
   const hpPct = Math.max(0, Math.min(1, fighter.max_hp > 0 ? fighter.current_hp / fighter.max_hp : 0));
   const effectBadges = activeEffectBadges(fighter);
+  const hasBuff = effectBadges.some((badge) => !badge.debuff);
+  const hasDebuff = effectBadges.some((badge) => badge.debuff);
   const hitText = damageEvent?.targetId === fighter.id
     ? damageEvent.blocked
       ? "ESCUDO"
@@ -274,13 +285,14 @@ function FighterTile({
   }, [dead, hit, impactKey, impactRole]);
 
   useEffect(() => {
-    life.value = withTiming(hpPct, { duration: 300, easing: Easing.out(Easing.cubic) });
+    life.value = withTiming(hpPct, { duration: 520, easing: Easing.out(Easing.cubic) });
   }, [hpPct, life]);
 
   useEffect(() => {
     if (!damageEvent || damageEvent.targetId !== fighter.id || !damageEvent.damage) return;
     damageRise.value = 0;
-    damageRise.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) });
+    // Fica parado e totalmente visivel ~1s, depois sobe e some. Legibilidade primeiro.
+    damageRise.value = withDelay(1000, withTiming(1, { duration: 560, easing: Easing.in(Easing.cubic) }));
   }, [damageEvent, damageRise, fighter.id]);
 
   useEffect(() => {
@@ -288,13 +300,44 @@ function FighterTile({
     rarePulse.value = withRepeat(withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) }), -1, true);
   }, [rarePulse, rarity]);
 
-  const glowStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: 1 + pulse.value * 0.025 },
-      { translateY: impactRole === "attacker" ? -hit.value * 20 : 0 },
-      { translateX: impactRole === "receiver" ? hit.value * 12 : 0 },
-    ],
-    shadowOpacity: selected ? 0.24 + pulse.value * 0.42 : 0.1,
+  useEffect(() => {
+    if (!taunting) {
+      tauntPulse.value = withTiming(0, { duration: 200 });
+      return;
+    }
+    tauntPulse.value = withRepeat(withTiming(1, { duration: 760, easing: Easing.inOut(Easing.sin) }), -1, true);
+  }, [taunting, tauntPulse]);
+
+  const glowStyle = useAnimatedStyle(() => {
+    const selScale = selected ? 0.14 + pulse.value * 0.04 : pulse.value * 0.025;
+    const selLift = selected ? (side === "own" ? -10 : 8) : 0;
+    return {
+      transform: [
+        { scale: 1 + selScale - (impactRole === "receiver" ? Math.abs(hit.value) * 0.05 : 0) },
+        {
+          translateY:
+            selLift +
+            (impactRole === "attacker"
+              ? -hit.value * 22
+              : impactRole === "receiver"
+                ? -Math.abs(hit.value) * 9
+                : 0),
+        },
+        { translateX: impactRole === "receiver" ? hit.value * 14 : 0 },
+      ],
+      zIndex: selected ? 40 : 1,
+      shadowOpacity: selected ? 0.6 + pulse.value * 0.4 : 0.1,
+    };
+  });
+
+  const selectionRingStyle = useAnimatedStyle(() => ({
+    opacity: selected ? 0.55 + pulse.value * 0.45 : 0,
+    transform: [{ scale: 1 + pulse.value * 0.05 }],
+  }));
+
+  const tauntRingStyle = useAnimatedStyle(() => ({
+    opacity: taunting ? 0.6 + tauntPulse.value * 0.4 : 0,
+    transform: [{ scale: 1 + tauntPulse.value * 0.04 }],
   }));
 
   const hitFlashStyle = useAnimatedStyle(() => ({
@@ -313,7 +356,7 @@ function FighterTile({
 
   const damageStyle = useAnimatedStyle(() => ({
     opacity: damageEvent?.targetId === fighter.id && damageEvent?.damage ? 1 - damageRise.value : 0,
-    transform: [{ translateY: -damageRise.value * 28 }, { scale: 0.9 + damageRise.value * 0.25 }],
+    transform: [{ translateY: -damageRise.value * 34 }, { scale: 1.05 - damageRise.value * 0.15 }],
   }));
 
   const rarityStyle = useAnimatedStyle(() => ({
@@ -337,11 +380,38 @@ function FighterTile({
           targetState === "invalid" && fighterStyles.invalidTarget,
           rarity === "incomum" && fighterStyles.uncommonField,
           rarity === "raro" && fighterStyles.rareField,
+          spent && !dead && fighterStyles.spent,
+          dimmed && !selected && !dead && fighterStyles.dimmed,
+          lockedByTaunt && !dead && fighterStyles.lockedTarget,
           dead && fighterStyles.dead,
-          { borderColor: selected ? rarityColor : "rgba(234,242,255,.16)", shadowColor: rarityColor },
+          {
+            borderColor: selected
+              ? rarityColor
+              : taunting
+                ? COLORS.gold
+                : hasDebuff
+                  ? "rgba(255,77,109,.9)"
+                  : hasBuff
+                    ? "rgba(134,239,172,.9)"
+                    : "rgba(234,242,255,.16)",
+            borderWidth: taunting || hasDebuff || hasBuff ? (taunting ? 3 : 2) : 1,
+            shadowColor: taunting ? COLORS.gold : hasDebuff ? COLORS.red : hasBuff ? COLORS.greenSoft : rarityColor,
+          },
         ]}
       >
         <GameCard data={fighterToCardData(fighter)} width={layout.fieldCardW} glow={selected} />
+        {selected ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[fighterStyles.selectionRing, { borderColor: rarityColor, shadowColor: rarityColor }, selectionRingStyle]}
+          />
+        ) : null}
+        {taunting && !selected ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[fighterStyles.selectionRing, { borderColor: COLORS.gold, shadowColor: COLORS.gold }, tauntRingStyle]}
+          />
+        ) : null}
         {fighter.shield_active ? <View pointerEvents="none" style={fighterStyles.shieldBubble} /> : null}
         {fighter.poison?.turns ? <Text pointerEvents="none" style={fighterStyles.poisonFx}>☠</Text> : null}
         <Animated.View pointerEvents="none" style={[fighterStyles.attackLift, { borderColor: rarityColor, shadowColor: rarityColor }, attackLiftStyle]}>
@@ -372,6 +442,13 @@ function FighterTile({
             <Animated.View style={[fighterStyles.cardLifeFill, lifeFillStyle]} />
           </View>
         </View>
+        {hasBuff || hasDebuff ? (
+          <View pointerEvents="none" style={[fighterStyles.stateChip, hasDebuff ? fighterStyles.stateChipDebuff : fighterStyles.stateChipBuff]}>
+            <Text style={fighterStyles.stateChipText} numberOfLines={1}>
+              {hasDebuff ? "DEBUFF ▼" : "BUFF ▲"}
+            </Text>
+          </View>
+        ) : null}
         <View pointerEvents="none" style={fighterStyles.abilityRow}>
           {fighter.ability === "provocar" ? <Text style={fighterStyles.abilityIcon}>🛡️</Text> : null}
           {fighter.ability === "escudo" ? <Text style={fighterStyles.abilityIcon}>✨</Text> : null}
@@ -380,7 +457,22 @@ function FighterTile({
         <Animated.Text pointerEvents="none" style={[fighterStyles.damageNumber, damageStyle]}>
           -{damageEvent?.targetId === fighter.id ? damageEvent.damage : 0}
         </Animated.Text>
+        {taunting && !dead ? (
+          <View pointerEvents="none" style={fighterStyles.tauntBadge}>
+            <Text style={fighterStyles.tauntBadgeText} numberOfLines={1}>🛡 PROVOCANDO</Text>
+          </View>
+        ) : null}
+        {lockedByTaunt && !dead ? (
+          <View pointerEvents="none" style={fighterStyles.lockBadge}>
+            <Text style={fighterStyles.lockBadgeText}>🔒</Text>
+          </View>
+        ) : null}
         {dead ? <Text style={fighterStyles.deadLabel}>FORA</Text> : null}
+        {spent && !dead ? (
+          <View pointerEvents="none" style={fighterStyles.spentBadge}>
+            <Text style={fighterStyles.spentText}>⚔ USADO</Text>
+          </View>
+        ) : null}
       </DraggableAction>
       </View>
       </Animated.View>
@@ -392,6 +484,7 @@ function TeamPanel({
   label,
   player,
   side,
+  tone,
   selectedId,
   attackerId,
   receiverId,
@@ -407,6 +500,7 @@ function TeamPanel({
   label: string;
   player: BattlePlayer;
   side: "own" | "enemy";
+  tone: typeof PLAYER_TONES[number];
   selectedId: string | null;
   attackerId?: string | null;
   receiverId?: string | null;
@@ -420,17 +514,31 @@ function TeamPanel({
   onMeasureFighter?: (target: FighterDropTarget) => void;
 }) {
   return (
-    <View style={[arenaStyles.teamPanel, { height: layout.rowH }, side === "enemy" && arenaStyles.enemyPanel, !activeSide && arenaStyles.inactiveTeamPanel]}>
-      <Text style={[arenaStyles.fieldLabel, side === "own" ? arenaStyles.ownFieldLabel : arenaStyles.enemyFieldLabel]} numberOfLines={1}>
-        {label}: {player.name}
+    <View
+      style={[
+        arenaStyles.teamPanel,
+        { height: layout.rowH },
+        activeSide
+          ? { borderColor: tone.border, shadowColor: tone.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } }
+          : arenaStyles.inactiveTeamPanel,
+      ]}
+    >
+      <Text style={[arenaStyles.fieldLabel, { color: tone.accent, borderColor: tone.border }]} numberOfLines={1}>
+        {activeSide ? "▸ " : ""}{label}: {player.name}
       </Text>
       <View style={arenaStyles.teamSlots}>
-        {player.fighters.map((fighter) => (
+        {(() => {
+          const tauntActive = side === "enemy" && player.fighters.some((f) => f.alive && f.ability === "provocar");
+          return player.fighters.map((fighter) => (
           <FighterTile
             key={fighter.id}
             fighter={fighter}
             side={side}
             layout={layout}
+            spent={side === "own" && Boolean(fighter.attacked)}
+            dimmed={Boolean(selectedId) && selectedId !== fighter.id}
+            taunting={side === "enemy" && fighter.alive && fighter.ability === "provocar"}
+            lockedByTaunt={tauntActive && fighter.alive && fighter.ability !== "provocar"}
             selected={selectedId === fighter.id}
             impactRole={
               impactKey && attackerId === fighter.id
@@ -446,7 +554,8 @@ function TeamPanel({
             onDragAttack={onDragFighter ? (point) => onDragFighter(fighter.id, point) : undefined}
             onMeasure={onMeasureFighter}
           />
-        ))}
+          ));
+        })()}
       </View>
     </View>
   );
@@ -511,11 +620,11 @@ function FanCard({
 }) {
   const center = (count - 1) / 2;
   const offset = index - center;
-  const rotate = offset * 5;
-  const translateY = Math.abs(offset) * 5 - (selected ? 12 : 0);
+  const rotate = selected ? 0 : offset * 5;
+  const translateY = Math.abs(offset) * 5 - (selected ? 34 : 0);
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 35).springify().damping(15)} style={{ marginLeft: index === 0 ? 0 : -18 }}>
+    <Animated.View entering={FadeInDown.delay(index * 35).springify().damping(15)} style={[{ marginLeft: index === 0 ? 0 : -18 }, selected && { zIndex: 40 }]}>
       <DraggableAction
         disabled={disabled}
         onTap={onPress}
@@ -525,7 +634,7 @@ function FanCard({
           selected && handStyles.selectedRealCard,
           playable && handStyles.playableRealCard,
           disabled && handStyles.used,
-          { transform: [{ rotate: `${rotate}deg` }, { translateY }] },
+          { transform: [{ rotate: `${rotate}deg` }, { translateY }, { scale: selected ? 1.16 : 1 }] },
         ]}
       >
         {children}
@@ -657,7 +766,7 @@ function ImpactOverlay({ event }: { event: BattleAction | null }) {
   }));
 
   const flash = useAnimatedStyle(() => ({
-    opacity: progress.value * (event?.type === "attack" ? 0.24 : 0.18),
+    opacity: progress.value * (event?.type === "attack" ? 0.14 : 0.12),
   }));
 
   const cinema = useAnimatedStyle(() => ({
@@ -730,11 +839,11 @@ function FloatingEvent({ event, latestLog }: { event: BattleAction | null; lates
     opacity.value = 0;
     y.value = withSequence(
       withTiming(event.type === "attack" ? -10 : -6, { duration: event.type === "attack" ? 360 : 220 }),
-      withDelay(event.type === "attack" ? 1850 : 1100, withTiming(event.type === "attack" ? -28 : -18, { duration: 300 }))
+      withDelay(event.type === "attack" ? 2400 : 1100, withTiming(event.type === "attack" ? -28 : -18, { duration: 300 }))
     );
     opacity.value = withSequence(
       withTiming(1, { duration: event.type === "attack" ? 220 : 160 }),
-      withDelay(event.type === "attack" ? 1960 : 1180, withTiming(0, { duration: 260 }))
+      withDelay(event.type === "attack" ? 2600 : 1180, withTiming(0, { duration: 300 }))
     );
   }, [event, opacity, y]);
 
@@ -923,13 +1032,18 @@ export default function BattleScreen() {
   const selectedCard = cur.hand.find((card) => card.id === b.battle?.selectedCardId && !card.used);
   const validTargetSide = selectedCard ? (selectedCard.polaridade === "DEBUFF" ? "enemy" : "own") : b.battle.selectedOwnId ? "enemy" : null;
   const hasAffordableCard = cur.hand.some((card) => !card.used && canAffordCard(cur, card));
+  const hasAttacked = cur.attacked_this_turn;
   const battleHint = selectedCard
     ? selectedCard.polaridade === "DEBUFF"
       ? "Toque ou arraste esta carta em um inimigo."
       : "Toque ou arraste esta carta em um aliado."
-    : b.battle.selectedOwnId
-      ? "Toque no inimigo para atacar agora."
-      : "Toque no seu fighter atacante, depois toque no inimigo.";
+    : hasAttacked
+      ? hasAffordableCard
+        ? "Ataque usado. Jogue uma carta ou encerre o turno."
+        : "Ataque usado. Encerre o turno."
+      : b.battle.selectedOwnId
+        ? "Toque no inimigo para atacar agora."
+        : "Toque no seu fighter atacante, depois toque no inimigo.";
   const nextTurnName = cur.name;
 
   return (
@@ -967,9 +1081,10 @@ export default function BattleScreen() {
           label="INIMIGO"
           player={foe}
           side="enemy"
+          tone={foeTone}
           layout={layout}
           selectedId={b.battle.selectedEnemyId}
-          receiverId={b.battle.selectedEnemyId}
+          receiverId={attackImpactKey ? event?.targetId ?? null : null}
           impactKey={attackImpactKey}
           damageEvent={event}
           validTargetSide={validTargetSide}
@@ -990,6 +1105,10 @@ export default function BattleScreen() {
               markAttackEvent(result);
               return;
             }
+            if (hasAttacked) {
+              markEvent("card", "ATAQUE USADO", "Voce ja atacou neste turno. Jogue cartas ou encerre o turno.", true);
+              return;
+            }
             markEvent("card", "ESCOLHA ATACANTE", "Primeiro toque em um fighter do seu campo.", true);
           }}
           onMeasureFighter={rememberDropTarget}
@@ -1004,9 +1123,10 @@ export default function BattleScreen() {
           label="SEU CAMPO"
           player={cur}
           side="own"
+          tone={curTone}
           layout={layout}
           selectedId={b.battle.selectedOwnId}
-          attackerId={b.battle.selectedOwnId}
+          attackerId={attackImpactKey ? event?.attackerId ?? null : null}
           impactKey={attackImpactKey}
           damageEvent={event}
           validTargetSide={validTargetSide}
@@ -1021,10 +1141,18 @@ export default function BattleScreen() {
               markCardEvent(result);
               return;
             }
+            if (hasAttacked) {
+              markEvent("card", "ATAQUE USADO", "Voce ja atacou neste turno. Jogue cartas ou encerre o turno.", true);
+              return;
+            }
             b.selectOwn(id);
           }}
           onMeasureFighter={rememberDropTarget}
           onDragFighter={(id, point) => {
+            if (hasAttacked) {
+              markEvent("card", "ATAQUE USADO", "Voce ja atacou neste turno. Jogue cartas ou encerre o turno.", true);
+              return;
+            }
             const target = targetAt(point, "enemy");
             if (!target) {
               markEvent("card", "SEM ALVO", "Solte em cima do inimigo.", true);
@@ -1065,7 +1193,7 @@ export default function BattleScreen() {
             label="Encerrar Turno"
             variant="ghost"
             disabled={b.waitingPass}
-            suggest={!hasAffordableCard}
+            suggest={hasAttacked || !hasAffordableCard}
             suggestColor={curTone.accent}
             onPress={() => {
               markEvent("pass", "Turno passado");
@@ -1159,10 +1287,10 @@ const fighterStyles = StyleSheet.create({
   },
   hitFlashText: {
     color: "#fff",
-    fontSize: 10,
-    lineHeight: 12,
+    fontSize: 13,
+    lineHeight: 15,
     fontWeight: "900",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   effectBadges: {
     position: "absolute",
@@ -1290,6 +1418,35 @@ const fighterStyles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: 2,
   },
+  stateChip: {
+    position: "absolute",
+    left: 4,
+    bottom: 21,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: RADIUS.round,
+    borderWidth: 1,
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  stateChipBuff: {
+    borderColor: "rgba(134,239,172,.85)",
+    backgroundColor: "rgba(20,83,45,.92)",
+    shadowColor: COLORS.greenSoft,
+  },
+  stateChipDebuff: {
+    borderColor: "rgba(255,77,109,.85)",
+    backgroundColor: "rgba(96,18,34,.92)",
+    shadowColor: COLORS.red,
+  },
+  stateChipText: {
+    color: "#fff",
+    fontSize: 7,
+    lineHeight: 9,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+  },
   abilityIcon: {
     fontSize: 9,
     lineHeight: 11,
@@ -1298,14 +1455,14 @@ const fighterStyles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    top: "38%",
+    top: "34%",
     color: COLORS.red,
-    fontSize: 18,
-    lineHeight: 21,
+    fontSize: 26,
+    lineHeight: 30,
     fontWeight: "900",
     textAlign: "center",
-    textShadowColor: "rgba(255,77,109,.8)",
-    textShadowRadius: 8,
+    textShadowColor: "rgba(255,77,109,.9)",
+    textShadowRadius: 12,
   },
   card: {
     padding: 5,
@@ -1317,7 +1474,78 @@ const fighterStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
   },
   enemyCard: { backgroundColor: "rgba(42,14,42,.72)" },
-  selected: { borderWidth: 2, backgroundColor: "rgba(24,41,79,.94)" },
+  selected: { borderWidth: 3, backgroundColor: "rgba(24,41,79,.96)" },
+  dimmed: { opacity: 0.42 },
+  selectionRing: {
+    position: "absolute",
+    inset: -6,
+    borderRadius: RADIUS.md,
+    borderWidth: 3,
+    backgroundColor: "transparent",
+    shadowOpacity: 1,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  spent: { opacity: 0.74 },
+  lockedTarget: { opacity: 0.4 },
+  tauntBadge: {
+    position: "absolute",
+    left: 4,
+    right: 4,
+    top: -10,
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: RADIUS.round,
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+    backgroundColor: "rgba(5,7,15,.95)",
+    shadowColor: COLORS.gold,
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  tauntBadgeText: {
+    color: COLORS.gold,
+    fontSize: 7,
+    lineHeight: 9,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+  },
+  lockBadge: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "42%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lockBadgeText: {
+    fontSize: 22,
+    lineHeight: 26,
+    textShadowColor: "rgba(0,0,0,.9)",
+    textShadowRadius: 6,
+  },
+  spentBadge: {
+    position: "absolute",
+    right: 4,
+    top: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: RADIUS.round,
+    borderWidth: 1,
+    borderColor: "rgba(245,197,66,.6)",
+    backgroundColor: "rgba(5,7,15,.9)",
+  },
+  spentText: {
+    color: COLORS.gold,
+    fontSize: 7,
+    lineHeight: 9,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+  },
   dead: { opacity: 0.34 },
   topRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   avatar: {
@@ -1401,7 +1629,13 @@ const handStyles = StyleSheet.create({
     shadowOpacity: 0.75,
     shadowRadius: 12,
   },
-  selectedRealCard: { shadowOpacity: 0.55 },
+  selectedRealCard: {
+    borderWidth: 2.5,
+    borderColor: COLORS.gold,
+    shadowColor: COLORS.gold,
+    shadowOpacity: 1,
+    shadowRadius: 20,
+  },
   costBadge: {
     position: "absolute",
     left: -4,
@@ -1506,8 +1740,17 @@ const arenaStyles = StyleSheet.create({
   boardLine: { position: "absolute", left: 0, right: 0, top: "50%", height: 1, backgroundColor: "rgba(245,197,66,.22)" },
   boardLineVertical: { top: 0, bottom: 0, left: "33.3%", width: 1, height: "100%" },
   boardLineVerticalAlt: { top: 0, bottom: 0, left: "66.6%", width: 1, height: "100%" },
-  teamPanel: { width: "100%", paddingHorizontal: 8, paddingTop: 16, alignItems: "center", justifyContent: "center" },
-  inactiveTeamPanel: { opacity: 0.7 },
+  teamPanel: {
+    width: "100%",
+    paddingHorizontal: 8,
+    paddingTop: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  inactiveTeamPanel: { opacity: 0.58 },
   enemyPanel: {},
   fieldLabel: {
     position: "absolute",
@@ -1523,8 +1766,6 @@ const arenaStyles = StyleSheet.create({
     letterSpacing: 0.8,
     backgroundColor: "rgba(5,7,15,.82)",
   },
-  ownFieldLabel: { color: COLORS.accent, borderColor: "rgba(52,225,255,.42)" },
-  enemyFieldLabel: { color: COLORS.primary, borderColor: "rgba(255,61,180,.42)" },
   teamSlots: { width: "100%", flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 },
   centerStage: {
     marginHorizontal: 8,

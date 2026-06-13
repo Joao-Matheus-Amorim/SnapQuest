@@ -225,6 +225,31 @@ test('defeated cards stay until end turn then are removed', () => {
   assert.equal(battle.players[1].fighters.some((fighter) => fighter.id === defender.id), false);
 });
 
+test('only one attack per turn is allowed and selection clears after attacking', () => {
+  const battle = makeBattle();
+  battle.players[1].fighters[1].alive = false; // remove taunt p2-b
+  battle.players[1].fighters[0].shield_active = false; // p2-a sem escudo
+  drawCard(battle);
+  battle.selectedOwnId = 'p1-b';
+  battle.selectedEnemyId = 'p2-a';
+
+  const first = withRandom(0.5, () => attackSelectedTarget(battle));
+  assert.equal(first.ok, true);
+  assert.equal(battle.players[0].attacked_this_turn, true);
+  assert.equal(battle.selectedOwnId, null);
+  assert.equal(battle.selectedEnemyId, null);
+
+  battle.selectedOwnId = 'p1-b';
+  battle.selectedEnemyId = 'p2-a';
+  const second = withRandom(0.5, () => attackSelectedTarget(battle));
+  assert.equal(second.ok, false);
+  assert.match(second.message, /ja atacou/);
+
+  passTurn(battle); // troca para o jogador 2
+  passTurn(battle); // volta para o jogador 1, ataque deve estar liberado de novo
+  assert.equal(battle.players[0].attacked_this_turn, false);
+});
+
 test('winner is returned when one side has no alive cards', () => {
   const battle = makeBattle();
   for (const fighter of battle.players[1].fighters) fighter.alive = false;

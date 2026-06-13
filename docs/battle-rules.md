@@ -19,7 +19,8 @@ Este documento registra o contrato atual da batalha local. A fonte executavel fi
 3. O jogador pode tocar em uma carta da mao e tocar no alvo correto, ou arrastar a carta ate o alvo.
 4. Cartas de buff sao usadas em aliados; cartas de debuff sao usadas em inimigos.
 5. Para atacar, o jogador toca em um Fighter do proprio campo e depois toca em um Fighter inimigo. Tambem pode arrastar o Fighter ate o inimigo.
-6. O turno so troca quando o jogador toca em `Encerrar Turno`.
+6. Cada jogador pode fazer apenas 1 ataque por turno (total). Depois de atacar, o ataque fica indisponivel ate o proximo turno; o jogador ainda pode jogar cartas se tiver energia. Vacilo e ataque bloqueado por escudo tambem consomem o ataque do turno.
+7. O turno so troca quando o jogador toca em `Encerrar Turno`.
 
 ## Energia
 
