@@ -17,7 +17,10 @@ import {
   type ActionResult,
 } from "../js/core/battle.js";
 
-const ATTACK_RESOLUTION_MS = 1200;
+// A cinematica de ataque (~7s) anima a carta PRIMEIRO; o golpe so "acerta" (dano
+// no board) no impacto, e a jogada destrava no fim.
+export const ATTACK_IMPACT_MS = 5400; // momento em que o dano aparece no board
+const ATTACK_RESOLUTION_MS = 6800; // fim da janela (destrava input + revela vencedor)
 
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -114,15 +117,18 @@ export function useBattle() {
   function resolveAttack(): ActionResult | undefined {
     const b = battleRef.current;
     if (!b) return undefined;
-    const result = attackSelectedTarget(b);
-    sync();
-    if (result.ok) {
-      setResolving(true);
-      setTimeout(() => {
-        setResolving(false);
-        if (result.winner) setWinner(result.winner ?? null);
-      }, ATTACK_RESOLUTION_MS);
+    const result = attackSelectedTarget(b); // muta a ref; o dano fica retido ate o impacto
+    if (!result.ok) {
+      sync(); // acao invalida (taunt etc): reflete a selecao na hora
+      return result;
     }
+    // Anima primeiro: o board so recebe o golpe no impacto; destrava no fim.
+    setResolving(true);
+    setTimeout(() => sync(), ATTACK_IMPACT_MS);
+    setTimeout(() => {
+      setResolving(false);
+      if (result.winner) setWinner(result.winner ?? null);
+    }, ATTACK_RESOLUTION_MS);
     return result;
   }
 

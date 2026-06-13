@@ -96,9 +96,7 @@ So um proc por golpe, definido pela classe do atacante. O resultado retorna `cri
 
 ## Habilidades passivas
 
-### Provocar
-
-Enquanto existir um Fighter inimigo vivo com `provocar`, ataques precisam mirar nele primeiro.
+> Provocar (taunt/agro) foi removido: ataques nao sao mais forcados a mirar um Fighter especifico.
 
 ### Escudo
 

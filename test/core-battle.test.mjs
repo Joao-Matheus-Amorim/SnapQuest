@@ -176,17 +176,6 @@ test('shield is a luck-based block, not consumed, and can fail', () => {
   assert.equal(landed.blocked, false);
 });
 
-test('taunt forces attacks into provoking fighter first', () => {
-  const battle = makeBattle();
-  drawCard(battle);
-  battle.selectedOwnId = 'p1-a';
-  battle.selectedEnemyId = 'p2-c';
-
-  const result = attackSelectedTarget(battle);
-  assert.equal(result.ok, false);
-  assert.match(result.message, /provocando/);
-});
-
 test('natural miss returns miss name without showing dice mechanics', () => {
   const battle = makeBattle();
   battle.players[1].fighters[1].alive = false;

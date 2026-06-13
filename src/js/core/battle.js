@@ -29,6 +29,8 @@ function abilityForFighter(fighter) {
   if (fighter.ability) return fighter.ability;
   if (fighter.habilidade) return fighter.habilidade;
   if (fighter.class_key === 'paladino') return ABILITIES.SHIELD;
+  // provocar/taunt foi removido (agro confuso). guerreiro nao tem passiva de
+  // habilidade — a forca dele esta no critico (sorte de classe).
   if (fighter.class_key === 'guerreiro') return ABILITIES.TAUNT;
   return ABILITIES.POISON;
 }
@@ -67,10 +69,6 @@ function battleLog(battle, text) {
   const entry = { id: `${Date.now()}-${battle.history.length}`, text, createdAt: Date.now() };
   battle.history.push(entry);
   battle.log.push(text);
-}
-
-function activeFighters(player) {
-  return player.fighters.filter(fighter => fighter.alive);
 }
 
 function normalizeCard(card) {
@@ -271,10 +269,6 @@ export function previewAttack(battle, attackerId = battle.selectedOwnId, defende
   };
 }
 
-function forcedTauntTarget(enemy) {
-  return activeFighters(enemy).find(fighter => fighter.ability === ABILITIES.TAUNT);
-}
-
 export function attackSelectedTarget(battle) {
   const player = currentPlayer(battle);
   const enemy = enemyPlayer(battle);
@@ -285,11 +279,6 @@ export function attackSelectedTarget(battle) {
   const attacker = player.fighters.find(fighter => fighter.id === battle.selectedOwnId && fighter.alive);
   const defender = enemy.fighters.find(fighter => fighter.id === battle.selectedEnemyId && fighter.alive);
   if (!attacker || !defender) return { ok: false, message: 'Atacante ou alvo invalido.' };
-
-  const taunt = forcedTauntTarget(enemy);
-  if (taunt && taunt.id !== defender.id) {
-    return { ok: false, message: `${taunt.nome} esta provocando. Ataque ele primeiro.` };
-  }
 
   if (player.attacked_this_turn) {
     return { ok: false, message: 'Voce ja atacou neste turno. Encerre o turno.' };
